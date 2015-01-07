@@ -8,20 +8,31 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+///
+//Initializes all engine components
 void Init(void)
 {
 	printf("Initializing\n");
 
+	//There currently are no other components to the engine
+	
+	//Set the background color to fully opaque Red
+	//TODO: Move background color setting to the render manager once complete
 	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	
 }
 
 ///
-//Checks for any OpenGL errors and prints if found
+//Checks for any OpenGL errors and prints error code if found
 void CheckGLErrors(void)
 {
+	//Get the openGL error code
 	int error = glGetError();
+
+	//If the error code signifies an error has occurred
 	if(error != GL_NO_ERROR)
 	{
+		//Print the error code
 		printf("Error: %d\n", error);
 	}
 }
@@ -78,13 +89,7 @@ int main(int argc, char* argv[])
 
 	//Window creation
 	int win = glutCreateWindow("NGen V1.0");
-
-	//initialize glew
-	//glewExperimental = GL_TRUE;
-	//if(glewInit() != GLEW_OK) 
-	//{
-	//	return -1;
-	//}
+	
 
 	//Check for errors
 	CheckGLErrors();
