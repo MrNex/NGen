@@ -8,6 +8,8 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+#include "Math/Vector.h"
+
 ///
 //Initializes all engine components
 void Init(void)
@@ -19,6 +21,43 @@ void Init(void)
 	//Set the background color to fully opaque Red
 	//TODO: Move background color setting to the render manager once complete
 	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+
+
+	//Test vector code
+	float* a, * b, * c;
+	a = (float*)malloc(sizeof(float) * 3);
+	b = (float*)malloc(sizeof(float) * 3);
+	c = (float*) malloc(sizeof(float) * 3);
+
+	for(int i = 1; i < 4; i++)
+	{
+		a[i - 1] = i;
+		b[i - 1] = 4-i;
+		c[i - 1] = 0;
+	}
+
+	Vector_Print(a, 3);
+	Vector_Print(b, 3);
+	Vector_Print(c, 3);
+
+	Vector_Normalize(a, 3);
+
+	Vector_Add(c, a, b, 3);
+
+	Vector_Scale(a, 50, 3);
+
+	Vector_Print(a, 3);
+	Vector_Print(b, 3);
+	Vector_Print(c, 3);
+
+	float magA = Vector_GetMag(a, 3);
+	printf("\n%f\n", magA);
+
+	free(a);
+	free(b);
+	free(c);
+
+	
 	
 }
 
@@ -44,7 +83,7 @@ void CheckGLErrors(void)
 //	int val - Unused, needed for valid glutTimerFunc signature
 void Update(int val)
 {
-	printf("Updating\n");
+	//printf("Updating\n");
 
 	//Put update code here
 	
@@ -60,7 +99,7 @@ void Update(int val)
 //Draws the current state of the engine
 void Draw(void)
 {
-	printf("Drawing\n");
+	//printf("Drawing\n");
 
 	//Clear buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
