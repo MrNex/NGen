@@ -5,7 +5,6 @@
 #include <windows.h>
 #endif
 
-#include <GL/glew.h>
 #include <GL/freeglut.h>
 
 #include "Math/Vector.h"
