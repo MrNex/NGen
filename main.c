@@ -23,6 +23,7 @@ void Init(void)
 
 
 	//Test vector code
+	/*
 	float* a, * b, * c;
 	a = (float*)malloc(sizeof(float) * 3);
 	b = (float*)malloc(sizeof(float) * 3);
@@ -55,6 +56,48 @@ void Init(void)
 	free(a);
 	free(b);
 	free(c);
+	*/
+	//New Vector code
+	Vector* a = Vector_Allocate(3);
+	Vector* b = Vector_Allocate(3);
+	Vector* c = Vector_Allocate(3);
+
+	Vector_PrintTranspose(a);
+	Vector_PrintTranspose(b);
+	Vector_PrintTranspose(c);
+
+
+
+	Vector_Initialize(a);
+	Vector_Initialize(b);
+	Vector_Initialize(c);
+
+	for(int i = 1; i < 4; i++)
+	{
+		a->components[i - 1] = i;
+		b->components[i - 1] = 4-i;
+		c->components[i - 1] = 0;
+	}
+
+	Vector_PrintTranspose(a);
+	Vector_PrintTranspose(b);
+	Vector_PrintTranspose(c);
+
+
+	Vector_Normalize(a);
+	Vector_Add(c,a,b);
+	Vector_Scale(a, 50);
+
+	Vector_PrintTranspose(a);
+	Vector_PrintTranspose(b);
+	Vector_PrintTranspose(c);
+
+	Vector_Free(a);
+
+	Vector_Free(b);
+	Vector_Free(c);
+
+	
 
 	
 	
