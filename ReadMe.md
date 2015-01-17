@@ -14,12 +14,25 @@ Freeglut
 
 ## Build
 
-NGen is compiled using MinGw's gcc compiler. After installing freeglut you can compile the program with
-> gcc main.c -o NGen -lFreeglut -lOpenGL32
+NGen is compiled using MinGw's gcc compiler. After installing freeglut you can compile the program from the top-level project directory by entering the following command:
 
-Coming soon: A makefile... Sorry for now guys.
+Windows:
+> mingw32-make
+
+Linux/Mac:
+> make
+
+The Makefile will take care of the rest. You can then run the project with:
+> NGen
 
 ## Installation
 
-Currently, after compilation, you can run the engine directly from the output file.
-In the future, when the other engine components are added, this will change.
+Simply download the project, extract to it's own folder if necessary, and then follow the instructions in the Build section. No other installation steps are needed.
+
+## Using the NGen
+
+As engine components are added I will be updating this section with examples of how you can use them.
+
+### Math
+
+ToDo: Provide an example of how to utilize the NGen's Matrix and Vector mathematics library.
