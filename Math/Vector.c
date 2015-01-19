@@ -42,6 +42,30 @@ void Vector_Free(Vector* vec)
 }
 
 ///
+//Copies a vector to an array
+//
+//Parameters:
+//	dest: The destination of the copy
+//	src: the vector to copy
+//	dim: The dimension of the vector being copied
+void Vector_CopyArray(float* dest, const float* src, const int dim)
+{
+	memcpy(dest, src, sizeof(float) * dim);
+}
+//Checks for errors then calls Vector_CopyArray
+void Vector_Copy(Vector* dest, const Vector* src)
+{
+	if(dest->dimension != src->dimension)
+	{
+		printf("Vector_Copy failed! Destination and source not of equal dimension. Vector not copied.\n");
+	}
+	else
+	{
+		Vector_CopyArray(dest->components, src->components, src->dimension);
+	}
+}
+
+///
 //Determines the magnitude of a vector
 //
 //Parameters:

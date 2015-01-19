@@ -7,7 +7,8 @@
 
 #include <GL/freeglut.h>
 
-#include "Math/Vector.h"
+//#include "Math/Vector.h"
+#include "Math/Matrix.h"
 
 ///
 //Initializes all engine components
@@ -62,9 +63,20 @@ void Init(void)
 	Vector* b = Vector_Allocate(3);
 	Vector* c = Vector_Allocate(3);
 
+	Matrix* tmat = Matrix_Allocate(3, 3);
+	Matrix_Initialize(tmat);
+	*Matrix_Index(tmat, 0, 0) = 0;
+	*Matrix_Index(tmat, 0, 2) = 1;
+	*Matrix_Index(tmat, 2, 0) = 1;
+	*Matrix_Index(tmat, 2, 2) = 0;
+
+	Matrix_Print(tmat);
+
 	Vector_PrintTranspose(a);
 	Vector_PrintTranspose(b);
 	Vector_PrintTranspose(c);
+	
+	printf("\n");
 
 
 
@@ -83,6 +95,8 @@ void Init(void)
 	Vector_PrintTranspose(b);
 	Vector_PrintTranspose(c);
 
+	printf("\n");
+
 
 	Vector_Normalize(a);
 	Vector_Add(c,a,b);
@@ -91,6 +105,25 @@ void Init(void)
 	Vector_PrintTranspose(a);
 	Vector_PrintTranspose(b);
 	Vector_PrintTranspose(c);
+
+	printf("\n");
+
+	float d[b->dimension];
+	Vector_AddArray(d, b->components, c->components, b->dimension);
+	Vector_PrintTransposeArray(d, b->dimension);
+
+	printf("\n");
+
+	Matrix_TransformVector(tmat, a);
+	Matrix_TransformVector(tmat, b);
+	Matrix_TransformVector(tmat, c);
+
+	Vector_PrintTranspose(a);
+	Vector_PrintTranspose(b);
+	Vector_PrintTranspose(c);
+
+	printf("\n");
+	
 
 	Vector_Free(a);
 

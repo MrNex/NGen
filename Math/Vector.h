@@ -32,6 +32,17 @@ void Vector_Initialize(Vector* vec);
 //	vec: The Vector which's resources are being freed
 void Vector_Free(Vector* vec);
 
+///
+//Copies a vector to an array
+//
+//Parameters:
+//	dest: The destination of the copy
+//	src: the vector to copy
+//	dim: The dimension of the vector being copied
+void Vector_CopyArray(float* dest, const float* src, const int dim);
+//Checks for errors then calls Vector_CopyArray
+void Vector_Copy(Vector* dest, const Vector* src);
+
 
 ///
 //Determines the magnitude of a vector
@@ -93,7 +104,7 @@ void Vector_Scale(Vector* vec, const float scaleValue);
 //	scaleValue: the amount by which to scale the initial vector
 //	dim: The number of components in the initial vector
 void Vector_GetScalarProductFromArray(float* dest, const float* src, const float scaleValue, const int dim);
-void Vector_GetScalarPRoduct(Vector* dest, const Vector* src, const float scaleValue);
+void Vector_GetScalarProduct(Vector* dest, const Vector* src, const float scaleValue);
 
 ///
 //Adds together two vectors retrieving the sum
