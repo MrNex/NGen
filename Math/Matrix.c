@@ -223,15 +223,12 @@ void Matrix_TransformMatrixArray(const float* LHSMatrix, float* RHSMatrix, const
 void Matrix_TransformMatrix(const Matrix* LHSMatrix, Matrix* RHSMatrix)
 {
 	//Make sure the dimensions of LHS and RHS Transpose match
-	if(LHSMatrix->numRows == RHSMatrix->numColumns)
-	{
+
 		if(LHSMatrix->numColumns == RHSMatrix->numRows)
 		{
 			Matrix_TransformMatrixArray(LHSMatrix->components, RHSMatrix->components, LHSMatrix->numRows, LHSMatrix->numColumns, RHSMatrix->numColumns);
 			return;
 		}
-
-	}
 	
 	//If code reaches this point, method failed.
 
@@ -251,12 +248,11 @@ void Matrix_GetProductMatrixArray(float* destMatrix, const float* LHSMatrix, con
 {
 	for(int rows = 0; rows < LHSNumRows; rows++)
 	{
-		for(int cols = 0; cols < LHSNumCols; cols++)
+		for(int cols = 0; cols < RHSNumCols; cols++)
 		{
-			destMatrix[(rows * LHSNumCols) + cols] = 0;
+			*Matrix_IndexArray(destMatrix, rows, cols, RHSNumCols) = 0.0f;
 			for(int dot = 0; dot < LHSNumCols; dot++)
-			{
-				//destMatrix[(rows * LHSNumCols) + cols] += LHSMatrix[(rows * LHSNumCols) + dot] * RHSMatrix[(dot * LHSNumCols) + col];
+			{	
 				 *Matrix_IndexArray(destMatrix, rows, cols, RHSNumCols) += Matrix_GetIndexArray(LHSMatrix, rows, dot, LHSNumCols) * Matrix_GetIndexArray(RHSMatrix, dot, cols, RHSNumCols);
 			}
 		}

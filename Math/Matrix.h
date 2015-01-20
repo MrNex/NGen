@@ -1,5 +1,12 @@
 #include "Vector.h"
 
+#define Matrix_INIT_ON_STACK( mat, numRow, numCol) \
+	mat.numRows	= numRow; \
+	mat.numColumns 	= numCol; \
+	float comp##mat [numRow * numCol] = { 0 }; \
+	mat.components = comp##mat ; \
+	if(numRow == numCol) Matrix_ToIdentity(&mat); 	
+
 typedef struct Matrix
 {
 	int numRows;

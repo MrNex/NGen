@@ -23,117 +23,93 @@ void Init(void)
 	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
 
-	//Test vector code
-	/*
-	float* a, * b, * c;
-	a = (float*)malloc(sizeof(float) * 3);
-	b = (float*)malloc(sizeof(float) * 3);
-	c = (float*) malloc(sizeof(float) * 3);
 
-	for(int i = 1; i < 4; i++)
-	{
-		a[i - 1] = i;
-		b[i - 1] = 4-i;
-		c[i - 1] = 0;
-	}
-
-	Vector_Print(a, 3);
-	Vector_Print(b, 3);
-	Vector_Print(c, 3);
-
-	Vector_Normalize(a, 3);
-
-	Vector_Add(c, a, b, 3);
-
-	Vector_Scale(a, 50, 3);
-
-	Vector_Print(a, 3);
-	Vector_Print(b, 3);
-	Vector_Print(c, 3);
-
-	float magA = Vector_GetMag(a, 3);
-	printf("\n%f\n", magA);
-
-	free(a);
-	free(b);
-	free(c);
-	*/
 	//New Vector code
-	Vector* a = Vector_Allocate(3);
-	Vector* b = Vector_Allocate(3);
-	Vector* c = Vector_Allocate(3);
+	Vector a;
+	Vector b;
+	Vector c;
 
-	Matrix* tmat = Matrix_Allocate(3, 3);
-	Matrix_Initialize(tmat);
-	*Matrix_Index(tmat, 0, 0) = 0;
-	*Matrix_Index(tmat, 0, 2) = 1;
-	*Matrix_Index(tmat, 2, 0) = 1;
-	*Matrix_Index(tmat, 2, 2) = 0;
+	Vector_INIT_ON_STACK(a, 3);
+	Vector_INIT_ON_STACK(b, 3);
+	Vector_INIT_ON_STACK(c, 3);
 
-	Matrix_Print(tmat);
-
-	Vector_PrintTranspose(a);
-	Vector_PrintTranspose(b);
-	Vector_PrintTranspose(c);
-	
-	printf("\n");
-
-
-
-	Vector_Initialize(a);
-	Vector_Initialize(b);
-	Vector_Initialize(c);
-
-	for(int i = 1; i < 4; i++)
+	for(int i = 0; i < a.dimension; i++)
 	{
-		a->components[i - 1] = i;
-		b->components[i - 1] = 4-i;
-		c->components[i - 1] = 0;
+		a.components[i] = 1;
+		b.components[i] = 2;
 	}
 
-	Vector_PrintTranspose(a);
-	Vector_PrintTranspose(b);
-	Vector_PrintTranspose(c);
+	Vector_PrintTranspose(&a);
+	Vector_PrintTranspose(&b);
+	Vector_PrintTranspose(&c);
 
-	printf("\n");
+	Vector_Scale(&b, 2.0f);
 
+	Vector_Add(&c, &a, &b);
 
-	Vector_Normalize(a);
-	Vector_Add(c,a,b);
-	Vector_Scale(a, 50);
-
-	Vector_PrintTranspose(a);
-	Vector_PrintTranspose(b);
-	Vector_PrintTranspose(c);
-
-	printf("\n");
-
-	float d[b->dimension];
-	Vector_AddArray(d, b->components, c->components, b->dimension);
-	Vector_PrintTransposeArray(d, b->dimension);
-
-	printf("\n");
-
-	Matrix_TransformVector(tmat, a);
-	Matrix_TransformVector(tmat, b);
-	Matrix_TransformVector(tmat, c);
-
-	Vector_PrintTranspose(a);
-	Vector_PrintTranspose(b);
-	Vector_PrintTranspose(c);
-
-	printf("\n");
+	Vector_PrintTranspose(&a);
+	Vector_PrintTranspose(&b);
+	Vector_PrintTranspose(&c);
 	
-
-	Vector_Free(a);
-
-	Vector_Free(b);
-	Vector_Free(c);
-
+	Vector_Decrement(&a, &c);
 	
+	Vector_Increment(&c, &a);
 
-	
-	
+	Vector_PrintTranspose(&a);
+	Vector_PrintTranspose(&b);
+	Vector_PrintTranspose(&c);
+
+	printf("A dot B = %f", Vector_DotProduct(&a, &b));
+
+
+	//Matrix code
+	Matrix m;
+	Matrix n;
+	Matrix o;
+	Matrix p;
+
+	Matrix_INIT_ON_STACK(m, 3, 3);
+	Matrix_INIT_ON_STACK(n, 3, 3);
+	Matrix_INIT_ON_STACK(p, 3, 2);
+	Matrix_INIT_ON_STACK(o, 3, 2);
+
+
+	Matrix_Print(&m);
+
+	*Matrix_Index(&m, 0, 2) = -3.0f;
+	*Matrix_Index(&n, 2, 2) = 2.0f;
+	*Matrix_Index(&o, 0, 0) = 5.0f;
+	*Matrix_Index(&o, 2, 0) = 1.0f;
+	*Matrix_Index(&o, 1, 1) = -22.0f;
+
+	printf("\n\n");
+	Matrix_Print(&m);
+	printf("\n");
+	Matrix_Print(&n);
+	printf("\n");
+	Matrix_Print(&o);
+
+	Matrix_TransformMatrix(&m, &n);
+	Matrix_GetProductMatrix(&p, &n, &o);
+
+	printf("\n\n");
+	Matrix_Print(&m);
+	printf("\n");
+	Matrix_Print(&n);
+	printf("\n");
+	Matrix_Print(&o);
+	printf("\n");
+	Matrix_Print(&p);
+
+	Vector d;
+	Vector_INIT_ON_STACK(d, 3);
+
+	Matrix_TransformVector(&m, &c);
+	Matrix_GetProductVector(&d, &n, &c);
+
+	Vector_PrintTranspose(&c);
+	Vector_PrintTranspose(&d);
+
 }
 
 ///

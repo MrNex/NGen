@@ -1,3 +1,8 @@
+#define Vector_INIT_ON_STACK( vec , dim) \
+	vec.dimension = dim; \
+	float comps##vec [dim] = { 0.0f }; \
+	vec.components = comps##vec;
+
 ///
 //A vector consists of an array of components,
 //And a dimension, or number of components.
@@ -43,6 +48,16 @@ void Vector_CopyArray(float* dest, const float* src, const int dim);
 //Checks for errors then calls Vector_CopyArray
 void Vector_Copy(Vector* dest, const Vector* src);
 
+///
+//Sets all components of the vector to 0
+//
+//Parameters:
+//	vec: The vector being zeroed
+//	dim: The number of components the vector has
+void Vector_ZeroArray(float* vec, const int dim);
+//Calls Vector_ZeroArray
+void Vecor_Zero(Vector* vec);
+
 
 ///
 //Determines the magnitude of a vector
@@ -63,15 +78,19 @@ void Vector_NormalizeArray(float* vec, const int dim);
 void Vector_Normalize(Vector* vec);
 
 ///
-//Multiplies a vector by a matrix storing the result in a new vector
+//Gets the dot product of two arrays
 //
 //Parameters:
-//	dest: the destination of the solution
-//	mat: The matrix being applied to the vector
-//	vec: The vector getting acted upon by the matrix
-//	numRows: The number of rows in the matrix
-//	numCols: The number of columns in the matrix
-//void Vector_Multiply(float* dest, const float* mat, const float* vec, const int numRows, const int numCols);
+//	vec1: Vector being dotted
+//	vec2: Other vector being dotted
+//	dim: Dimension of the two vectors
+//
+//Returns:
+//	Float representing value of the dot product
+float Vector_DotProductArray(const float* vec1, const float* vec2, const int dim);
+//Checks for errors then calls Vector_DotProductArray
+//Returns 0 on error
+float Vector_DotProduct(const Vector* vec1, const Vector* vec2);
 
 ///
 //Increments a vector by another vector

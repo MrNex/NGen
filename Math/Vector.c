@@ -66,6 +66,23 @@ void Vector_Copy(Vector* dest, const Vector* src)
 }
 
 ///
+//Sets all components of the vector to 0
+//
+//Parameters:
+//	vec: The vector being zeroed
+//	dim: The number of components the vector has
+void Vector_ZeroArray(float* vec, const int dim)
+{
+	for(int i = 0; i < dim; i++)
+		vec[i] = 0;
+}
+//Calls Vector_ZeroArray
+void Vector_Zero(Vector* vec)
+{
+	Vector_ZeroArray(vec->components, vec->dimension);
+}
+
+///
 //Determines the magnitude of a vector
 //
 //Parameters:
@@ -115,28 +132,36 @@ void Vector_NormalizeArray(float* vec, const int dim)
 }
 
 ///
-//Multiplies a vector by a matrix storing the result in a new vector
+//Gets the dot product of two arrays
 //
 //Parameters:
-//	dest: the destination of the solution
-//	mat: The matrix being applied to the vector
-//	vec: The vector getting acted upon by the matrix
-//	numRows: The number of rows in the matrix
-//	numCols: The number of columns in the matrix
-/*
-void Vector_Multiply(float* dest, const float* mat, const float* vec, const int numRows, const int numCols)
+//	vec1: Vector being dotted
+//	vec2: Other vector being dotted
+//	dim: Dimension of the two vectors
+//
+//Returns:
+//	Float representing value of the dot product
+float Vector_DotProductArray(const float* vec1, const float* vec2, const int dim)
 {
-	for(int column = 0; column < numCols; column++)
-	{
-		float dot = 0.0f;
-		for(int row = 0; row < numRows; row++)
-		{
-			dot += mat[(row * numCols) + column] * vec[row];
-		}
-		dest[column] = dot;
-	}
+	float dotProd = 0.0f;
+
+	for(int i = 0; i < dim; i++)
+		dotProd += vec1[i] * vec2[i];
+
+	return dotProd;
 }
-*/
+//Checks for errors then calls Vector_DotProductArray
+//Returns 0 on error
+float Vector_DotProduct(const Vector* vec1, const Vector* vec2)
+{
+	if(vec1->dimension != vec2->dimension)
+	{
+		printf("Vector_DotProduct failed. Operands are not of equal dimension. Returning 0.");
+		return 0.0f;
+	}
+	else
+		return Vector_DotProductArray(vec1->components, vec2->components, vec1->dimension);
+}
 
 ///
 //Increments a vector by another vector
