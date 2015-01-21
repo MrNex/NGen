@@ -5,10 +5,16 @@
 #include <windows.h>
 #endif
 
+#include <GL/glew.h>
 #include <GL/freeglut.h>
+#include <GL/gl.h>
 
-//#include "Math/Vector.h"
+
 #include "Math/Matrix.h"
+
+#include "Render/Mesh.h"
+
+Mesh* mesh;
 
 ///
 //Initializes all engine components
@@ -110,6 +116,43 @@ void Init(void)
 	Vector_PrintTranspose(&c);
 	Vector_PrintTranspose(&d);
 
+
+	struct Vertex va =
+	{
+		-1.0f,
+		-1.0f,
+		1.0f
+	};
+
+	struct Vertex vb =
+	{
+		0.0f,
+		1.0f,
+		1.0f
+	};
+
+	struct Vertex vc =
+	{
+		1.0f,
+		-1.0f,
+		1.0f
+	};
+
+	struct Triangle t = 
+	{
+		va,
+		vb,
+		vc
+	};
+
+	t.a = va;
+	t.b = vb;
+	t.c = vc;	
+	
+	mesh = Mesh_Allocate(1);
+	Mesh_Initialize(mesh, &t);
+
+
 }
 
 ///
@@ -156,6 +199,7 @@ void Draw(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//Draw code here
+	Mesh_Render(mesh);
 	
 	//Start drawing threads on gpu
 	glFlush();
@@ -179,6 +223,9 @@ int main(int argc, char* argv[])
 
 	//Window creation
 	int win = glutCreateWindow("NGen V1.0");
+
+	glewExperimental = GL_TRUE;
+	if(glewInit() != GLEW_OK) { return -1; }
 	
 
 	//Check for errors

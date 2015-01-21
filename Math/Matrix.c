@@ -324,7 +324,7 @@ void Matrix_GetProductVectorArray(float* destVector, const float* LHSMatrix, con
 		destVector[row] = 0;
 		for(int col = 0; col < LHSNumCols; col++)
 		{
-			destVector[row] += *Matrix_IndexArray(LHSMatrix, row, col, LHSNumCols) * RHSVector[col];
+			destVector[row] += Matrix_GetIndexArray(LHSMatrix, row, col, LHSNumCols) * RHSVector[col];
 		}	
 	}
 }

@@ -1,3 +1,5 @@
+#include <string.h>
+
 #define Vector_INIT_ON_STACK( vec , dim) \
 	vec.dimension = dim; \
 	float comps##vec [dim] = { 0.0f }; \
