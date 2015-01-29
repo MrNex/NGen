@@ -1,4 +1,9 @@
 # NGen
+#Project On Hold
+
+Due to this engine doubling as a platform for my coursework I am forced to halt all progress here until the end of the school year. New features currently include a 3D Camera system, an object component system, and components featuring Meshes, States, and RigidBodies.
+
+## Description
 
 A 3D Game / Simulation API for the C programming language.
 
