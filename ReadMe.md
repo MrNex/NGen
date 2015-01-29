@@ -1,7 +1,7 @@
 # NGen
 #Project On Hold
 
-Due to this engine doubling as a platform for my coursework I am forced to halt all progress here until the end of the school year. New features currently include a 3D Camera system, an object component system, and components featuring Meshes, States, and RigidBodies.
+Due to this engine doubling as a platform for my coursework I am forced to halt all progress here until the end of May. New features currently include a rendering manager, an input manager, an 3D Camera system, an object component based system, and components featuring Meshes, States, and RigidBodies.
 
 ## Description
 
