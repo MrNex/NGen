@@ -1,4 +1,4 @@
-#include <windows.h>
+//#include <windows.h>
 
 #include <GL/glew.h>
 #include <GL/freeglut.h>

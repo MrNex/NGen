@@ -1,6 +1,7 @@
 #include "Mesh.h"
 
 #include <stdio.h>
+#include <string.h>
 
 ///
 //Allocates memory for a new Mesh
@@ -97,7 +98,6 @@ void Mesh_Free(Mesh* m)
 //	m:The mesh to render
 void Mesh_Render(Mesh* m)
 {
-	printf("Binding");
 	glBindVertexArray(m->VAO);
 
 	glDrawArrays(
@@ -105,8 +105,6 @@ void Mesh_Render(Mesh* m)
 	/*Offset*/	0,
 	/*numVertices*/	m->numTriangles * 3
 	);
-
-	printf("Drawing");
 }
 
 
