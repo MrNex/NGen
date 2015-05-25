@@ -1,11 +1,19 @@
+#ifndef MESH
+#define MESH
+
 //#include <windows.h>
 
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+#include "../Math/Matrix.h"
+
+
 struct Vertex
 {
 	float x, y, z;		//Position
+	float tx, ty;		//Texture coordinates
+	float nx, ny, nz;	//Normal
 };
 
 struct Triangle
@@ -19,6 +27,8 @@ typedef struct Mesh
 	GLuint VBO;
 	unsigned int numTriangles;
 	struct Triangle* triangles;
+	GLenum primitive;
+	GLenum usagePattern;
 } Mesh;
 
 ///
@@ -29,7 +39,7 @@ typedef struct Mesh
 //
 //Returns:
 //	Pointer to a new mesh
-Mesh* Mesh_Allocate(unsigned int numTriangles);
+Mesh* Mesh_Allocate();
 
 ///
 //Initializes a mesh
@@ -37,14 +47,17 @@ Mesh* Mesh_Allocate(unsigned int numTriangles);
 //Parameters:
 //	m: The mesh to initialize
 //	tris: An array of triangles representing the mesh
-void Mesh_Initialize(Mesh* m, struct Triangle* tris);
+//	numTriangles: the amount of triangles
+//	usagePattern: The usage pattern of the mesh's data (GL_STATIC_DRAW | GL_STREAM_DRAW | GL_DYNAMIC_DRAW)
+void Mesh_Initialize(Mesh* m, struct Triangle* tris, unsigned int numTriangles, GLenum usagePattern);
 
 ///
 //Generates Vertex buffer & array objects for a mesh
 //
 //Parameters:
 //	m: The mesh to generate VBO & VAO for
-static void GenerateBuffers(Mesh* m);
+//	usagePattern: The usage pattern of the mesh's data (GL_STATIC_DRAW | GL_STREAM_DRAW | GL_DYNAMIC_DRAW)
+static void GenerateBuffers(Mesh* m, GLenum usagePattern);
 
 ///
 //Frees a mesh from memory
@@ -54,8 +67,33 @@ static void GenerateBuffers(Mesh* m);
 void Mesh_Free(Mesh* m);
 
 ///
+//Calculates the centroid of a CLOSED mesh. A closed mesh
+//constitutes a mesh which is composed of outward facing faces. This is to say that
+//in order to view any face from the inside out you would first need to clip through a face facing you.
+//
+//Parameters:
+//	dest: A pointer to the vector to store the centroid
+//	mesh: The mesh to calculate the centroid of
+void Mesh_CalculateCentroid(Vector* dest, const Mesh* mesh);
+
+///
+//Calculates the maximum dimensions of a meshes model space
+//That is the furthest X, Y, and Z values of any point from the centroid of the mesh
+//
+//Parameters:
+//	dest: A pointer to The vector (of dimension 3) to store the maximum dimensions in
+//	mesh: A pointer to The mesh to calculate the maximum dimensions of
+//	centroid: A pointer to a vector containing the center of a mesh
+void Mesh_CalculateMaxDimensions(Vector* dest, const Mesh* mesh, const Vector* centroid);
+
+///
 //Renders a mesh
 //
 //Parameters:
 //	m: The mesh to render
-void Mesh_Render(Mesh* m);
+void Mesh_Render(Mesh* m, GLenum renderMode);
+
+
+
+
+#endif
