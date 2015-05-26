@@ -6,6 +6,7 @@
 #define windows
 #endif
 
+
 #if defined __linux__
 #define linux
 
@@ -17,9 +18,9 @@
 #endif
 //#define _POSIX_C_SOURCE 1
 
-#endif
-
 #include <time.h>
+
+#endif
 
 
 #ifdef windows

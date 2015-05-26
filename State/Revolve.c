@@ -1,6 +1,21 @@
-#include "RevolutionState.h"
+#if defined __linux__
 
-#include "TimeManager.h"
+//Enable POSIX definitions (for timespec)
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif
+//#define _POSIX_C_SOURCE 1
+
+#include <time.h>
+
+#endif 
+
+
+#include "Revolve.h"
+
+#include "../Manager/TimeManager.h"
 
 struct State_Revolution_Members
 {

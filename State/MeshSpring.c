@@ -1,9 +1,24 @@
+#if defined __linux__
+
+//Enable POSIX definitions (for timespec)
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif
+//#define _POSIX_C_SOURCE 1
+
+#include <time.h>
+
+#endif 
+
+
 #include "MeshSpring.h"
 
-#include "TimeManager.h"
-#include "InputManager.h"
+#include "../Manager/TimeManager.h"
+#include "../Manager/InputManager.h"
 
-#include "DynamicArray.h"
+#include "../Data/DynamicArray.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -83,7 +98,7 @@ void State_MeshSpringState_Initialize(State* state, Mesh* grid, unsigned int gri
 			{
 				unsigned int nodeIndex = i + j * gridWidth + k * gridWidth * gridHeight;
 				members->nodes[nodeIndex].vertex.dimension = 3;
-				members->nodes[nodeIndex].vertex.components = (float*)(((Vertex*)grid->triangles) + nodeIndex);
+				members->nodes[nodeIndex].vertex.components = (float*)(((struct Vertex*)grid->triangles) + nodeIndex);
 
 				members->numNodes++;
 

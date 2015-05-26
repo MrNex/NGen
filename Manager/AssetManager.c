@@ -36,7 +36,6 @@ AssetBuffer AssetManager_GetAssetBuffer(void)
 //Loads all of the engines assets into the internal asset buffer
 void AssetManager_LoadAssets(void)
 {
-	/*
 	//Load meshes
 	HashMap_Add(assetBuffer->meshMap, "Cube", Loader_LoadOBJFile("./Assets/Models/cube.obj"), strlen("Cube"));
 	//HashMap_Add(assetBuffer->meshMap, "Cube", Generator_GenerateCubeMesh(2.0f));
@@ -117,7 +116,6 @@ void AssetManager_LoadAssets(void)
 	t = Texture_Allocate();
 	Texture_Initialize(t, i);
 	HashMap_Add(assetBuffer->textureMap, "Table", t, strlen("Table"));
-	*/
 }
 
 ///

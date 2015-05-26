@@ -1,6 +1,5 @@
 ##
-#Working through main
-#Just finished RenderingManager
+#Working through State Implementations
 
 CC=gcc
 CFLAGS=-std=c99 -Wall -pedantic -Wextra
@@ -22,6 +21,18 @@ OBJ= \
 	Bin/ShaderProgram.o \
 	Bin/Camera.o \
 	Bin/State.o \
+	Bin/ApplyForce.o \
+	Bin/CharacterController.o \
+	Bin/FirstPersonCamera.o \
+	Bin/MeshSpring.o \
+	Bin/MeshSwap.o \
+	Bin/Remove.o \
+	Bin/Reset.o \
+	Bin/Revolve.o \
+	Bin/Rotate.o \
+	Bin/RotateCoordinateAxis.o \
+	Bin/Score.o \
+	Bin/Spring.o \
 	Bin/RigidBody.o \
 	Bin/SphereCollider.o \
 	Bin/AABBCollider.o \
@@ -90,6 +101,42 @@ Bin/Texture.o: Render/Texture.c Render/Texture.h Bin/Image.o
 ##
 #State
 Bin/State.o: State/State.c State/State.h
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/ApplyForce.o: State/ApplyForce.c State/ApplyForce.h Bin/State.o Bin/GObject.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/CharacterController.o: State/CharacterController.c State/CharacterController.h Bin/State.o Bin/GObject.o Bin/InputManager.o Bin/RenderingManager.o Bin/AssetManager.o Bin/TimeManager.o Bin/PhysicsManager.o Bin/ObjectManager.o Bin/Remove.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/FirstPersonCamera.o: State/FirstPersonCamera.c State/FirstPersonCamera.h Bin/State.o Bin/InputManager.o Bin/RenderingManager.o Bin/TimeManager.o Bin/PhysicsManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/MeshSwap.o: State/MeshSwap.c State/MeshSwap.h Bin/State.o Bin/GObject.o Bin/InputManager.o Bin/AssetManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/MeshSpring.o: State/MeshSpring.c State/MeshSpring.h Bin/State.o Bin/Mesh.o Bin/TimeManager.o Bin/InputManager.o Bin/DynamicArray.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/Remove.o: State/Remove.c State/Remove.h Bin/State.o Bin/GObject.o Bin/TimeManager.o Bin/ObjectManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/Reset.o: State/Reset.c State/Reset.h Bin/State.o Bin/GObject.o Bin/TimeManager.o Bin/ObjectManager.o Bin/CollisionManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/Revolve.o: State/Revolve.c State/Revolve.h Bin/State.o Bin/GObject.o Bin/Vector.o Bin/TimeManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/Rotate.o: State/Rotate.c State/Rotate.h Bin/State.o Bin/GObject.o Bin/Vector.o Bin/TimeManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/RotateCoordinateAxis.o: State/RotateCoordinateAxis.c State/RotateCoordinateAxis.h Bin/State.o Bin/GObject.o Bin/Vector.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/Score.o: State/Score.c State/Score.h Bin/State.o Bin/GObject.o Bin/CollisionManager.o Bin/TimeManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/Spring.o: State/Spring.c State/Spring.h Bin/State.o Bin/GObject.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##

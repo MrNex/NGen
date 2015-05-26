@@ -1,8 +1,24 @@
+#if defined __linux__
+#define linux
+
+//Enable POSIX definitions (for timespec)
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif
+//#define _POSIX_C_SOURCE 1
+
+#include <time.h>
+
+#endif
+
+
 #include "Score.h"
 #include <stdio.h>
 
-#include "CollisionManager.h"
-#include "TimeManager.h"
+#include "../Manager/CollisionManager.h"
+#include "../Manager/TimeManager.h"
 
 struct State_Score_Members
 {
@@ -58,13 +74,13 @@ void State_Score_Update(GObject* GO, State* state)
 		if(GO->collider->currentCollisions->size > 0)
 		{
 			//Loop through the collisions which occurred previous frame
-			LinkedList_Node* current = GO->collider->currentCollisions->head;
-			Collision* currentCollision;
+			struct LinkedList_Node* current = GO->collider->currentCollisions->head;
+			struct Collision* currentCollision;
 			while(current != NULL)
 			{
 				//Check if any of the objects involved in the collision are a bullet
 				//TODO: MAke a tagging system so this doesn't need to happen
-				currentCollision = (Collision*)current->data;
+				currentCollision = (struct Collision*)current->data;
 				//Bullets are the only thing with a scale of 0.3
 				if(currentCollision->obj1->frameOfReference->scale->components[0] == 0.9f || currentCollision->obj2->frameOfReference->scale->components[0] == 0.9f)
 				{

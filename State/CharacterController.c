@@ -1,13 +1,28 @@
-nclude "CharacterController.h"
+#if defined __linux__
 
-#include "InputManager.h"
-#include "RenderingManager.h"
-#include "AssetManager.h"
-#include "TimeManager.h"
-#include "PhysicsManager.h"
-#include "ObjectManager.h"
+//Enable POSIX definitions (for timespec)
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif
+//#define _POSIX_C_SOURCE 1
 
-#include "RemoveState.h"
+#include <time.h>
+
+#endif 
+
+
+#include "CharacterController.h"
+
+#include "../Manager/InputManager.h"
+#include "../Manager/RenderingManager.h"
+#include "../Manager/AssetManager.h"
+#include "../Manager/TimeManager.h"
+#include "../Manager/PhysicsManager.h"
+#include "../Manager/ObjectManager.h"
+
+#include "Remove.h"
 
 #include <stdio.h>
 
@@ -34,7 +49,7 @@ struct State_CharacterController_Members
 // Initialize the character State
 // Param:
 //  s: The state of intiialize
-void State_CharacterController_Initialize(State* s, float velocity, float angularVelocity, float maxVel, float shootSpeed)
+void State_CharacterController_Initialize(State* s, const float velocity, const float angularVelocity, float maxVel, float shootSpeed)
 {
 	s->members = (State_Members)malloc(sizeof(struct State_CharacterController_Members));
 	//Get members
@@ -193,12 +208,16 @@ void State_CharacterController_Translate(GObject* GO, State* state)
 			Vector_GetProjection(&perpMvmtVec, &netMvmtVec, &Vector_E2);
 			Vector_Decrement(&netMvmtVec, &perpMvmtVec);
 
+
 			// Normalize vector and scale
 			Vector_Normalize(&netMvmtVec);
 			Vector_Scale(&netMvmtVec, members->movementSpeed);
 
+
 			//Apply Impulse
 			RigidBody_ApplyImpulse(GO->body, &netMvmtVec, &Vector_ZERO);
+
+
 
 
 		}

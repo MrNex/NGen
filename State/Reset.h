@@ -2,7 +2,7 @@
 #define STATE_RESET_H
 
 #include "State.h"
-#include "GObject.h"
+#include "../GObject/GObject.h"
 
 ///
 //Initializes a reset state

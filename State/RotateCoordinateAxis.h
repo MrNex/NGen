@@ -1,8 +1,8 @@
 #ifndef STATE_ROTATECOORDINATEAXIS_H
 #define STATE_ROTATECOORDINATEAXIS_H
 #include "State.h"
-#include "GObject.h"
-#include "Vector.h"
+#include "../GObject/GObject.h"
+#include "../Math/Vector.h"
 
 
 ///

@@ -2,7 +2,7 @@
 #define STATE_MESHSPRING_H
 
 #include "State.h"
-#include "Mesh.h"
+#include "../Render/Mesh.h"
 
 ///
 //Initializes a mesh spring state

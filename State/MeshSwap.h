@@ -2,7 +2,7 @@
 #define STATE_MESHSWAP_H
 
 #include "State.h"
-#include "GObject.h"
+#include "../GObject/GObject.h"
 
 ///
 //Initializes a mesh swap state

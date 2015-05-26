@@ -1,7 +1,7 @@
 #include "MeshSwap.h"
 
-#include "InputManager.h"
-#include "AssetManager.h"
+#include "../Manager/InputManager.h"
+#include "../Manager/AssetManager.h"
 
 
 //This state needs no members.

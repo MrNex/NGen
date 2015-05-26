@@ -2,8 +2,8 @@
 #define STATE_ROTATE_H
 
 #include "State.h"
-#include "GObject.h"
-#include "Vector.h"
+#include "../GObject/GObject.h"
+#include "../Math/Vector.h"
 
 ///
 //Initializes a rotation state

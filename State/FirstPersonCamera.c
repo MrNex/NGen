@@ -1,9 +1,24 @@
-include "FirstPersonCamera.h"
+#if defined __linux__
 
-#include "InputManager.h"
-#include "RenderingManager.h"
-#include "TimeManager.h"
-#include "PhysicsManager.h"
+//Enable POSIX definitions (for timespec)
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif
+//#define _POSIX_C_SOURCE 1
+
+#include <time.h>
+
+#endif 
+
+
+#include "FirstPersonCamera.h"
+
+#include "../Manager/InputManager.h"
+#include "../Manager/RenderingManager.h"
+#include "../Manager/TimeManager.h"
+#include "../Manager/PhysicsManager.h"
 
 #include <stdio.h>
 

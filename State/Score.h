@@ -2,7 +2,7 @@
 #define STATE_SCORE_H
 
 #include "State.h"
-#include "GObject.h"
+#include "../GObject/GObject.h"
 
 static int score = 0;
 

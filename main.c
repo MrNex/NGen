@@ -34,10 +34,10 @@
 #include "Manager/CollisionManager.h"
 #include "Manager/PhysicsManager.h"
 
-//#include "ScoreState.h"
-//#include "ResetState.h"
+#include "State/Score.h"
+#include "State/Reset.h"
 //#include "SpringState.h"
-//#include "ForceState.h"
+#include "State/ApplyForce.h"
 
 #include "Math/Matrix.h"
 
@@ -48,7 +48,7 @@
 //#include "SpringState.h"
 //#include "MeshSwapState.h"
 //#include "MeshSpringState.h"
-//#include "CharacterController.h"
+#include "State/CharacterController.h"
 
 #include "Data/LinkedList.h"
 #include "Data/DynamicArray.h"
@@ -81,7 +81,7 @@ void CheckGLErrors(void)
 	}
 }
 
-/*
+
 /// AddTrashCan Function
 // 
 //Definition:
@@ -261,7 +261,7 @@ void AddMovingTarget(GObject* obj, float ObjX, float ObjY, float ObjZ, float Spr
 	// add it 
 	ObjectManager_AddObject(obj);
 }
-*/
+
 
 ///
 //Initializes the scene within the engine,
@@ -269,7 +269,6 @@ void AddMovingTarget(GObject* obj, float ObjX, float ObjY, float ObjZ, float Spr
 //This is all components excluding the TimeManager.
 void InitializeScene(void)
 {
-	/*
 	///
 	//Camera controller simulation
 	GObject* cam = GObject_Allocate();
@@ -277,7 +276,7 @@ void InitializeScene(void)
 
 	State* state = State_Allocate();
 
-	State_CharacterController_Initialize(state,7.0f, 0.005f, 10.0f, 1.0f);
+	State_CharacterController_Initialize(state, 7.0f, 0.005f, 10.0f, 1.0f);
 
 	GObject_AddState(cam,state);
 	//cam->mesh = AssetManager_LookupMesh("Cube");
@@ -661,7 +660,6 @@ void InitializeScene(void)
 	gravity->components[1] = -9.81f;
 	
 	PhysicsManager_AddGlobalAcceleration(gravity);
-	*/
 }
 
 ///

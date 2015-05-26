@@ -1,7 +1,21 @@
-#include "Rotate.h"
-#include "GObject.h"
+#if defined __linux__
 
-#include "TimeManager.h"
+//Enable POSIX definitions (for timespec)
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif
+//#define _POSIX_C_SOURCE 1
+
+#include <time.h>
+
+#endif 
+
+
+#include "Rotate.h"
+
+#include "../Manager/TimeManager.h"
 
 struct State_Rotate_Members
 {
@@ -59,8 +73,7 @@ void State_Rotate_Update(GObject* GO, State* state)
 	//Get members as a State_Rotate_Members struct
 	struct State_Rotate_Members* members = (struct State_Rotate_Members*)state->members;
 
-	long long dtl = TimeManager_GetTimeBuffer().deltaTime->QuadPart;
-	float dt = (float)dtl / 1000000.0f;
+	float dt = TimeManager_GetDeltaSec();
 	GObject_Rotate(GO, members->axis, members->angularVelocity * dt);
 }
 

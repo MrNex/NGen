@@ -1,7 +1,23 @@
+#if defined __linux__
+
+//Enable POSIX definitions (for timespec)
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif
+//#define _POSIX_C_SOURCE 1
+
+#include <time.h>
+
+#endif 
+
+
 #include "Remove.h"
 
-#include "TimeManager.h"
-#include "ObjectManager.h"
+
+#include "../Manager/TimeManager.h"
+#include "../Manager/ObjectManager.h"
 
 struct State_Remove_Members
 {

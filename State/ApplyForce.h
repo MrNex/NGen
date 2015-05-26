@@ -1,8 +1,8 @@
-ifndef STATE_FORCE_H
+#ifndef STATE_FORCE_H
 #define STATE_FORCE_H
 
 #include "State.h"
-#include "GObject.h"
+#include "../GObject/GObject.h"
 
 ///
 //Initializes a new force state
