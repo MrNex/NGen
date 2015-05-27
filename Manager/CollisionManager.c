@@ -1,6 +1,117 @@
 #include "CollisionManager.h"
 #include <stdio.h>
 #include <math.h>
+
+///
+//Declarations
+
+///
+//Allocates memory for a new collision buffer
+//
+//Returns:
+//      pointer to a newly allocated collision buffer
+static CollisionBuffer* CollisionManager_AllocateBuffer(void);
+
+///
+//Initializes a collision buffer
+//
+//Parameters:
+//      buffer: The buffer to initialize
+static void CollisionManager_InitializeBuffer(CollisionBuffer* buffer);
+
+///
+//Frees resources allocated by a collision buffer
+//
+//Parameters:
+//      buffer: A pointer to The collision buffer to free
+static void CollisionManager_FreeBuffer(CollisionBuffer* buffer);
+
+///
+//Allocates memory for a new collision
+//
+//Returns:
+//      Pointer to a newly allocated collision
+static struct Collision* CollisionManager_AllocateCollision(void);
+
+///
+//Initializes a collision
+//All members of the collision are set to NULL with the exception of the MTV
+//
+//PArameters:
+//      collision: The collision to initialize
+static void CollisionManager_InitializeCollision(struct Collision* collision);
+
+///
+//Tests for collisions on all objects within an oct tree node appending to a list of collisions which occur
+//
+//Parameters:
+//      node: A pointer to the node of the oct tree to check
+static void CollisionManager_UpdateOctTreeNode(struct OctTree_Node* node);
+
+///
+//Tests for collisions on an array of objects within an oct tree node appending to a list of collisions which occur
+//
+//Parameters:
+//      gameObjects: An array of pointers to game objects to check collisions
+//      numObjects: The number of objects in the array
+static void CollisionManager_UpdateOctTreeNodeArray(GObject** gameObjects, unsigned int numObjects);
+
+///
+//Performs the Separating Axis Theorem test with face normals
+//
+//Parameters:
+//      dest: A pointer to a collision to store the results of the test in. Results will not be stored if the test detects no collision
+//      orientedAxes1: An array of pointers to vectors representing the oriented axes of object 1 involved in the test
+//      numAxes1: The number of axes belonging to object 1
+//      orientedPoints1: An array of pointers to vectors representing the oriented points of object 1 involved in the test
+//      numPoints1: The number of points belonging to object 1
+//      orientedAxes2: An array of pointersto vectors representing the oriented axes of object 2 involved in the test
+//      numAxes2: The number of axes belonging to object 2
+//      orientedPoints2: An array of pointers to vectors representing the oriented points of object 2 involved in the test
+//      numPoints2: The number of points belonging to object 2
+//
+//Returns:
+//      0 if the test detects no collision
+//      1 if the test detects a collision
+static unsigned char CollisionManager_PerformSATFaces(struct Collision* dest,
+                                                                                const Vector** orientedAxes1, const unsigned int numAxes1,
+                                                                                const Vector** orientedPoints1, const unsigned int numPoints1,
+                                                                                const Vector** orientedAxes2, const unsigned int numAxes2,
+                                                                                const Vector** orientedPoints2, const unsigned int numPoints2);
+
+///
+//Performs the Separating axis theorem test with face normals
+//
+//Parameters:
+//      dest: A pointer to the collision to store the results of the test in. Resultswill not be stored if the test detects no collisions
+//      orientedEdges1: An array of pointers to vectors representing the oriented edges of object 1
+//      numEdges1: The number of edges belonging to object 1
+//      orientedPoints1: An array of pointers to vectors representing the oriented points of object 1
+//      numPoints1: The number of points belonging to object 1
+//      orientedEdges2: An array of pointers to vectors representing the oriented edges of object 2
+//      numEdges2: The number of edges belonging to object 2
+//  orientedPoints2: An array of pointers to vectors representing the oriented points of object 2
+//      numPoints2: the number of points belonging to object 2
+static unsigned char CollisionManager_PerformSATEdges(struct Collision* dest,
+                                                                                const Vector** orientedEdges1, const unsigned int numEdges1,
+                                                                                const Vector** orientedPoints1, const unsigned int numPoints1,
+                                                                                const Vector** orientedEdges2, const unsigned int numEdges2,
+                                                                                const Vector** orientedPoints2, const unsigned int numPoints2);
+
+///
+//Projects a set of points onto a normalized axis getting the squared magnitude of the projection vector.
+//Finds the minimum and maximum values of the point set projected onto the axis.
+//
+//Parameters:
+//      dest: The destination of the projection bounds
+//      axis: The axis projecting onto
+//      points: The set of points to project onto the axis
+static void CollisionManager_GetProjectionBounds(struct ProjectionBounds* dest, const Vector* axis, const Vector** points, const int numPoints);
+
+
+///
+//Implementations
+
 ///
 //Initializes the Collision Manager
 void CollisionManager_Initialize(void)
