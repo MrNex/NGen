@@ -20,6 +20,8 @@
 #include "../Manager/CollisionManager.h"
 #include "../Manager/TimeManager.h"
 
+int score = 0;
+
 struct State_Score_Members
 {
 	int worth;

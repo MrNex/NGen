@@ -4,7 +4,7 @@
 #include "State.h"
 #include "../GObject/GObject.h"
 
-static int score = 0;
+extern int score;
 
 ///
 //Initializes a new score state
