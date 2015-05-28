@@ -55,7 +55,7 @@ typedef struct TimeBuffer
 
 
 //Internals
-static TimeBuffer* timeBuffer;
+extern TimeBuffer* timeBuffer;
 
 //Functions
 

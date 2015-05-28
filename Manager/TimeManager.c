@@ -7,6 +7,15 @@
 
 //#include "InputManager.h"
 
+///
+//Declarations
+
+TimeBuffer* timeBuffer;
+
+
+///
+//Implementations
+
 
 ///
 //Gets the internal time buffer from the time manager

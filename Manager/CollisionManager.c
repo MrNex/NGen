@@ -4,6 +4,7 @@
 
 ///
 //Declarations
+CollisionBuffer* collisionBuffer;
 
 ///
 //Allocates memory for a new collision buffer

@@ -10,31 +10,11 @@ typedef struct AssetBuffer
 	HashMap* textureMap;
 } AssetBuffer;
 
+///
 //Internals
-static AssetBuffer* assetBuffer;
+extern AssetBuffer* assetBuffer;
 
 ///
-//Allocates a new AssetBuffer
-//
-//Returns:
-//	Pointer to a newly allocated uninitialized asset buffer
-static AssetBuffer* AssetManager_AllocateBuffer(void);
-
-///
-//Initializes an asset buffer
-//
-//Parameters:
-//	buffer: pointer to the buffer to initialize
-static void AssetManager_InitializeBuffer(AssetBuffer* buffer);
-
-///
-//Frees resuorces allocated by an Asset Buffer
-//Deletes data being held in buffer!!
-//
-//PArameters:
-//	buffer: pointer to The buffer to free
-static void AssetManager_FreeBuffer(AssetBuffer* buffer);
-
 //Functions
 
 ///

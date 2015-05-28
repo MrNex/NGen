@@ -29,7 +29,7 @@ struct ProjectionBounds
 	float min, max;
 };
 
-static CollisionBuffer* collisionBuffer;
+extern CollisionBuffer* collisionBuffer;
 
 ///
 //Frees the memory allocated for a collision.
