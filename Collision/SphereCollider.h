@@ -7,7 +7,7 @@
 
 
 //Forward declaration of Collider to avoid circular dependency
-typedef struct Collider Collider;
+struct Collider;
 //typedef enum ColliderType;
 
 
@@ -32,7 +32,7 @@ struct ColliderData_Sphere* SphereCollider_AllocateData();
 //	rad: The radius of the collider to initialize
 //TODO:
 //	centroid: A pointer to a vector to copy as the centroid of the sphere collider
-void SphereCollider_Initialize(Collider* collider, const float rad);
+void SphereCollider_Initialize(struct Collider* collider, const float rad);
 
 ///
 //Frees a sphere collider data set

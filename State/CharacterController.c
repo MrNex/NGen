@@ -85,6 +85,9 @@ void State_CharacterController_Update(GObject* GO, State* state)
 // This should need no changes?
 void State_CharacterController_Rotate(GObject* GO, State* state)
 {
+	//GO is unused
+	(void)GO;
+
 	// create a camera object
 	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
 	//Get members
@@ -108,7 +111,7 @@ void State_CharacterController_Rotate(GObject* GO, State* state)
 			axis->components[1] = 1.0f;
 			// rotate the camera
 			//Camera_Rotate(cam,axis,state->members->rotationSpeed * deltaMouseX);
-			Camera_ChangeYaw(cam, members->rotationSpeed * deltaMouseX);
+			Camera_ChangeYaw(cam, members->rotationSpeed * deltaMouseX * dt);
 			axis->components[1] = 0.0f;
 		}
 
@@ -124,7 +127,7 @@ void State_CharacterController_Rotate(GObject* GO, State* state)
 				if (Vector_DotProduct(&forwardVector, &Vector_E2) < 0.7f)
 				{
 					axis->components[0] = 1.0f;
-					Camera_ChangePitch(cam, members->rotationSpeed * deltaMouseY);
+					Camera_ChangePitch(cam, members->rotationSpeed * deltaMouseY * dt);
 					axis->components[0] = 0.0f;
 				}
 			}
@@ -133,7 +136,7 @@ void State_CharacterController_Rotate(GObject* GO, State* state)
 				if (Vector_DotProduct(&forwardVector, &Vector_E2) > -0.7f)
 				{
 					axis->components[0] = 1.0f;
-					Camera_ChangePitch(cam, members->rotationSpeed * deltaMouseY);
+					Camera_ChangePitch(cam, members->rotationSpeed * deltaMouseY * dt);
 					axis->components[0] = 0.0f;
 				}
 			}
@@ -159,9 +162,6 @@ void State_CharacterController_Translate(GObject* GO, State* state)
 
 	if(InputManager_GetInputBuffer().mouseLock)
 	{
-
-		// Gets the time per second
-		float dt = TimeManager_GetDeltaSec();
 		Vector netMvmtVec;
 		Vector partialMvmtVec;
 		Vector_INIT_ON_STACK(netMvmtVec, 3);

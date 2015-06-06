@@ -72,7 +72,10 @@ void State_FirstPersonCamera_Update(GObject* GO, State* state)
 	State_FirstPersonCamera_Translate(GO, state);
 	State_FirstPersonCamera_Skew(GO, state);
 
-		//Experimental feature
+	/*
+	TODO: Program this feature into it's own state
+
+	//Experimental feature
 	if(InputManager_IsKeyDown('o'))
 	{
 		//Get Camera
@@ -82,17 +85,18 @@ void State_FirstPersonCamera_Update(GObject* GO, State* state)
 		PhysicsBuffer* buffer = PhysicsManager_GetPhysicsBuffer();
 
 		//Get the global gravity force
-		//Vector* gravity = (Vector*)buffer->globalForces->head->data;
+		Vector* gravity = (Vector*)buffer->globalForces->head->data;
 
 		//Get z axis from camera
-		//Vector zAxis;
-		//Vector_INIT_ON_STACK(zAxis, 3);
+		Vector zAxis;
+		Vector_INIT_ON_STACK(zAxis, 3);
 
-		//Matrix_SliceRow(&zAxis, cam->rotationMatrix, 2, 0, 3);
-		//Vector_Scale(&zAxis, -1.0f);
+		Matrix_SliceRow(&zAxis, cam->rotationMatrix, 2, 0, 3);
+		Vector_Scale(&zAxis, -1.0f);
 
-		//Vector_Copy(gravity, &zAxis);
+		Vector_Copy(gravity, &zAxis);
 	}
+	*/
 
 }
 
@@ -104,6 +108,9 @@ void State_FirstPersonCamera_Update(GObject* GO, State* state)
 //	state: The First person camera state updating the gameObject
 void State_FirstPersonCamera_Rotate(GObject* GO, State* state)
 {
+	//GO is unused
+	(void)GO;
+
 
 	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
 
@@ -125,7 +132,7 @@ void State_FirstPersonCamera_Rotate(GObject* GO, State* state)
 
 
 			axis->components[1] = 1.0f;
-			Camera_Rotate(cam, axis, members->rotationSpeed * deltaMouseX);
+			Camera_Rotate(cam, axis, members->rotationSpeed * deltaMouseX * dt);
 			axis->components[1] = 0.0f;
 		}
 
@@ -133,7 +140,7 @@ void State_FirstPersonCamera_Rotate(GObject* GO, State* state)
 		{
 			axis->components[0] = 1.0f;
 
-			Camera_Rotate(cam, axis, members->rotationSpeed * deltaMouseY);
+			Camera_Rotate(cam, axis, members->rotationSpeed * deltaMouseY * dt);
 			axis->components[0] = 0.0f;
 		}
 
@@ -151,6 +158,9 @@ void State_FirstPersonCamera_Rotate(GObject* GO, State* state)
 //	state: the First Person Camera State updating the gameObject
 void State_FirstPersonCamera_Translate(GObject* GO, State* state)
 {
+	//GO is unused
+	(void)GO;
+
 	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
 
 	if(InputManager_GetInputBuffer().mouseLock)
@@ -216,7 +226,13 @@ void State_FirstPersonCamera_Translate(GObject* GO, State* state)
 //	state: The First person camera state updating the gameObject
 void State_FirstPersonCamera_Skew(GObject* GO, State* state)
 {
-	//TODO: Write Skew code here
+	//GO is unused
+	(void)GO;
+	//TODO: put the skew factor into the state members
+	//But it is unused for now
+	(void)state;
+
+
 	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
 
 	if(InputManager_IsKeyDown('='))

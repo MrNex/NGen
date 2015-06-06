@@ -7,7 +7,7 @@
 #include "ConvexHullCollider.h"
 
 //Forward declaration of Collider to avoid circular dependency
-typedef struct Collider Collider;
+struct Collider;
 //enum ColliderType;
 
 
@@ -48,7 +48,7 @@ void AABBCollider_InitializeData(struct ColliderData_AABB* AABB, const float wid
 //	height: The height of the bounding box
 //	depth: The depth of the bounding box
 //	Centroid: A pointer to a vector to copy as the centroid of te AABB
-void AABBCollider_Initialize(Collider* collider, float width, float height, float depth, const Vector* centroid);
+void AABBCollider_Initialize(struct Collider* collider, float width, float height, float depth, const Vector* centroid);
 
 ///
 //Initializes an axis aligned bounding box collider fit to a given mesh
@@ -56,7 +56,7 @@ void AABBCollider_Initialize(Collider* collider, float width, float height, floa
 //Parameters:
 //	collider: The collider to initialize
 //	mesh: The mesh to base the AABB collider's dimensions off of
-void AABBCollider_InitializeFromMesh(Collider* collider, const Mesh* mesh);
+void AABBCollider_InitializeFromMesh(struct Collider* collider, const Mesh* mesh);
 
 ///
 //Frees an axis aligned collider data set

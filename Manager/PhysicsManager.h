@@ -72,11 +72,12 @@ void PhysicsManager_UpdateBodies(LinkedList* gameObjects);
 
 ///
 //Applies all global forces to the given rigidbody
+//And global accelerations
 //
 //Parameters:
 //	body: The rigidbody to apply global forces to
 //	dt: The change in type since last update
-void PhysicsManager_ApplyGlobalForces(RigidBody* body, float dt);
+void PhysicsManager_ApplyGlobals(RigidBody* body);
 
 ///
 //Updates the linear physics of a rigidbody

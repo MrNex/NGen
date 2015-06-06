@@ -137,12 +137,9 @@ static void PhysicsManager_DetermineCollisionPointConvexHullEdge(Vector* dest,
 //Parameters:
 //      dest: A pointer to he vector to store the collision in
 //      furthestOnHull1: A pointer to the dynamic array of vectors containing the vertices IN WORLDSPACE belonging to convexHull1 furthest in the direction of it's respective MTV
-//      convexFrame1: A pointer to the frame of reference of the convex hull which the vertices from furthestOnHull1 belong
 //      furthestOnHull2: A pointer to the dynamic array of vectors containing the vertices IN WORLDSPACE belongong to convexHull2 furthest in the direction of it's respective MTV
-//      convexFrame2: A pointer to the frame of reference of the convex hull whch the vertices from furthestOnHull2 belong
 static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest,
-                                                                                                                          const DynamicArray* furthestOnHull1, const FrameOfReference* convexFrame1, 
-                                                                                                                          const DynamicArray* furthestOnHull2, const FrameOfReference* convexFrame2);
+	const DynamicArray* furthestOnHull1, const DynamicArray* furthestOnHull2);
 
 ///
 //Calculates and imparts the resulting collision impulse from the collision 
@@ -160,7 +157,7 @@ static void PhysicsManager_ApplyCollisionImpulses(struct Collision* collision, c
 //      pointsOfCollision: An array of 2 pointers to vectors in 3 space representing the point of collision in global space for obj1 and obj2 respectively
 //      staticCoefficient: The static coefficient of friction between the two colliding surfaces
 //      dynamicCoefficient: The dynamic coefficient of friction between the two colliding surfaces
-static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* collision, const Vector** pointsOfCollision, const float staticCoefficient, const float dynamicCoefficient);
+static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient);
 
 ///
 //Calculates and applies the angular frictional forces when two objects spin against each other
@@ -308,7 +305,7 @@ void PhysicsManager_UpdateBodies(LinkedList* gameObjects)
 		{
 			if( gameObject->body->physicsOn)
 			{
-				PhysicsManager_ApplyGlobalForces(gameObject->body, dt);
+				PhysicsManager_ApplyGlobals(gameObject->body);
 				PhysicsManager_UpdateLinearPhysicsOfBody(gameObject->body, dt);
 				PhysicsManager_UpdateRotationalPhysicsOfBody(gameObject->body, dt);
 			}
@@ -326,7 +323,7 @@ void PhysicsManager_UpdateBodies(LinkedList* gameObjects)
 //Parameters:
 //	body: The rigidbody to apply global forces to
 //	dt: The change in type since last update
-void PhysicsManager_ApplyGlobalForces(RigidBody* body, float dt)
+void PhysicsManager_ApplyGlobals(RigidBody* body)
 {
 	struct LinkedList_Node* currentNode = physicsBuffer->globalForces->head;
 	Vector* currentForce;
@@ -573,7 +570,7 @@ static void PhysicsManager_ResolveCollision(struct Collision* collision)
 		float dynamicCoefficient = ((collision->obj1->body != NULL ? collision->obj1->body->dynamicFriction : 1.0f) + (collision->obj2->body != NULL ? collision->obj2->body->dynamicFriction : 1.0f)) / 2.0f;
 
 		//Step 4b: Calculate and apply frictional impulses
-		PhysicsManager_ApplyLinearFrictionalImpulses(collision, (const Vector**)pointsOfCollision, staticCoefficient, dynamicCoefficient);
+		PhysicsManager_ApplyLinearFrictionalImpulses(collision, staticCoefficient, dynamicCoefficient);
 		PhysicsManager_ApplyFrictionalTorques(collision, staticCoefficient, dynamicCoefficient);
 
 		//Free the vectors used to hold the collision points
@@ -1290,9 +1287,9 @@ static void PhysicsManager_DetermineCollisionPointAABB(Vector* dest, const Frame
 //	convexFrame2: A pointer to the frame of reference of the other convex hull involved in the collision, whether the object itself has a convex hull or not
 //	relativeMTV: A pointer to a vector representing the MTV !Pointing towards the OTHER object (convexHull2)!
 static void PhysicsManager_DetermineCollisionPointConvexHull(Vector* dest,
-															 const struct ColliderData_ConvexHull* convexHull1, const FrameOfReference* convexFrame1, 
-															 const struct ColliderData_ConvexHull* convexHull2, const FrameOfReference* convexFrame2,
-															 const Vector* relativeMTV)
+	const struct ColliderData_ConvexHull* convexHull1, const FrameOfReference* convexFrame1, 
+	const struct ColliderData_ConvexHull* convexHull2, const FrameOfReference* convexFrame2,
+	const Vector* relativeMTV)
 {
 	//Create an unsigned character to serve as a boolean for whether the collision point was found yet
 	unsigned char found = 0;
@@ -1393,20 +1390,20 @@ static void PhysicsManager_DetermineCollisionPointConvexHull(Vector* dest,
 		//It must be an Edge / Face - Face case
 
 		//In this case we must translate all points into worldspace before calling the collision point determination function!
-		for(int i = 0; i < furthestPoints1->size; i++)
+		for(unsigned int i = 0; i < furthestPoints1->size; i++)
 		{
 			Vector* current = (Vector*)DynamicArray_Index(furthestPoints1, i);
 			Vector_Increment(current, convexFrame1->position);
 		}
 
-		for(int i = 0; i < furthestPoints2->size; i++)
+		for(unsigned int i = 0; i < furthestPoints2->size; i++)
 		{
 			Vector*current = (Vector*)DynamicArray_Index(furthestPoints2, i);
 			Vector_Increment(current, convexFrame2->position);
 		}
 
 		//Calculate approximate collision point of general case
-		PhysicsManager_DetermineCollisionPointConvexHullFace(dest, furthestPoints1, convexFrame1, furthestPoints2, convexFrame2);
+		PhysicsManager_DetermineCollisionPointConvexHullFace(dest, furthestPoints1, furthestPoints2);
 		//Collision point was determined, flag found
 		found = 1;
 	}
@@ -1457,8 +1454,8 @@ static void PhysicsManager_DetermineCollisionPointConvexHullVertex(Vector* dest,
 //	furthestOnHull2: A pointer to a dynamic array of vectors containing two vertices oriented in ModelSpace on convexHull2 furthest in the direction of the respective relative MTV
 //	convexFrame2: A pointer to the frame of reference of the convex Hull which the vertices furthestOnHull2 belong to
 static void PhysicsManager_DetermineCollisionPointConvexHullEdge(Vector* dest, 
-																 const DynamicArray* furthestOnHull1, const FrameOfReference* convexFrame1,
-																 const DynamicArray* furthestOnHull2, const FrameOfReference* convexFrame2)
+	const DynamicArray* furthestOnHull1, const FrameOfReference* convexFrame1,
+	const DynamicArray* furthestOnHull2, const FrameOfReference* convexFrame2)
 {
 	//We can represent the two points on each convex hull as a line, then test for the intersection of the two lines
 	Vector direction1;	//Will store Direction of line on convexHull1
@@ -1526,12 +1523,9 @@ static void PhysicsManager_DetermineCollisionPointConvexHullEdge(Vector* dest,
 //Parameters:
 //	dest: A pointer to he vector to store the collision in
 //	furthestOnHull1: A pointer to the dynamic array of vectors containing the vertices belonging to convexHull1 furthest in the direction of it's respective MTV
-//	convexFrame1: A pointer to the frame of reference of the convex hull which the vertices from furthestOnHull1 belong
 //	furthestOnHull2: A pointer to the dynamic array of vectors containing the vertices belongong to convexHull2 furthest in the direction of it's respective MTV
-//	convexFrame2: A pointer to the frame of reference of the convex hull whch the vertices from furthestOnHull2 belong
 static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest,
-																 const DynamicArray* furthestOnHull1, const FrameOfReference* convexFrame1,
-																 const DynamicArray* furthestOnHull2, const FrameOfReference* convexFrame2)
+	const DynamicArray* furthestOnHull1, const DynamicArray* furthestOnHull2)
 {
 
 	//Create a linked list of points to find the inner most points
@@ -1570,7 +1564,7 @@ static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest,
 			iterator = innerPoints->head;
 			minNode = iterator;
 			maxNode = iterator;
-			for(int j = 0; j < innerPoints->size - 1; j++)
+			for(unsigned int j = 0; j < innerPoints->size - 1; j++)
 			{
 				//Move to next point
 				iterator = iterator->next;
@@ -1797,7 +1791,7 @@ static void PhysicsManager_ApplyCollisionImpulses(struct Collision* collision, c
 //	pointsOfCollision: An array of 2 pointers to vectors in 3 space representing the point of collision in global space for obj1 and obj2 respectively
 //	staticCoefficient: The static coefficient of friction between the two colliding surfaces
 //	dynamicCoefficient: The dynamic coefficient of friction between the two colliding surfaces
-static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* collision, const Vector** pointsOfCollision, const float staticCoefficient, const float dynamicCoefficient)
+static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient)
 {
 	//Step 1) Find the direction of a tangent vector which is tangential to the surface of collision in the direction of movement / applied forces if there is no tangential movement
 	Vector unitTangentVector;
@@ -2047,7 +2041,7 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 			Vector_Normalize(&axis);
 
 			//Torque will be in the direction of the collision face normal with a magnitude of -1.0 * dynamic mag
-			Vector_GetScalarProduct(&frictionalTorque, &axis, -1.0f * dynamicMag2);
+			Vector_GetScalarProduct(&frictionalTorque, &axis, -1.0f * dynamicMag1);
 
 			RigidBody_ApplyInstantaneousTorque(collision->obj1->body, &frictionalTorque);
 		}

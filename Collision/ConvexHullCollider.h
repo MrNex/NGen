@@ -9,12 +9,15 @@
 #include "../Render/Mesh.h"
 
 #include "ColliderEnum.h"
+
+
+
 #include "AABBCollider.h"
 
 //Forward declaration of Collider to avoid circular dependency
-typedef struct Collider Collider;
-//enum ColliderType;
-
+struct Collider;
+//Forward declaration of AABBCollider data
+struct ColliderData_AABB;
 
 struct ColliderData_ConvexHull
 {
@@ -42,7 +45,7 @@ void ConvexHullCollider_InitializeData(struct ColliderData_ConvexHull* convexDat
 //
 //Parameters:
 //	collider: The colider being initialized
-void ConvexHullCollider_Initialize(Collider* collider);
+void ConvexHullCollider_Initialize(struct Collider* collider);
 
 ///
 //Frees a convex hull collider data set
