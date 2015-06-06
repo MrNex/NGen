@@ -7,17 +7,6 @@
 
 #include "Collider.h"
 
-
-///
-//Setter for the static Collider_Initialize function
-//
-//Parameters:
-//	funcPtr: Collider_Initialize function pointer
-void SphereCollider_SetColliderInitializer(InitializerPtr funcPtr)
-{
-	SphereCollider_ColliderInitializePtr = funcPtr;
-}
-
 ///
 //Allocates memory for a new sphere collider
 //
@@ -40,7 +29,7 @@ struct ColliderData_Sphere* SphereCollider_AllocateData()
 void SphereCollider_Initialize(Collider* collider, float rad)
 {
 	//Initialize collider
-	SphereCollider_ColliderInitializePtr(collider, COLLIDER_SPHERE, AssetManager_LookupMesh("Sphere"));
+	Collider_Initialize(collider, COLLIDER_SPHERE, AssetManager_LookupMesh("Sphere"));
 
 	//Allocate data
 	collider->data->sphereData = SphereCollider_AllocateData();

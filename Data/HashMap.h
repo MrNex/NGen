@@ -115,20 +115,6 @@ struct HashMap_KeyValuePair* HashMap_LookUp(HashMap* map, void* key, unsigned in
 //	keyLength: The length of the key in bytes
 unsigned char HashMap_Contains(HashMap* map, void* key, unsigned int keyLength);
 
-///
-//Increases the internal storage of the hashmap, and re-hashes all existing key value pairs
-//
-//Parameters:
-//	map: THe hashmap to increase the internal storage of
-static void HashMap_Grow(HashMap* map);
 
-///
-//Takes an existing key value pair and re-hashes and re-adds it to the hashmap
-//To be used when a hashmap is growing in size
-//
-//Parameters:
-//	map: THe hashmap the existing pair is being added to
-//	pair: THe pair to add
-static void HashMap_AddPair(HashMap* map, struct HashMap_KeyValuePair* pair);
 
 #endif

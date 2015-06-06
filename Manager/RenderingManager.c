@@ -5,6 +5,37 @@
 #include "AssetManager.h"
 
 ///
+//Internals
+RenderingBuffer* renderingBuffer;
+
+///
+//Static Declarations
+
+///
+//Allocates memory for a rendering buffer
+//
+//Returns:
+//	Pointer to a newly allocated rendering buffer
+static RenderingBuffer* RenderingManager_AllocateBuffer(void);
+
+///
+//Initializes a rendering buffer
+//
+//Parameters:
+//      buffer: Rendering buffer to initialize
+static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer);
+
+///
+//Frees the memory consumed by a Rendering Buffer
+//
+//Parameters:
+//      buffer: The buffer to free
+static void RenderingManager_FreeBuffer(RenderingBuffer* buffer);
+
+///
+//External functions
+
+///
 //Initialize the Rendering Manager
 void RenderingManager_Initialize(void)
 {
@@ -274,53 +305,51 @@ static RenderingBuffer* RenderingManager_AllocateBuffer(void)
 //Initializes a rendering buffer
 //
 //Parameters:
-//	buffer: Rendering buffer to initialize
+//      buffer: Rendering buffer to initialize
 static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 {
-	//Shaders
-	buffer->shaderPrograms = (ShaderProgram**)malloc(sizeof(ShaderProgram*));
+        //Shaders
+        buffer->shaderPrograms = (ShaderProgram**)malloc(sizeof(ShaderProgram*));
 
-	buffer->shaderPrograms[0] = ShaderProgram_Allocate();
-	ShaderProgram_Initialize(buffer->shaderPrograms[0], "./Shader/VertexShader.glsl", "./Shader/FragmentShader.glsl");
-
-
-	//Checking shaders
-	if (buffer->shaderPrograms[0]->shaderProgramID == 0)
-	{
-		printf("\nError Creating Shader Program!\nShader Results:\nV: %d\tF: %d\tP: %d\n",
-			buffer->shaderPrograms[0]->vertexShaderID,
-			buffer->shaderPrograms[0]->fragmentShaderID,
-			buffer->shaderPrograms[0]->shaderProgramID);
-
-	}
+        buffer->shaderPrograms[0] = ShaderProgram_Allocate();
+        ShaderProgram_Initialize(buffer->shaderPrograms[0], "./Shader/VertexShader.glsl", "./Shader/FragmentShader.glsl");
 
 
-	//Camera
-	buffer->camera = Camera_Allocate();
-	Camera_Initialize(buffer->camera);
+        //Checking shaders
+        if (buffer->shaderPrograms[0]->shaderProgramID == 0)
+        {
+                printf("\nError Creating Shader Program!\nShader Results:\nV: %d\tF: %d\tP: %d\n",
+                        buffer->shaderPrograms[0]->vertexShaderID,
+                        buffer->shaderPrograms[0]->fragmentShaderID,
+                        buffer->shaderPrograms[0]->shaderProgramID);
 
-	//Lighting
-	buffer->directionalLightVector = Vector_Allocate();
-	Vector_Initialize(buffer->directionalLightVector, 3);
-	//buffer->directionalLightVector->components[0] = -0.77f;
-	//buffer->directionalLightVector->components[2] = -0.77f;
-	buffer->directionalLightVector->components[2] = -1.0f;
+        }
 
-	//Debug
-	buffer->debugOctTree = 0;
+
+        //Camera
+        buffer->camera = Camera_Allocate();
+        Camera_Initialize(buffer->camera);
+
+        //Lighting
+        buffer->directionalLightVector = Vector_Allocate();
+        Vector_Initialize(buffer->directionalLightVector, 3);
+        //buffer->directionalLightVector->components[0] = -0.77f;
+        //buffer->directionalLightVector->components[2] = -0.77f;
+        buffer->directionalLightVector->components[2] = -1.0f;
+
+        //Debug
+        buffer->debugOctTree = 0;
 }
 
 ///
 //Frees the memory consumed by a Rendering Buffer
 //
 //Parameters:
-//	buffer: The buffer to free
+//      buffer: The buffer to free
 static void RenderingManager_FreeBuffer(RenderingBuffer* buffer)
 {
-	ShaderProgram_Free(buffer->shaderPrograms[0]);
-	free(buffer->shaderPrograms);
-	Camera_Free(buffer->camera);
-	Vector_Free(buffer->directionalLightVector);
+        ShaderProgram_Free(buffer->shaderPrograms[0]);
+        free(buffer->shaderPrograms);
+        Camera_Free(buffer->camera);
+        Vector_Free(buffer->directionalLightVector);
 }
-
-

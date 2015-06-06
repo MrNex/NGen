@@ -14,28 +14,7 @@ typedef struct ObjectBuffer
 } ObjectBuffer;
 
 //Internal
-static ObjectBuffer* objectBuffer;
-
-///
-//Allocates a new Object buffer
-//
-//Returns:
-//	Returns a pointer to a newly allocated Object Buffer
-static ObjectBuffer* ObjectManager_AllocateBuffer(void);
-
-///
-//Initializes an Object Buffer
-//
-//Parameters:
-//	buffer: The object buffer to initialize
-static void ObjectManager_InitializeBuffer(ObjectBuffer* buffer);
-
-///
-//Frees resources being used by an Object Buffer
-//
-//Parameters:
-//	buffer: The object buffer to free
-static void ObjectManager_FreeBuffer(ObjectBuffer* buffer);
+extern ObjectBuffer* objectBuffer;
 
 //Functions
 

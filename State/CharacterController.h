@@ -2,6 +2,7 @@
 #define CHARACTERCONTROLLER_H
 
 #include "State.h"
+#include "../GObject/GObject.h"
 
 // Initialize the character state
 void State_CharacterController_Initialize(State* s, const float velocity, const float angularVelocity, float maxVel, float shootSpeed);

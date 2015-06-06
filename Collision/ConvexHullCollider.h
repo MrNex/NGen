@@ -16,16 +16,6 @@ typedef struct Collider Collider;
 //enum ColliderType;
 
 
-//Pointer to the static Collider_Initialize function
-static void(*ConvexHullCollider_ColliderInitializePtr)(struct Collider*, ColliderType, Mesh*);
-///
-//Setter for the static Collider_Initialize function
-//
-//Parameters:
-//	funcPtr: Collider_Initialize function pointer
-void ConvexHullCollider_SetColliderInitializer(void(*funcPtr)(struct Collider*, ColliderType, Mesh*));
-
-
 struct ColliderData_ConvexHull
 {
 	LinkedList* points;

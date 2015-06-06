@@ -5,6 +5,20 @@
 #include <string.h>
 
 ///
+//Internal Declarations
+
+///
+//Generates Vertex buffer & array objects for a mesh
+//
+//Parameters:
+//	m: The mesh to generate VBO & VAO for
+//	usagePattern: The usage pattern of the mesh's data (GL_STATIC_DRAW | GL_STREAM_DRAW | GL_DYNAMIC_DRAW)
+static void GenerateBuffers(Mesh* m, GLenum usagePattern);
+
+///
+//Implementations
+
+///
 //Allocates memory for a new Mesh
 //
 //Parameters:

@@ -51,13 +51,7 @@ Mesh* Mesh_Allocate();
 //	usagePattern: The usage pattern of the mesh's data (GL_STATIC_DRAW | GL_STREAM_DRAW | GL_DYNAMIC_DRAW)
 void Mesh_Initialize(Mesh* m, struct Triangle* tris, unsigned int numTriangles, GLenum usagePattern);
 
-///
-//Generates Vertex buffer & array objects for a mesh
-//
-//Parameters:
-//	m: The mesh to generate VBO & VAO for
-//	usagePattern: The usage pattern of the mesh's data (GL_STATIC_DRAW | GL_STREAM_DRAW | GL_DYNAMIC_DRAW)
-static void GenerateBuffers(Mesh* m, GLenum usagePattern);
+
 
 ///
 //Frees a mesh from memory

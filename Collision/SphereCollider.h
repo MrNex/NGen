@@ -10,14 +10,7 @@
 typedef struct Collider Collider;
 //typedef enum ColliderType;
 
-//Pointer to the static Collider_Initialize function
-static void(*SphereCollider_ColliderInitializePtr)(struct Collider*, ColliderType, Mesh*);
-///
-//Setter for the static Collider_Initialize function
-//
-//Parameters:
-//	funcPtr: Collider_Initialize function pointer
-void SphereCollider_SetColliderInitializer(void(*funcPtr)(struct Collider*, ColliderType, Mesh*));
+
 
 struct ColliderData_Sphere
 {

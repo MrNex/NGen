@@ -7,16 +7,6 @@
 #include "Collider.h"
 
 ///
-//Setter for the static Collider_Initialize function
-//
-//Parameters:
-//	funcPtr: Collider_Initialize function pointer
-void AABBCollider_SetColliderInitializer(InitializerPtr funcPtr)
-{
-	AABBCollider_ColliderInitializePtr = funcPtr;
-}
-
-///
 //Allocates memory for a new Axis Aligned Bounding Box collider data
 //
 //returns:
@@ -59,7 +49,7 @@ void AABBCollider_InitializeData(struct ColliderData_AABB* AABB, const float wid
 void AABBCollider_Initialize(Collider* collider, float width, float height, float depth, const Vector* centroid)
 {
 	//Initialize the collider
-	AABBCollider_ColliderInitializePtr(collider, COLLIDER_AABB, AssetManager_LookupMesh("Cube"));
+	Collider_Initialize(collider, COLLIDER_AABB, AssetManager_LookupMesh("Cube"));
 
 	//Allocate the datafor collider
 	collider->data->AABBData = AABBCollider_AllocateData();

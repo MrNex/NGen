@@ -3,6 +3,12 @@
 #include <string.h>
 
 ///
+//Internal Declarations
+static int defaultCapacity = 8;
+static float defaultGrowth = 2.0f;
+
+
+///
 //Allocates a Dynamic Array
 //
 //Returns:

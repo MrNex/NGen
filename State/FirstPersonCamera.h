@@ -2,6 +2,7 @@
 #define STATE_FIRSTPERSONCAMERA_H
 
 #include "State.h"
+#include "../GObject/GObject.h"
 
 ///
 //Initializes a first person camera state

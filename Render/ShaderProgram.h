@@ -45,17 +45,3 @@ void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char
 //Parameters:
 //	prog: The shader program to free
 void ShaderProgram_Free(ShaderProgram* prog);
-
-///
-//Loads a shader source and compiles it
-//
-//Parameters:
-//	fileName: Filepath of the shader
-//	shaderType: Type of shader being compiled
-//
-//Returns:
-//	Shader index
-static GLuint LoadShader(const char* fileName, GLenum shaderType);
-
-
-

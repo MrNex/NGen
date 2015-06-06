@@ -19,29 +19,7 @@ typedef struct RenderingBuffer
 } RenderingBuffer;
 
 //Internals
-static RenderingBuffer* renderingBuffer;
-
-///
-//Allocates memory for a rendering buffer
-//
-//Returns:
-//	Pointer to a newly allocated rendering buffer
-static RenderingBuffer* RenderingManager_AllocateBuffer(void);
-
-///
-//Initializes a rendering buffer
-//
-//Parameters:
-//	buffer: Rendering buffer to initialize
-static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer);
-
-///
-//Frees the memory consumed by a Rendering Buffer
-//
-//Parameters:
-//	buffer: The buffer to free
-static void RenderingManager_FreeBuffer(RenderingBuffer* buffer);
-
+extern RenderingBuffer* renderingBuffer;
 
 //Functions
 

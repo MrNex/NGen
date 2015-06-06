@@ -1,6 +1,10 @@
 #include "ShaderProgram.h"
 #include "../Load/Loader.h"
 
+//Declarations
+static GLuint LoadShader(const char* fileName, GLenum shaderType);
+
+
 ///
 //Allocates a new shader program returning a pointer to it in memory
 //

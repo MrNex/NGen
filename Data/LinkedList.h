@@ -15,31 +15,6 @@ typedef struct LinkedList
 	unsigned int size;
 } LinkedList;
 
-//Internals
-
-///
-//Allocates a Node for a Linked List
-//
-//Returns:
-//	Newly allocated Pointer to linked list node
-static struct LinkedList_Node* LinkedList_Node_Allocate(void);
-
-///
-//Initializes a new node for a linked list
-//
-//Parameters:
-//	node: pointer to node to initialize
-//	data: Data to initialize node with
-static void LinkedList_Node_Initialize(struct LinkedList_Node* node, void* data);
-
-///
-//Frees resources being used by a Linked List node
-//
-//Parameters:
-//	node: The node to free
-static void LinkedList_Node_Free(struct LinkedList_Node* node);
-
-
 //Functions
 
 ///

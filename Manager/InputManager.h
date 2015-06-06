@@ -13,33 +13,7 @@ typedef struct InputBuffer
 } InputBuffer;
 ///
 //Internals
-static InputBuffer* inputBuffer;
-
-///
-//Allocates memory for a new input buffer
-//
-//Returns:
-//	Pointer to newly allocated inputBuffer
-static InputBuffer* InputManager_AllocateBuffer(void);
-
-///
-//Initializes an Input Buffer
-//
-//Parameters:
-//	buffer: Input Buffer to initialize
-static void InputManager_InitializeBuffer(InputBuffer* buffer);
-
-///
-//Frees the memory taken by an Input Buffer
-//
-//Parameters:
-//	buffer: The buffer to free
-static void InputManager_FreeBuffer(InputBuffer* buffer);
-
-///
-//Traps the mouse inside of the window
-static void InputManager_TrapMouse(void);
-
+extern InputBuffer* inputBuffer;
 
 ///
 //Functions

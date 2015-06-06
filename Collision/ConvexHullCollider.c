@@ -7,16 +7,6 @@
 #include "../Manager/AssetManager.h"
 
 ///
-//Setter for the static Collider_Initialize function
-//
-//Parameters:
-//	funcPtr: Collider_Initialize function pointer
-void ConvexHullCollider_SetColliderInitializer(InitializerPtr funcPtr)
-{
-	ConvexHullCollider_ColliderInitializePtr = funcPtr;
-}
-
-///
 //Allocates memory for a new convex hull collider data set
 //
 //Returns:
@@ -53,7 +43,7 @@ void ConvexHullCollider_Initialize(Collider* collider)
 {
 	//TODO: Change to initialize from a mesh with a proper mesh representation
 	//Initialize the collider
-	ConvexHullCollider_ColliderInitializePtr(collider, COLLIDER_CONVEXHULL, AssetManager_LookupMesh("Cube"));
+	Collider_Initialize(collider, COLLIDER_CONVEXHULL, AssetManager_LookupMesh("Cube"));
 
 	//Allocate the collider data
 	collider->data->convexHullData = ConvexHullCollider_AllocateData();

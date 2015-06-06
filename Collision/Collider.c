@@ -3,24 +3,6 @@
 #include <stdlib.h>
 
 ///
-//Gets the a pointer to the collider_Initialize function
-//
-//Returns:
-//	Pointer to Collider_Initialize function
-InitializerPtr Collider_GetInitializer(void)
-{
-	return initPtr;
-}
-
-///
-//Destroys the only reachable pointer to the collider_Initialize function
-//This will prevent any other files from gaining access to it that have not already gotten access.
-void Collider_DestroyInitializerPtr(void)
-{
-	initPtr = 0;
-}
-
-///
 //Allocates memory for a Collider
 //
 //Returns:
@@ -29,6 +11,34 @@ Collider* Collider_Allocate()
 {
 	Collider* collider = (Collider*)malloc(sizeof(Collider));
 	return collider;
+}
+
+///
+//Initializes general collider information
+//
+//Parameters:
+//	collider: THe collider to initialize
+//	type: The type of the collider being initialized
+//	rep: A pointer to a mesh which can represent this collider in debug mode
+void Collider_Initialize(Collider* collider, ColliderType type, Mesh* rep)
+{
+	collider->data = (union ColliderData*)malloc(sizeof(union ColliderData));
+	collider->type = type;
+
+	collider->currentCollisions = LinkedList_Allocate();
+	LinkedList_Initialize(collider->currentCollisions);
+
+	//Initialize with debug mode on & setup debug settings
+	collider->debug = 0;
+	collider->representation = rep;
+
+	collider->colorMatrix = Matrix_Allocate();
+	Matrix_Initialize(collider->colorMatrix, 4, 4);
+
+	//Set color matrix to green
+	*Matrix_Index(collider->colorMatrix, 0, 0) = 0.0f;	//Red
+	*Matrix_Index(collider->colorMatrix, 1, 1) = 1.0f;	//Green
+	*Matrix_Index(collider->colorMatrix, 2, 2) = 0.0f;	//Blue
 }
 
 ///

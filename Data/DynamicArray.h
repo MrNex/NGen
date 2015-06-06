@@ -31,12 +31,6 @@ void DynamicArray_Initialize(DynamicArray* arr, unsigned int dataSize);
 //	arr: The dynamic array to free
 void DynamicArray_Free(DynamicArray* arr);
 
-//Internal members
-static int defaultCapacity = 8;
-static float defaultGrowth = 2.0f;
-//Internal functions
-
-
 //Functions
 
 ///

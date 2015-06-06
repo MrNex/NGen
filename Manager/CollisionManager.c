@@ -120,16 +120,6 @@ void CollisionManager_Initialize(void)
 	//Allocate & initialize collision buffer
 	collisionBuffer = CollisionManager_AllocateBuffer();
 	CollisionManager_InitializeBuffer(collisionBuffer);
-
-	//Get the Collider_initializer pointer
-	InitializerPtr initializerPtr = Collider_GetInitializer();
-	//Destroy the pointer
-	Collider_DestroyInitializerPtr();
-
-	//Pass Collider_Initialize pointer to all collider types
-	SphereCollider_SetColliderInitializer(initializerPtr);
-	AABBCollider_SetColliderInitializer(initializerPtr);
-	ConvexHullCollider_SetColliderInitializer(initializerPtr);
 }
 
 ///
