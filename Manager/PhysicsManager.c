@@ -1944,6 +1944,102 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 //	dynamicCoefficient: The dynamic coefficient of friction between the two colliding surfaces
 static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient)
 {
+
+	//Step 0) Save references to both bodies to reduce typing and increase readability
+	RigidBody* body1 = collision->obj1->body;
+	RigidBody* body2 = collision->obj2->body;
+
+	//Step 1) Find the relative angular velocity of obj2 from the center of mass of obj1
+	Vector aVRel;
+	Vector_INIT_ON_STACK(aVRel, 3);
+	if(body2 != NULL && body2->inverseMass != 0.0f && !body2->freezeRotation)
+	{
+		Vector_Increment(&aVRel, body2->angularVelocity);
+	}
+
+	if(body1 != NULL && body1->inverseMass != 0.0f && !body1->freezeRotation)
+	{
+		Vector_Increment(&aVRel, body1->angularVelocity);
+	}
+
+	//Step 2: Find the magnitude of force of the collision normal to the colliding surface
+	float fNormal = 0.0f;
+	if(body1 != NULL && body1->inverseMass != 0.0f && !body1->freezeRotation)
+	{
+		fNormal = fabs(Vector_DotProduct(body1->netImpulse, collision->minimumTranslationVector));
+	}
+	else
+	{
+		fNormal = fabs(Vector_DotProduct(body2->netImpulse, collision->minimumTranslationVector));
+	}
+
+	//Step 3: Use normal force to determine the static and dynamic friction magnitudes
+	float staticMag = fNormal * staticCoefficient;
+	float dynamicMag = fNormal * dynamicCoefficient;
+
+	//Step 4: Determine the magnitude of the relative angular velocity in the direction of the surface normal
+	float relAVPerp = Vector_DotProduct(&aVRel, collision->minimumTranslationVector);
+
+	//Step 5: Apply the frictional torques to each object
+	//Object 1
+	if(body1 != NULL && body1->inverseMass != 0.0f && !body1->freezeRotation)
+	{
+		//Step a: Compute the angular impulse / momentum in the direction of surface normal
+		Vector lA;
+		Vector_INIT_ON_STACK(lA, 3);
+		
+		Matrix iA;
+		Matrix_INIT_ON_STACK(iA, 3, 3);
+		RigidBody_CalculateMomentOfInertiaInWorldSpace(&iA, body1);
+
+		Vector_GetScalarProduct(&lA, collision->minimumTranslationVector, relAVPerp);
+		Matrix_TransformVector(&iA, &lA);
+
+		//Step b: Determine if the magnitude of the angular impulse / momentum overcomes the magnitude of static friction
+		if(Vector_GetMag(&lA) <= staticMag)
+		{
+			//If it does not, apply an opposing impulse (Note that lA is already in the direction opposing A's angular velocity)
+			RigidBody_ApplyInstantaneousTorque(body1, &lA);
+		}
+		else
+		{
+			//If it does, apply an impulse in the direction opposing intending movement equal to dynamicMag in magnitude
+			Vector_Normalize(&lA);
+			Vector_Scale(&lA, dynamicMag);
+			RigidBody_ApplyInstantaneousTorque(body1, &lA);
+		}
+	}
+	
+	//Object 2
+	if(body2 != NULL && body2->inverseMass != 0.0f && !body2->freezeRotation)
+	{
+		//Step a: Compute the angular impulse / momentum in the direction of surface normal
+		Vector lB;
+		Vector_INIT_ON_STACK(lB, 3);
+		
+		Matrix iB;
+		Matrix_INIT_ON_STACK(iB, 3, 3);
+		RigidBody_CalculateMomentOfInertiaInWorldSpace(&iB, body2);
+
+		Vector_GetScalarProduct(&lB, collision->minimumTranslationVector, relAVPerp);
+		Matrix_TransformVector(&iB, &lB);
+
+		//Step b: Determine if the magnitude of the angular impulse / momentum overcomes the magnitude of static friction
+		if(Vector_GetMag(&lB) <= staticMag)
+		{
+			//If it does not, apply an opposing impulse (Note that lA is in the direction of B's angular velocity)
+			Vector_Scale(&lB, -1.0f);
+			RigidBody_ApplyInstantaneousTorque(body2, &lB);
+		}
+		else
+		{
+			//If it does, apply an impulse in the direction opposing intending movement equal to dynamicMag in magnitude
+			Vector_Normalize(&lB);
+			Vector_Scale(&lB, -dynamicMag);
+			RigidBody_ApplyInstantaneousTorque(body2, &lB);
+		}
+	}
+	/*
 	//Step 1) compute static and dynamic frictional torque magnitudes based off of the magnitude of the
 	//component of the reaction instantaneous torque of the collision in the direction of the contact normal
 	float reactionMag1 = 0.0f;
@@ -2090,5 +2186,6 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 		}
 
 	}
+	*/
 
 }
