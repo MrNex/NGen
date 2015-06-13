@@ -264,7 +264,7 @@ void RigidBody_CalculateMaxLocalLinearVelocity(Vector* dest, const RigidBody* bo
 
 
 	//For each of the furthest points, determine the one which has the highest linear velocity due to angular velocity in the direction of the relative MTV
-	for(int i = 0; i < points->size; i++)
+	for(unsigned int i = 0; i < points->size; i++)
 	{
 		//Get the current point and calculate it's current local linear velocity
 		currentPoint = (Vector*)DynamicArray_Index((DynamicArray*)points, i);

@@ -220,49 +220,49 @@ static void OctTree_Node_InitializeChildren(OctTree* tree, struct OctTree_Node* 
 	//Bottom back right octant
 	OctTree_Node_Initialize(parent->children, tree, parent, parent->depth + 1, 
 		parent->left + halfWidth, parent->right,		//Left / Right bounds
-		parent->bottom, parent->bottom + halfWidth,		//Bottom / Top bounds
+		parent->bottom, parent->bottom + halfHeight,		//Bottom / Top bounds
 		parent->back, parent->back + halfDepth);		//Back / Front bounds
 
 	//Bottom back left octant
 	OctTree_Node_Initialize(parent->children + 1, tree, parent, parent->depth + 1, 
 		parent->left, parent->left + halfWidth,			//Left / Right bounds
-		parent->bottom, parent->bottom + halfWidth,		//Bottom / Top bounds
+		parent->bottom, parent->bottom + halfHeight,		//Bottom / Top bounds
 		parent->back, parent->back + halfDepth);		//Back / Front bounds
 
 	//Bottom front left octant
 	OctTree_Node_Initialize(parent->children + 2, tree, parent, parent->depth + 1, 
 		parent->left, parent->left + halfWidth,			//Left / Right bounds
-		parent->bottom, parent->bottom + halfWidth,		//Bottom / Top bounds
+		parent->bottom, parent->bottom + halfHeight,		//Bottom / Top bounds
 		parent->back + halfDepth, parent->front);		//Back / Front bounds
 
 	//Bottom front right octant
 	OctTree_Node_Initialize(parent->children + 3, tree, parent, parent->depth + 1, 
 		parent->left + halfWidth, parent->right,		//Left / Right bounds
-		parent->bottom, parent->bottom + halfWidth,		//Bottom / Top bounds
+		parent->bottom, parent->bottom + halfHeight,		//Bottom / Top bounds
 		parent->back + halfDepth, parent->front);		//Back / Front bounds
 
 	//Top back right octant
 	OctTree_Node_Initialize(parent->children + 4, tree, parent, parent->depth + 1, 
 		parent->left + halfWidth, parent->right,		//Left / Right bounds
-		parent->bottom + halfWidth, parent->top,		//Bottom / Top bounds
+		parent->bottom + halfHeight, parent->top,		//Bottom / Top bounds
 		parent->back, parent->back + halfDepth);		//Back / Front bounds
 
 	//Top back left octant
 	OctTree_Node_Initialize(parent->children + 5, tree, parent, parent->depth + 1, 
 		parent->left, parent->left + halfWidth,			//Left / Right bounds
-		parent->bottom + halfWidth, parent->top,		//Bottom / Top bounds
+		parent->bottom + halfHeight, parent->top,		//Bottom / Top bounds
 		parent->back, parent->back + halfDepth);		//Back / Front bounds
 
 	//Top front left octant
 	OctTree_Node_Initialize(parent->children + 6, tree, parent, parent->depth + 1, 
 		parent->left, parent->left + halfWidth,			//Left / Right bounds
-		parent->bottom + halfWidth, parent->top,		//Bottom / Top bounds
+		parent->bottom + halfHeight, parent->top,		//Bottom / Top bounds
 		parent->back + halfDepth, parent->front);		//Back / Front bounds
 
 	//Top front right octant
 	OctTree_Node_Initialize(parent->children + 7, tree, parent, parent->depth + 1, 
 		parent->left + halfWidth, parent->right,		//Left / Right bounds
-		parent->bottom + halfWidth, parent->top,		//Bottom / Top bounds
+		parent->bottom + halfHeight, parent->top,		//Bottom / Top bounds
 		parent->back + halfDepth, parent->front);		//Back / Front bounds
 
 }
@@ -307,7 +307,7 @@ void OctTree_Initialize(OctTree* tree, float leftBound, float rightBound, float 
 	//Allocate hashmap
 	tree->map = HashMap_Allocate();
 	//Initialize map
-	HashMap_Initialize(tree->map, 16);
+	HashMap_Initialize(tree->map);
 }
 
 ///
@@ -352,7 +352,7 @@ void OctTree_Update(OctTree* tree, LinkedList* gameObjects)
 			}
 
 			//For each OctTree_Node the game object was in
-			for(int i = 0; i < log->size; i++)
+			for(unsigned int i = 0; i < log->size; i++)
 			{
 				struct OctTree_NodeStatus* nodeStatus = (struct OctTree_NodeStatus*)DynamicArray_Index(log, i);
 				//get it's current status for this node
@@ -638,7 +638,7 @@ void OctTree_Node_AddAndLog(OctTree* tree, struct OctTree_Node* node, GObject* o
 				DynamicArray* log = (DynamicArray*)HashMap_LookUp(tree->map, &obj, sizeof(GObject*))->data;
 				//Find the entry of this node in the log
 				struct OctTree_NodeStatus* entry = NULL;
-				for(int i = 0; i < log->size; i++)
+				for(unsigned int i = 0; i < log->size; i++)
 				{
 					struct OctTree_NodeStatus* mightBeTheEntry = (struct OctTree_NodeStatus*)DynamicArray_Index(log, i);
 					//If we find it
@@ -711,7 +711,7 @@ static void OctTree_Node_Subdivide(OctTree* tree, struct OctTree_Node* node)
 	DynamicArray_Clear(node->data);
 	GObject* current;
 	//re-add all contents to the node
-	for(int i = 0; i < numOccupants; i++)
+	for(unsigned int i = 0; i < numOccupants; i++)
 	{
 		//Get the GObject* at index i
 		current = occupants[i];
@@ -751,7 +751,7 @@ static void OctTree_Node_SubdivideAndLog(OctTree*tree, struct OctTree_Node* node
 
 	//re-add all contents to the node
 	GObject* current;
-	for(int i = 0; i < numOccupants; i++)
+	for(unsigned int i = 0; i < numOccupants; i++)
 	{
 		//Get the GObject* at index i
 		current = occupants[i];
@@ -759,12 +759,12 @@ static void OctTree_Node_SubdivideAndLog(OctTree*tree, struct OctTree_Node* node
 		//Get this log of this object
 		DynamicArray* log = (DynamicArray*)HashMap_LookUp(tree->map, &current, sizeof(GObject*))->data;
 		//Find parent node in the log
-		for(int i = 0; i < log->size; i++)
+		for(unsigned int j = 0; j < log->size; j++)
 		{
-			if(((struct OctTree_NodeStatus*)DynamicArray_Index(log, i))->node == node)
+			if(((struct OctTree_NodeStatus*)DynamicArray_Index(log, j))->node == node)
 			{
 				//And remove it
-				DynamicArray_Remove(log, i);
+				DynamicArray_Remove(log, j);
 				break;
 			}
 		}
@@ -839,8 +839,6 @@ static unsigned char OctTree_Node_DoesSphereCollide(struct OctTree_Node* node, s
 
 	//Find the scaled radius
 	float scaledRadius = SphereCollider_GetScaledRadius(sphere, frame);
-	//For reference, get a pointer to where the first bound is located in the node struct
-	float* reference = &(node->left);
 
 
 	float bounds[6] = 

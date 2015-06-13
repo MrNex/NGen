@@ -93,7 +93,7 @@ float Matrix_GetIndex(const Matrix* mat, const int row, const int col);
 //	col: The column of the index to get the corresponding minor of
 //	numRows: The number of rows in the matrix
 //	numColumns: The number of columns in the matrix
-void Matrix_GetMinorArray(float* dest, const float* mat, const int row, const int col, const unsigned int numRows, const unsigned int numColumns);
+void Matrix_GetMinorArray(float* dest, const float* mat, const unsigned int row, const unsigned int col, const unsigned int numRows, const unsigned int numColumns);
 //Checks for errors then calls CMatrix_GetMinorArray
 void Matrix_GetMinor(Matrix* dest, const Matrix* mat, const int row, const int col);
 

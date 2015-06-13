@@ -31,6 +31,8 @@ void State_MeshSwap_Initialize(State* s)
 //	s: The mesh swap state to free
 void State_MeshSwap_Free(State* s)
 {
+	//s is unused
+	(void)s;
 	//No members to free
 }
 
@@ -43,6 +45,9 @@ void State_MeshSwap_Free(State* s)
 //	state: The MeshSwap state updating the gameobject
 void State_MeshSwap_Update(GObject* GO, State* state)
 {
+	//State is unused
+	(void)state;
+
 	if(InputManager_IsKeyDown('1'))
 	{
 		GO->mesh = AssetManager_LookupMesh("Cube");

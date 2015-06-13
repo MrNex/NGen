@@ -176,7 +176,7 @@ float Matrix_GetIndex(const Matrix* mat, const int row, const int col)
 //	col: The column of the index to get the corresponding minor of
 //	numRows: The number of rows in the matrix we are extracting the minor from
 //	numColumns: The number of columns in the matrix we are extracting the minor from
-void Matrix_GetMinorArray(float* dest, const float* mat, const int row, const int col, const unsigned int numRows, const unsigned int numColumns)
+void Matrix_GetMinorArray(float* dest, const float* mat, const unsigned int row, const unsigned int col, const unsigned int numRows, const unsigned int numColumns)
 {
 	unsigned int destRow = 0, destColumn = 0;
 	for(unsigned int srcRow = 0; srcRow < numRows; srcRow++)
@@ -376,7 +376,7 @@ void Matrix_SliceColumn(Vector* destination, const Matrix* mat, const int desire
 //	scalarValue: The value by which to scale the matrix
 void Matrix_ScaleArray(float* matrix, const unsigned int numRows, const unsigned int numColumns, const float scalarValue)
 {
-	for(int i = 0; i < numRows * numColumns; i++)
+	for(unsigned int i = 0; i < numRows * numColumns; i++)
 	{
 		matrix[i] *= scalarValue;
 	}
@@ -513,14 +513,10 @@ void Matrix_GetInverseArray(float* dest, const float* matrix, const unsigned int
 		//Create an array of floats to hold the minor matrices
 		float* minor = (float*)malloc(sizeof(float) * (numRows - 1) * (numCols - 1));
 
-		//Set the dimensions of the current minor
-		//No minor was taken yet, dimensions match the dimensions of the matrix
-		unsigned int currentNumRows = numRows;
-		unsigned int currentNumColumns = numCols;
 
-		for(int i = 0; i < numRows; i++)
+		for(unsigned int i = 0; i < numRows; i++)
 		{
-			for(int j = 0; j < numCols; j++)
+			for(unsigned int j = 0; j < numCols; j++)
 			{
 
 				//Get the minor of the 0, 0 index

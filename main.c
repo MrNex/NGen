@@ -190,7 +190,7 @@ void AddTrashCan(GObject* obj, float x, float z)
 	ObjectManager_AddObject(obj);
 }
 
-void AddMovingTarget(GObject* obj, float ObjX, float ObjY, float ObjZ, float SpringX, float SpringZ, int pointValue)
+void AddMovingTarget(GObject* obj, float ObjX, float ObjY, float ObjZ, int pointValue)
 {
 	//Moving Object
 	obj = GObject_Allocate();
@@ -276,7 +276,7 @@ void InitializeScene(void)
 
 	State* state = State_Allocate();
 
-	State_CharacterController_Initialize(state, 7.0f, 0.005f, 10.0f, 1.0f);
+	State_CharacterController_Initialize(state, 7.0f, 5.0f, 10.0f, 1.0f);
 
 	GObject_AddState(cam,state);
 	//cam->mesh = AssetManager_LookupMesh("Cube");
@@ -335,8 +335,8 @@ void InitializeScene(void)
 	AddTrashCan(obj, -30.0f, -42.0f);
 
 	// Add the Moving Tragets to the scene
-	AddMovingTarget(obj, 20.0f, 5.0f, -18.0f, 0.0f, -18.0f, 50);
-	//AddMovingTarget(obj, -20.0f, 5.0f, -30.0f, 0.0f, -30.0f);
+	AddMovingTarget(obj, 20.0f, 5.0f, -18.0f, 50);
+	//AddMovingTarget(obj, -20.0f, 5.0f, -30.0f);
 
 	///////////////////////////////////////
 	//Create ground
@@ -914,7 +914,7 @@ void Update(void)
 void DrawLoop(int val)
 {
 	glutPostRedisplay();
-	glutTimerFunc(16, DrawLoop, 0);
+	glutTimerFunc(val, DrawLoop, 16);
 
 
 }
@@ -957,7 +957,7 @@ int main(int argc, char* argv[])
 	//Set up callback registration
 	//
 	glutIdleFunc(Update);
-	glutTimerFunc(16, DrawLoop, 0);
+	glutTimerFunc(16, DrawLoop, 16);
 	glutDisplayFunc(Draw);
 
 

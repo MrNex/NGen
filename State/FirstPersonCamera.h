@@ -9,7 +9,10 @@
 //
 //Parameters:
 //	s: The state to initialize
-void State_FirstPersonCamera_Initialize(State* s, const float velocity, const float angularVelocity);
+//	velocity: The movement speed of the camera
+//	angularVelocity: The rotation speed of the camera
+//	skewSpeed: The rate at which the camera can skew
+void State_FirstPersonCamera_Initialize(State* s, const float velocity, const float angularVelocity, const float skewSpeed);
 
 ///
 //Frees resources taken by a First Person Camera State

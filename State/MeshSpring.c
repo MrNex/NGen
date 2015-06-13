@@ -90,11 +90,11 @@ void State_MeshSpringState_Initialize(State* state, Mesh* grid, unsigned int gri
 	int anchors = 0;
 
 	//Create each node in the grid
-	for(int k = 0; k < gridDepth; k++)
+	for(unsigned int k = 0; k < gridDepth; k++)
 	{
-		for(int j = 0; j < gridHeight; j++)
+		for(unsigned int j = 0; j < gridHeight; j++)
 		{
-			for(int i = 0; i < gridWidth; i++)
+			for(unsigned int i = 0; i < gridWidth; i++)
 			{
 				unsigned int nodeIndex = i + j * gridWidth + k * gridWidth * gridHeight;
 				members->nodes[nodeIndex].vertex.dimension = 3;
@@ -138,11 +138,11 @@ void State_MeshSpringState_Initialize(State* state, Mesh* grid, unsigned int gri
 
 
 	//Connect node to neighbor nodes
-	for(int k = 0; k < gridDepth; k++)
+	for(unsigned int k = 0; k < gridDepth; k++)
 	{
-		for(int j = 0; j < gridHeight; j++)
+		for(unsigned int j = 0; j < gridHeight; j++)
 		{
-			for(int i = 0; i < gridWidth; i++)
+			for(unsigned int i = 0; i < gridWidth; i++)
 			{
 				unsigned int nodeIndex = i + j * gridWidth + k * gridWidth * gridHeight;
 
@@ -246,7 +246,7 @@ void State_MeshSpringState_Free(State* state)
 	struct State_MeshSpring_Members* members = (struct State_MeshSpring_Members*)state->members;
 
 	//For each node
-	for(int i = 0; i < members->numNodes; i++)
+	for(unsigned int i = 0; i < members->numNodes; i++)
 	{
 		//Free the nodes velocity
 		Vector_Free(members->nodes[i].velocity);
@@ -266,6 +266,10 @@ void State_MeshSpringState_Free(State* state)
 //	state: The state updating this gameObject
 void State_MeshSpringState_Update(GObject* GO, State* state)
 {
+	//GO is unused
+	(void)GO;
+
+
 	//Get members
 	struct State_MeshSpring_Members* members = (struct State_MeshSpring_Members*)state->members;
 
@@ -273,12 +277,12 @@ void State_MeshSpringState_Update(GObject* GO, State* state)
 	float dt = TimeManager_GetDeltaSec();
 
 	//For each node
-	for(int i = 0; i < members->numNodes; i++)
+	for(unsigned int i = 0; i < members->numNodes; i++)
 	{
 		unsigned int nodeIndex = i;
 		struct MeshSpringState_Node* current = members->nodes + nodeIndex;
 
-		int middleNodeIndex = (int)members->gridWidth /2 + (int)members->gridWidth * (int)members->gridHeight/2;
+		unsigned int middleNodeIndex = (int)members->gridWidth /2 + (int)members->gridWidth * (int)members->gridHeight/2;
 
 		//If the node is not an anchor
 		if(!current->isAnchor)
@@ -291,7 +295,7 @@ void State_MeshSpringState_Update(GObject* GO, State* state)
 			Vector currForce;
 			Vector_INIT_ON_STACK(currForce, 3);
 
-			for(int j = 0; j < current->numNeighbors; j++)
+			for(unsigned int j = 0; j < current->numNeighbors; j++)
 			{
 				//Get current force from this neighbor
 				Vector_Subtract(&currForce, &current->vertex, current->neighbors[j]);

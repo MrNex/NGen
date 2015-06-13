@@ -193,8 +193,8 @@ static void AssetManager_InitializeBuffer(AssetBuffer* buffer)
 {
 	buffer->meshMap = HashMap_Allocate();
 	buffer->textureMap = HashMap_Allocate();
-	HashMap_Initialize(buffer->meshMap, 11);
-	HashMap_Initialize(buffer->textureMap, 10);
+	HashMap_Initialize(buffer->meshMap);
+	HashMap_Initialize(buffer->textureMap);
 }
 
 ///
@@ -205,9 +205,8 @@ static void AssetManager_InitializeBuffer(AssetBuffer* buffer)
 //	buffer: pointer to The buffer to free
 static void AssetManager_FreeBuffer(AssetBuffer* buffer)
 {
-	for (int i = 0; i < buffer->meshMap->data->capacity; i++)
+	for (unsigned int i = 0; i < buffer->meshMap->data->capacity; i++)
 	{
-		//Mesh_Free((Mesh*)buffer->meshMap->data[i]->data);
 		Mesh* m = *(Mesh**)DynamicArray_Index(buffer->meshMap->data, i);
 		if(m != NULL)
 		{
@@ -216,10 +215,8 @@ static void AssetManager_FreeBuffer(AssetBuffer* buffer)
 	}
 	HashMap_Free(buffer->meshMap);
 
-	//for (int i = 0; i < buffer->textureMap->size; i++)
-	for (int i = 0; i < buffer->textureMap->data->capacity; i++)
+	for (unsigned int i = 0; i < buffer->textureMap->data->capacity; i++)
 	{
-		//Texture_Free((Texture*)buffer->meshMap->data[i]->data);
 		Texture* t = *(Texture**)DynamicArray_Index(buffer->textureMap->data, i);
 		if(t != NULL)
 		{

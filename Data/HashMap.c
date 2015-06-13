@@ -45,7 +45,7 @@ HashMap* HashMap_Allocate(void)
 //
 //Parameters:
 //	map: Hashmap to initialize
-void HashMap_Initialize(HashMap* map, unsigned int capacity)
+void HashMap_Initialize(HashMap* map)
 {
 	map->data = DynamicArray_Allocate();
 	DynamicArray_Initialize(map->data, sizeof(struct HashMap_KeyValuePair*));

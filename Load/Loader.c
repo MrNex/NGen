@@ -34,7 +34,7 @@ char* Loader_LoadTextFile(const char* fPath)
 		int size = (sizeof(char)* length) + 1;
 
 		//Allocate space for entire file and null terminator in file contents
-		fileContents = (char*)malloc((sizeof(char)* (length)+1));
+		fileContents = (char*)malloc(size);
 
 		//Read file into array
 		//fileInputStream.read(fileContents, length);
@@ -239,7 +239,7 @@ struct Image* Loader_Load24BitBMPFile(const char* fPath)
 	//Bitmaps should have the magic number 66,77 ('B','M')
 	if (headerInfo[0] != 'B' || headerInfo[1] != 'M')
 	{
-		printf("File %s is not a bitmap file!", &fPath);
+		printf("File %s is not a bitmap file!", fPath);
 	}
 
 	//In bitmap files the locationof the start of the bitmap can be found in bytes 10-14

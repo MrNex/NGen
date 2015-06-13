@@ -85,14 +85,6 @@ void Camera_ChangePitch(Camera* cam, const float radians);
 void Camera_ChangeYaw(Camera* cam, const float radians);
 
 ///
-//Scales the camera
-//
-//Parameters:
-//	cam: thegamera to scale
-//	scaleVector: a Vec-3 containing x, y, and z scale factors
-void Camera_Scale(Camera* cam, const Vector* scaleVector);
-
-///
 //Compiles the camera into a 4x4 view matrix containing a translation to camera view
 //Where the first 3x3 is a rotation matrix with scale information on the diagnol
 //And the 4th column is a Vector 3 holding Rx(x)+Ry(y)+Rz(z)

@@ -27,7 +27,7 @@ struct State_FirstPersonCamera_Members
 {
 	float rotationSpeed;
 	float movementSpeed;
-	float* selectedPlane;
+	float skewRate;
 };
 
 ///
@@ -35,7 +35,10 @@ struct State_FirstPersonCamera_Members
 //
 //Parameters:
 //	s: The state to initialize
-void State_FirstPersonCamera_Initialize(State* s, const float velocity, const float angularVelocity)
+//	velocity: The movement speed of the camera
+//	angularVelocity: The rotation speed of the camera
+//	skewSpeed: The rate at which the camera can skew 
+void State_FirstPersonCamera_Initialize(State* s, const float velocity, const float angularVelocity, const float skewSpeed)
 {
 	s->members = (State_Members)malloc(sizeof(struct State_FirstPersonCamera_Members));
 
@@ -44,7 +47,7 @@ void State_FirstPersonCamera_Initialize(State* s, const float velocity, const fl
 
 	members->movementSpeed = velocity;
 	members->rotationSpeed = angularVelocity;
-	members->selectedPlane = &(RenderingManager_GetRenderingBuffer()->camera->nearPlane);
+	members->skewRate = skewSpeed;
 
 	s->State_Update = State_FirstPersonCamera_Update;
 	s->State_Members_Free = State_FirstPersonCamera_Free;
@@ -67,12 +70,12 @@ void State_FirstPersonCamera_Free(State* s)
 //	state: The First person camera state updating the gameObject
 void State_FirstPersonCamera_Update(GObject* GO, State* state)
 {
-	//printf("\nUpdating Cam\n");
 	State_FirstPersonCamera_Rotate(GO, state);
 	State_FirstPersonCamera_Translate(GO, state);
 	State_FirstPersonCamera_Skew(GO, state);
 
-		//Experimental feature
+	/*
+	//Experimental feature
 	if(InputManager_IsKeyDown('o'))
 	{
 		//Get Camera
@@ -93,6 +96,7 @@ void State_FirstPersonCamera_Update(GObject* GO, State* state)
 
 		//Vector_Copy(gravity, &zAxis);
 	}
+	*/
 
 }
 
@@ -104,6 +108,8 @@ void State_FirstPersonCamera_Update(GObject* GO, State* state)
 //	state: The First person camera state updating the gameObject
 void State_FirstPersonCamera_Rotate(GObject* GO, State* state)
 {
+	//GO is unused
+	(void)GO;
 
 	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
 
@@ -125,7 +131,7 @@ void State_FirstPersonCamera_Rotate(GObject* GO, State* state)
 
 
 			axis->components[1] = 1.0f;
-			Camera_Rotate(cam, axis, members->rotationSpeed * deltaMouseX);
+			Camera_Rotate(cam, axis, members->rotationSpeed * deltaMouseX * dt);
 			axis->components[1] = 0.0f;
 		}
 
@@ -133,7 +139,7 @@ void State_FirstPersonCamera_Rotate(GObject* GO, State* state)
 		{
 			axis->components[0] = 1.0f;
 
-			Camera_Rotate(cam, axis, members->rotationSpeed * deltaMouseY);
+			Camera_Rotate(cam, axis, members->rotationSpeed * deltaMouseY * dt);
 			axis->components[0] = 0.0f;
 		}
 
@@ -151,6 +157,9 @@ void State_FirstPersonCamera_Rotate(GObject* GO, State* state)
 //	state: the First Person Camera State updating the gameObject
 void State_FirstPersonCamera_Translate(GObject* GO, State* state)
 {
+	//GO is unused
+	(void)GO;
+
 	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
 
 	if(InputManager_GetInputBuffer().mouseLock)
@@ -216,18 +225,25 @@ void State_FirstPersonCamera_Translate(GObject* GO, State* state)
 //	state: The First person camera state updating the gameObject
 void State_FirstPersonCamera_Skew(GObject* GO, State* state)
 {
-	//TODO: Write Skew code here
+	//GO is unused
+	(void)GO;	
+
+	//Get members
+	struct State_FirstPersonCamera_Members* members = (struct State_FirstPersonCamera_Members*)state->members;
+	//Get camera
 	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
+	//Get dt
+	float dt = TimeManager_GetDeltaSec();
 
 	if(InputManager_IsKeyDown('='))
 	{
-		cam->nearPlane *= 1.001f;
-		printf("Near Plane: %f\n", cam->nearPlane);
+		cam->nearPlane += members->skewRate * dt;
+		printf("Near Plane: %f\n", cam->nearPlane); 
 		Camera_RefreshPerspectiveMatrix(cam);
 	}
 	if(InputManager_IsKeyDown('-'))
 	{
-		cam->nearPlane *= 0.999f;
+		cam->nearPlane -= members->skewRate * dt;
 		printf("Near Plane: %f\n", cam->nearPlane);
 		Camera_RefreshPerspectiveMatrix(cam);
 	}

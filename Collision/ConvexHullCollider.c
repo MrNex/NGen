@@ -424,7 +424,7 @@ void ConvexHullCollider_GetOrientedWorldPoints(Vector** dest, const struct Colli
 	ConvexHullCollider_GetOrientedModelPoints(dest, collider, frame);
 
 	//Translate to world space
-	for(int i = 0; i < collider->points->size; i++)
+	for(unsigned int i = 0; i < collider->points->size; i++)
 	{
 		Vector_Increment(dest[i], frame->position);
 	}

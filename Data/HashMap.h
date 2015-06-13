@@ -5,9 +5,6 @@
 
 typedef struct HashMap
 {
-	//unsigned int capacity;
-	//unsigned int size;
-	//struct HashMap_KeyValuePair** data;
 	DynamicArray* data;
 	unsigned long(*Hash)(void* key, unsigned int keyLength);
 
@@ -65,7 +62,7 @@ HashMap* HashMap_Allocate(void);
 //
 //Parameters:
 //	map: Hashmap to initialize
-void HashMap_Initialize(HashMap* map, unsigned int capacity);
+void HashMap_Initialize(HashMap* map);
 
 ///
 //Frees a hashmap

@@ -180,7 +180,7 @@ LinkedList* CollisionManager_UpdateList(LinkedList* gameObjects)
 					CollisionManager_TestCollision( 
 						collision,
 						currentObj,
-						currentObj->body != NULL ? currentObj->body->frame : currentObj->frameOfReference,		//If there is a rigidbody use that frame of reference, else use the objects
+						currentObj->body != NULL ? currentObj->body->frame : currentObj->frameOfReference,	//If there is a rigidbody use that frame of reference, else use the objects
 						iteratorObj,
 						iteratorObj->body != NULL ? iteratorObj->body->frame : iteratorObj->frameOfReference);	//If there is a rigidbody use that frame of reference, else use the objects
 
@@ -292,11 +292,11 @@ static void CollisionManager_UpdateOctTreeNodeArray(GObject** gameObjects, unsig
 	struct Collision* collision = CollisionManager_AllocateCollision();
 	CollisionManager_InitializeCollision(collision);
 
-	for(int i = 0; i < numObjects; i++)
+	for(unsigned int i = 0; i < numObjects; i++)
 	{
 		if(gameObjects[i]->collider != NULL)
 		{
-			for(int j = i+1; j < numObjects; j++)
+			for(unsigned int j = i+1; j < numObjects; j++)
 			{
 				if(gameObjects[j]->collider != NULL)
 				{
@@ -398,11 +398,11 @@ LinkedList* CollisionManager_UpdateArray(GObject** gameObjects, unsigned int num
 	struct Collision* collision = CollisionManager_AllocateCollision();
 	CollisionManager_InitializeCollision(collision);
 
-	for(int i = 0; i < numObjects; i++)
+	for(unsigned int i = 0; i < numObjects; i++)
 	{
 		if(gameObjects[i]->collider != NULL)
 		{
-			for(int j = i+1; j < numObjects; j++)
+			for(unsigned int j = i+1; j < numObjects; j++)
 			{
 				if(gameObjects[j]->collider != NULL)
 				{
@@ -1706,13 +1706,12 @@ static unsigned char CollisionManager_PerformSATFaces(struct Collision* dest,
 //  orientedPoints2: An array of pointers to vectors representing the oriented points of object 2
 //	numPoints2: the number of points belonging to object 2
 static unsigned char CollisionManager_PerformSATEdges(struct Collision* dest,
-													  const Vector** orientedEdges1, const unsigned int numEdges1,
-													  const Vector** orientedPoints1, const unsigned int numPoints1,
-													  const Vector** orientedEdges2, const unsigned int numEdges2,
-													  const Vector** orientedPoints2, const unsigned int numPoints2)
+	const Vector** orientedEdges1, const unsigned int numEdges1,
+	const Vector** orientedPoints1, const unsigned int numPoints1,
+	const Vector** orientedEdges2, const unsigned int numEdges2,
+	const Vector** orientedPoints2, const unsigned int numPoints2)
 {
-	unsigned char detected = 1;		//Tracks if any axis does not detect a collision
-	float minOverlap = dest->overlap;		//Stores the minimum overlap of all axes
+	float minOverlap = dest->overlap;	//Stores the minimum overlap of all axes
 
 	//Stores the projection bounds on each axis of obj1's points and obj2's points
 	struct ProjectionBounds bounds[2];

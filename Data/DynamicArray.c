@@ -132,7 +132,7 @@ void DynamicArray_Remove(DynamicArray* arr, const unsigned int index)
 //	data: The data to remove
 void DynamicArray_RemoveData(DynamicArray* arr, void* data)
 {
-	for(int i = 0; i < arr->capacity; i++)
+	for(unsigned int i = 0; i < arr->capacity; i++)
 	{
 		if(memcmp(data, (char*)arr->data + (i * arr->dataSize), arr->dataSize) == 0)
 		{
@@ -155,7 +155,7 @@ void DynamicArray_RemoveData(DynamicArray* arr, void* data)
 //	1 if the data is contained
 unsigned char DynamicArray_Contains(DynamicArray* arr, void* data)
 {
-	for(int i = 0; i < arr->capacity; i++)
+	for(unsigned int i = 0; i < arr->capacity; i++)
 	{
 		if(memcmp(data, (char*)arr->data + (i * arr->dataSize), arr->dataSize) == 0)
 		{
@@ -178,7 +178,7 @@ unsigned char DynamicArray_Contains(DynamicArray* arr, void* data)
 //	1 if the data is contained
 unsigned char DynamicArray_ContainsWithin(DynamicArray* arr, void* data, unsigned int n)
 {
-	for(int i = 0; i < n; i++)
+	for(unsigned int i = 0; i < n; i++)
 	{
 		if(memcmp(data, (char*)arr->data + (i * arr->dataSize), arr->dataSize) == 0)
 		{

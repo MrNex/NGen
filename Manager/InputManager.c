@@ -120,6 +120,9 @@ void InputManager_OnMouseDrag(int x, int y)
 //	y: the current y position of the mouse
 void InputManager_OnMouseClick(int button, int state, int x, int y)
 {
+	//Variables x, y are unused
+	(void)x;
+	(void)y;
 	inputBuffer->mouseButtonStates[button] = state == 1 ? 0 : 1;
 }
 
@@ -133,6 +136,10 @@ void InputManager_OnMouseClick(int button, int state, int x, int y)
 //	y: Current y position of the mouse
 void InputManager_OnKeyPress(unsigned char key, int x, int y)
 {
+	//Variables x, y are unused
+	(void)x;
+	(void)y;
+
 	inputBuffer->keyStates[key] = 1;
 }
 
@@ -146,6 +153,10 @@ void InputManager_OnKeyPress(unsigned char key, int x, int y)
 //	y: Current y position of the mouse
 void InputManager_OnKeyRelease(unsigned char key, int x, int y)
 {
+	//Variables x, y are unused
+	(void)x;
+	(void)y;
+
 	inputBuffer->keyStates[key] = 0;
 }
 
