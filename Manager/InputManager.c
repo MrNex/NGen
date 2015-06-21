@@ -140,6 +140,8 @@ void InputManager_OnKeyPress(unsigned char key, int x, int y)
 	(void)x;
 	(void)y;
 
+	//printf("Key\t%d\n", (int)key);
+
 	inputBuffer->keyStates[key] = 1;
 }
 
