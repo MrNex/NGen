@@ -17,8 +17,11 @@
 #include "../Manager/InputManager.h"
 #include "../Manager/RenderingManager.h"
 #include "../Manager/TimeManager.h"
+#include "../Manager/AssetManager.h"
 
 #include "../Data/LinkedList.h"
+
+#include "Remove.h"
 
 
 struct State_ParkourController_Members
@@ -34,6 +37,9 @@ struct State_ParkourController_Members
 	float spinningTime;
 	float spinningTimer;
 
+	float shootCooldown;
+	float shootTimer;
+
 	Vector* wallNormal;
 };
 
@@ -46,7 +52,8 @@ struct State_ParkourController_Members
 //	maxVelocity: The maximum linear velocity of the parkourController
 //	angularVelocity: The angular velocity of the parkour controller (How fast can you turn?)
 //	jumpImpulse: The force exerted when jumping
-void State_ParkourController_Initialize(State* s, const float acceleration, const float maxVelocity, const float angularVelocity, const float jumpImpulse)
+//	shootSpeed: The amount of seconds you must wait before shooting againS
+void State_ParkourController_Initialize(State* s, const float acceleration, const float maxVelocity, const float angularVelocity, const float jumpImpulse, const float shootSpeed)
 {
 	struct State_ParkourController_Members* members = (struct State_ParkourController_Members*)malloc(sizeof(struct State_ParkourController_Members));
 	s->members = (State_Members*)members;
@@ -63,6 +70,9 @@ void State_ParkourController_Initialize(State* s, const float acceleration, cons
 
 	members->spinningTime = 3.14159f / spinningRate;
 	members->spinningTimer = members->spinningTime;
+
+	members->shootTimer = 0.0f;
+	members->shootCooldown = shootSpeed;	
 
 	members->wallNormal = Vector_Allocate();
 	Vector_Initialize(members->wallNormal, 3);
@@ -149,7 +159,7 @@ static void State_ParkourController_Accelerate(GObject* obj, State* state)
 	Vector_INIT_ON_STACK(netForce, 3);
 	Vector direction;
 	Vector_INIT_ON_STACK(direction, 3);
-	if(InputManager_IsKeyDown('W'))
+	if(InputManager_IsKeyDown('w'))
 	{
 		//Get forward vector of camera
 		Matrix_SliceRow(&direction, cam->rotationMatrix, 2, 0, 3);
@@ -165,7 +175,7 @@ static void State_ParkourController_Accelerate(GObject* obj, State* state)
 		//BEcause forward is the negative Z axis
 		Vector_Decrement(&netForce, &direction);
 	}
-	if(InputManager_IsKeyDown('S'))
+	if(InputManager_IsKeyDown('s'))
 	{
 		//Get back vector of camera
 		//Get forward vector of camera
@@ -182,7 +192,7 @@ static void State_ParkourController_Accelerate(GObject* obj, State* state)
 		//BEcause forward is the negative Z axis
 		Vector_Increment(&netForce, &direction);
 	}
-	if(InputManager_IsKeyDown('D'))
+	if(InputManager_IsKeyDown('d'))
 	{
 		//Get forward vector of camera
 		Matrix_SliceRow(&direction, cam->rotationMatrix, 0, 0, 3);
@@ -198,7 +208,7 @@ static void State_ParkourController_Accelerate(GObject* obj, State* state)
 		//BEcause forward is the negative Z axis
 		Vector_Increment(&netForce, &direction);
 	}
-	if(InputManager_IsKeyDown('A'))
+	if(InputManager_IsKeyDown('a'))
 	{
 		//Get forward vector of camera
 		Matrix_SliceRow(&direction, cam->rotationMatrix, 0, 0, 3);
@@ -223,7 +233,7 @@ static void State_ParkourController_Accelerate(GObject* obj, State* state)
 	if(Vector_GetMag(obj->body->velocity) < members->maxVelocity)
 	{
 		//Apply the impulse
-		RigidBody_ApplyImpulse(obj->body, &netForce, &Vector_ZERO);
+		RigidBody_ApplyForce(obj->body, &netForce, &Vector_ZERO);
 	}
 	else
 	{
@@ -284,13 +294,110 @@ static void State_ParkourController_Jump(GObject* obj, State* state)
 	RigidBody_ApplyImpulse(obj->body, &jumpImpulse, &Vector_E1);
 }
 
+///
+//Allows the parkour controller to horizontally wallrun
+//
+//Parameters:
+//	obj: A pointer to the object attached to the parkourController state
+//	state: The parkourController state updating the object
+static void State_ParkourController_HorizontalWallrun(GObject* obj, State* state)
+{
+	//Get the members of this state
+	struct State_ParkourController_Members* members = (struct State_ParkourController_Members*)state->members;
+
+	//Zero downward velocity
+	if(obj->body->velocity->components[1] < 0.0f)
+	{
+		Vector impulse;
+		Vector_INIT_ON_STACK(impulse, 3);
+		impulse.components[1] = -obj->body->velocity->components[1];
+		RigidBody_ApplyImpulse(obj->body, &impulse, &Vector_ZERO);
+	}
+	
+	//Accelerate along wall
+	//Get the projection of the forward vector onto the wall's plane
+	
+	//Start by getting for forward vector of the camera
+	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
+
+	Vector forward;
+	Vector_INIT_ON_STACK(forward, 3);
+
+	Matrix_SliceRow(&forward, cam->rotationMatrix, 2, 0, 3);
+	//Forward of camera is back of object...
+	Vector_Scale(&forward, -1.0f);
+
+	//Project the forward vector onto the wall plane
+	Vector perp;
+	Vector_INIT_ON_STACK(perp, 3);
+
+	Vector_GetProjection(&perp, &forward, members->wallNormal);
+	Vector_Decrement(&forward, &perp);
+
+	//Set the Y component to 0 to get horizontal vector along wall!
+	forward.components[1] = 0.0f;
+
+	Vector_Normalize(&forward);
+
+	//MAke sure the velocity in this direction is not too much
+	float magVelAlongWall = Vector_DotProduct(&forward, obj->body->velocity);
+
+	if(magVelAlongWall < members->maxVelocity)
+	{
+		RigidBody_ApplyImpulse(obj->body, &forward, &Vector_ZERO);
+	}
+
+	//Apply a cohesive force to the wall to make sure you do not fall off
+	
+
+}
+
+///
+//Allows the parkour controller to vertically wallrun
+//
+//Parameters:
+//	obj: A pointer to the object attached to the parkourController state
+//	state: The parkourController state updating the object
+static void State_ParkourController_VerticalWallrun(GObject* obj, State* state)
+{
+	//Get the members of this state
+	struct State_ParkourController_Members* members = (struct State_ParkourController_Members*)state->members;
+
+
+	Vector impulse;
+	Vector_INIT_ON_STACK(impulse, 3);
+	impulse.components[1] = members->jumpMag;
+	RigidBody_ApplyImpulse(obj->body, &impulse, &Vector_ZERO);
+
+	//Cap max upward speed
+	if(obj->body->velocity->components[1] > members->maxVelocity)
+	{
+		obj->body->velocity->components[1] = members->maxVelocity;
+	}
+
+	if(obj->body->velocity->components[0] != 0.0f || obj->body->velocity->components[2])
+	{
+		Vector_Copy(&impulse, &Vector_ZERO);
+
+		impulse.components[0] -= obj->body->velocity->components[0];
+		impulse.components[2] -= obj->body->velocity->components[2];
+
+		RigidBody_ApplyImpulse(obj->body, &impulse, &Vector_ZERO);
+	}
+}
+///
+//Allows the parkour controller to run up a wall
+//
+//Parameters:
+//	obj: A pointer to the object attached to the parkourController state
+//	state: The parkourController state updating the object
 static void State_ParkourController_Wallrun(GObject* obj, State* state)
 {
 	//Get the members of this state
 	struct State_ParkourController_Members* members = (struct State_ParkourController_Members*)state->members;
 
-	//If we are not wallrunning yet
-	if(members->horizontalRunning == 0 && members->verticalRunning == 0)
+	//If we are not vertical wallrunning yet
+	if(members->verticalRunning == 0 && members->horizontalRunning == 0)
 	{
 		//Loop through the list of collisions this object was involved in
 		struct LinkedList_Node* currentNode = obj->collider->currentCollisions->head;
@@ -307,15 +414,187 @@ static void State_ParkourController_Wallrun(GObject* obj, State* state)
 				Vector currentNormal;
 				Vector_INIT_ON_STACK(currentNormal, 3);
 				Vector_Copy(&currentNormal, current->minimumTranslationVector);
-		
+
+				//Make sure the normal is pointing toward this object
+				if(current->obj1 != obj)
+				{
+					Vector_Scale(&currentNormal, -1.0f);
+				}
+
+
+				//Next we must determine what kind of wallrun is happening
+				//Start by getting for forward vector of the camera
+				Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
+
+				Vector forward;
+				Vector_INIT_ON_STACK(forward, 3);
+
+				Matrix_SliceRow(&forward, cam->rotationMatrix, 2, 0, 3);
+
+				//Project the forward vector onto the XY plane
+				Vector perp;
+				Vector_INIT_ON_STACK(perp, 3);
+
+				Vector_GetProjection(&perp, &forward, &Vector_E2);
+				Vector_Decrement(&forward, &perp);
+
+				Vector_Normalize(&forward);
+
+				//Get the dot product of the forward vector and collision normal
+				float dotProduct = Vector_DotProduct(&forward, &currentNormal);
+
+				//If the dot product is closer to 1, we are starting to vertically wallrun
+				if(dotProduct > 0.75f)
+				{
+					members->verticalRunning = 1;
+					//Vertical wall running always has higher precedence than horizontal wall running
+					members->horizontalRunning = 0;
+					//SEt the wall normal of state
+					Vector_Copy(members->wallNormal, &currentNormal);
+					break;
+				}
+				else if(dotProduct > 0.0f)
+				{
+					members->horizontalRunning = 1;
+					//Set the wall normal of state
+					Vector_Copy(members->wallNormal, &currentNormal);
+				}
 			}
 			currentNode = currentNode->next;
 		}
 	}
+
+	//If we are vertical wall running
+	if(members->verticalRunning)
+	{
+
+		State_ParkourController_VerticalWallrun(obj, state);
+
+	}
+	//else If we are horizontal wall running
+	else if(members->horizontalRunning)
+	{	
+		State_ParkourController_HorizontalWallrun(obj, state);
+	}
 }
+
+///
+//Lets the controller jump off of a wall
+//Parameters:
+//	obj: A pointer to The object attached to the ParkourController state
+//	state: A pointer to the ParkourController state updating the object
+void State_ParkourController_WallJump(GObject* obj, State* state)
+{
+	//Get the members of this state
+	struct State_ParkourController_Members* members = (struct State_ParkourController_Members*)state->members;
+
+	Vector impulse;
+	Vector_INIT_ON_STACK(impulse, 3);
+	Vector_Copy(&impulse, members->wallNormal);
+	Vector_Scale(&impulse, members->jumpMag);
+
+	RigidBody_ApplyImpulse(obj->body, &impulse, &Vector_ZERO);
+
+	if(members->horizontalRunning)
+	{
+		Vector_Copy(&impulse, &Vector_E2);
+		Vector_Scale(&impulse, members->jumpMag);
+		RigidBody_ApplyImpulse(obj->body, &impulse, &Vector_ZERO);
+	}
 	
+}
 
+///
+//Lets the ParkourController vault over a wall
+//
+//Parameters:
+//	obj: A pointer to the object attached to the ParkourController state
+//	state: 
+void State_ParkourController_WallVault(GObject* obj, State* state)
+{
+	//Get the members of this state
+	struct State_ParkourController_Members* members = (struct State_ParkourController_Members*)state->members;
+	
+	Vector impulse;
+	Vector_INIT_ON_STACK(impulse, 3);
 
+	Vector_Copy(&impulse, members->wallNormal);
+	Vector_Scale(&impulse, -members->maxVelocity);
+	
+	RigidBody_ApplyImpulse(obj->body, &impulse, &Vector_ZERO);
+}	
+
+void State_ParkourController_Shoot(GObject* obj, State* state)
+{
+	//Get the members of the state
+	struct State_ParkourController_Members* members = (struct State_ParkourController_Members*)state->members;
+
+	//Get a reference to the camera
+	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
+
+	
+	if(InputManager_GetInputBuffer().mouseLock)
+	{
+		//IF we can shoot again
+		if(members->shootTimer >= members->shootCooldown)
+		{
+			//Get the forward vector of the camera
+			Vector direction;
+			Vector_INIT_ON_STACK(direction, 3);
+
+			Matrix_SliceRow(&direction, cam->rotationMatrix, 2, 0, 3);
+			Vector_Scale(&direction, -1.0f);
+
+			//Create the bullet object
+			GObject* bullet = GObject_Allocate();
+			GObject_Initialize(bullet);
+
+			//Set the appearance
+			bullet->mesh = AssetManager_LookupMesh("Cube");
+			bullet->texture = AssetManager_LookupTexture("White");
+			*Matrix_Index(bullet->colorMatrix, 1, 1) = 0.0f;
+			*Matrix_Index(bullet->colorMatrix, 2, 2) = 0.0f;
+
+			//Create ridgid body
+			bullet->body = RigidBody_Allocate();
+			RigidBody_Initialize(bullet->body, bullet->frameOfReference, 1.0f);
+			bullet->body->coefficientOfRestitution = 0.2f;		
+	
+			//Create collider
+			bullet->collider = Collider_Allocate();
+			ConvexHullCollider_Initialize(bullet->collider);
+			ConvexHullCollider_MakeRectangularCollider(bullet->collider->data->convexHullData, 2.0f, 2.0f, 2.0f);
+
+			//Position bullet
+			Vector transform;
+			Vector_INIT_ON_STACK(transform, 3);
+
+			Vector_GetScalarProduct(&transform, &direction, 2.8243f);
+			Vector_Increment(&transform, obj->frameOfReference->position);
+			GObject_Translate(bullet, &transform);
+
+			//Scale bullet
+			Vector_Copy(&transform, &Vector_ZERO);
+			transform.components[0] = transform.components[1] = transform.components[2] = 0.1f;
+			GObject_Scale(bullet, &transform);
+
+			//Apply impulse
+			Vector_Scale(&direction, 25.0f);
+			RigidBody_ApplyImpulse(bullet->body, &direction, &Vector_ZERO);
+
+			//Add the remove state
+			State* state = State_Allocate();
+			State_Remove_Initialize(state, 5.0f);
+			GObject_AddState(bullet, state);
+
+			//Add the bullet to the world
+			ObjectManager_AddObject(bullet);
+
+			//Set shoot timer to 0
+			members->shootTimer = 0.0f;
+		}
+	}	
+}
 ///
 //Updates a GObject using a Template state
 //
@@ -326,7 +605,20 @@ void State_ParkourController_Update(GObject* obj, State* state)
 {
 	//Get a reference to the state members
 	struct State_ParkourController_Members* members = (struct State_ParkourController_Members*)state->members;
-	
+
+
+	//If it needs to be updated, update the shoot timer
+	if(members->shootTimer < members->shootCooldown)
+	{
+		float dt = TimeManager_GetDeltaSec();
+		members->shootTimer += dt;
+	}	
+	//If the left mouse button is down, shoot
+	if(InputManager_IsMouseButtonPressed(0))
+	{
+		State_ParkourController_Shoot(obj, state);
+	}
+
 	//Get a reference to the camera
 	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
 
@@ -350,12 +642,35 @@ void State_ParkourController_Update(GObject* obj, State* state)
 			//Attempt to wallrun!
 			State_ParkourController_Wallrun(obj, state);
 		}
+		else if(members->verticalRunning || members->horizontalRunning)
+		{
+			//Wall jump!
+			State_ParkourController_WallJump(obj, state);
+
+			//If vertically wallrunning, start spinning right round baby right round!
+			if(members->verticalRunning) members->spinningTimer = 0.0f;	
+	
+			//The object was wallrunning but now (s)he stopped before the wall ended
+			members->verticalRunning = members->horizontalRunning = 0;
+		}
+	}
+	else if(members->verticalRunning || members->horizontalRunning)
+	{
+		if(members->verticalRunning)
+		{
+			State_ParkourController_WallVault(obj, state);
+		}
+
+		//The character was wallrunning but now there is no wall
+		members->verticalRunning = members->horizontalRunning = 0;
 	}
 	
 	//If the parkour controller currently spinning off a wall, let it continue, else let the player rotate the controller
 	if(members->spinningTimer < members->spinningTime)
 	{
-
+		float dt = TimeManager_GetDeltaSec();
+		members->spinningTimer += dt;
+		Camera_ChangeYaw(cam, spinningRate * dt);
 	}
 	else
 	{

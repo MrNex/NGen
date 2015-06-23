@@ -333,9 +333,9 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
         //Lighting
         buffer->directionalLightVector = Vector_Allocate();
         Vector_Initialize(buffer->directionalLightVector, 3);
-        //buffer->directionalLightVector->components[0] = -0.77f;
+        buffer->directionalLightVector->components[0] = -1.0f;
         //buffer->directionalLightVector->components[2] = -0.77f;
-        buffer->directionalLightVector->components[2] = -1.0f;
+        //buffer->directionalLightVector->components[2] = -1.0f;
 
         //Debug
         buffer->debugOctTree = 0;

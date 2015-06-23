@@ -15,7 +15,8 @@ static const float spinningRate = 3.14159f * 5.0f;
 //	maxVelocity: The maximum linear velocity of the parkourController
 //	angularVelocity: The angular velocity of the parkour controller (How fast can you turn?)
 //	jumpImpulse: The force exerted when jumping
-void State_ParkourController_Initialize(State* s, const float acceleration, const float maxVelocity, const float angularVelocity, const float jumpImpulse);
+//	shootSpeed: The amount of seconds you must wait before shooting again
+void State_ParkourController_Initialize(State* s, const float acceleration, const float maxVelocity, const float angularVelocity, const float jumpImpulse, const float shootSpeed);
 
 ///
 //Updates a GObject using a Template state

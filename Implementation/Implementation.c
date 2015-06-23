@@ -23,12 +23,12 @@ void InitializeScene(void)
 	Vector trans;
 	Vector_INIT_ON_STACK(trans, 3);
 	trans.components[1] = -1.0f;
-	AABBCollider_Initialize(cam->collider, 2.0f, 2.0f, 2.0f, &trans);
+	AABBCollider_Initialize(cam->collider, 3.0f, 3.0f, 3.0f, &trans);
 	//cam->collider->debug = 1;
 
 	State* state = State_Allocate();
 
-	State_ParkourController_Initialize(state, 1.0f, 7.0f, 100.0f, 3.0f);
+	State_ParkourController_Initialize(state, 10.0f, 10.0f, 50.0f, 3.0f, 0.1f);
 
 	GObject_AddState(cam,state);
 
@@ -62,6 +62,101 @@ void InitializeScene(void)
 
 	ObjectManager_AddObject(block);
 
+
+	//Create wall
+	block = GObject_Allocate();
+	GObject_Initialize(block);
+
+	block->mesh = AssetManager_LookupMesh("Cube");
+
+	block->collider = Collider_Allocate();
+	AABBCollider_Initialize(block->collider, 2.0f, 2.0f, 2.0f, &Vector_ZERO);
+
+	block->body = RigidBody_Allocate();
+	RigidBody_Initialize(block->body, block->frameOfReference, 0.0f);
+	block->body->freezeTranslation = block->body->freezeRotation = 1;
+	block->body->dynamicFriction = block->body->staticFriction = 0.1f;
+
+	
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 1.0f;
+	v.components[1] = 20.0f;
+	v.components[2] = 1.0f;
+
+	GObject_Scale(block, &v);
+
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[1] = v.components[2] = -4.0f;
+
+	GObject_Translate(block, &v);
+
+	ObjectManager_AddObject(block);
+
+
+	//Create  second wall
+	block = GObject_Allocate();
+	GObject_Initialize(block);
+
+	block->mesh = AssetManager_LookupMesh("Cube");
+
+	block->collider = Collider_Allocate();
+	AABBCollider_Initialize(block->collider, 2.0f, 2.0f, 2.0f, &Vector_ZERO);
+
+	block->body = RigidBody_Allocate();
+	RigidBody_Initialize(block->body, block->frameOfReference, 0.0f);
+	block->body->freezeTranslation = block->body->freezeRotation = 1;
+	block->body->dynamicFriction = block->body->staticFriction = 0.1f;
+
+	
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 20.0f;
+	v.components[1] = 5.0f;
+	v.components[2] = 1.0f;
+
+	GObject_Scale(block, &v);
+
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 9.0f;
+	v.components[1] = 24.0f;
+	v.components[2] = 4.0f;
+
+	GObject_Translate(block, &v);
+
+	ObjectManager_AddObject(block);
+
+	
+	//Create third wall
+	block = GObject_Allocate();
+	GObject_Initialize(block);
+
+	block->mesh = AssetManager_LookupMesh("Cube");
+
+	block->collider = Collider_Allocate();
+	AABBCollider_Initialize(block->collider, 2.0f, 2.0f, 2.0f, &Vector_ZERO);
+
+	block->body = RigidBody_Allocate();
+	RigidBody_Initialize(block->body, block->frameOfReference, 0.0f);
+	block->body->freezeTranslation = block->body->freezeRotation = 1;
+	block->body->dynamicFriction = block->body->staticFriction = 0.1f;
+
+	
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 5.0f;
+	v.components[1] = 5.0f;
+	v.components[2] = 1.0f;
+
+	GObject_Scale(block, &v);
+
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 20.0f;
+	v.components[1] = 24.0f;
+	v.components[2] = -1.0f;
+
+	GObject_Translate(block, &v);
+
+	ObjectManager_AddObject(block);
+	
+	
 	
 	//Set gravity
 	Vector* gravity = Vector_Allocate();
