@@ -59,6 +59,7 @@ void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char
 		prog->modelViewProjectionMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "modelViewProjectionMatrix");
 
 		prog->colorMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "colorMatrix" );
+		prog->tileLocation = glGetUniformLocation(prog->shaderProgramID, "tileVector");
 
 		prog->directionalLightVectorLocation = glGetUniformLocation(prog->shaderProgramID, "directionalLightVector");
 

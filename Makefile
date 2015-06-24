@@ -31,6 +31,7 @@ OBJ= \
 	Bin/Mesh.o \
 	Bin/Image.o \
 	Bin/Texture.o \
+	Bin/Material.o \
 	Bin/ShaderProgram.o \
 	Bin/Camera.o \
 	Bin/RigidBody.o \
@@ -97,6 +98,9 @@ Bin/Image.o: Render/Image.c Render/Image.h
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/Texture.o: Render/Texture.c Render/Texture.h Bin/Image.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/Material.o: Render/Material.c Render/Material.h Bin/Texture.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##

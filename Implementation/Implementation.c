@@ -1,6 +1,7 @@
 #include "Implementation.h"
 
 #include "../State/ParkourController.h"
+#include "../State/ColorCopy.h"
 
 
 ///
@@ -39,6 +40,10 @@ void InitializeScene(void)
 	GObject_Initialize(block);
 
 	block->mesh = AssetManager_LookupMesh("Cube");
+	block->material = Material_Allocate();
+	Material_Initialize(block->material, AssetManager_LookupTexture("Test"));
+	block->material->tile->components[0] = block->material->tile->components[1] = 10.0f;
+
 
 	block->collider = Collider_Allocate();
 	AABBCollider_Initialize(block->collider, 2.0f, 2.0f, 2.0f, &Vector_ZERO);

@@ -267,8 +267,9 @@ void State_CharacterController_ShootBullet(GObject* GO, State* state)
 
 			//bullet->mesh = AssetManager_LookupMesh("Sphere");
 			bullet->mesh = AssetManager_LookupMesh("Arrow");
-			bullet->texture = AssetManager_LookupTexture("Arrow");
-
+			//bullet->texture = AssetManager_LookupTexture("Arrow");
+			bullet->material = Material_Allocate();
+			Material_Initialize(bullet->material, AssetManager_LookupTexture("Arrow"));
 
 			bullet->body = RigidBody_Allocate();
 			RigidBody_Initialize(bullet->body, bullet->frameOfReference, 0.45f);

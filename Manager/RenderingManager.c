@@ -92,7 +92,7 @@ void RenderingManager_Render(LinkedList* gameObjects)
 {
 
 	//Clear buffers
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
 
 	//Set directional light
@@ -123,9 +123,6 @@ void RenderingManager_Render(LinkedList* gameObjects)
 		//Render gameobject's mesh if it exists
 		if (gameObj->mesh != NULL)
 		{
-			//Set color matrix
-			glProgramUniformMatrix4fv(renderingBuffer->shaderPrograms[0]->shaderProgramID, renderingBuffer->shaderPrograms[0]->colorMatrixLocation, 1, GL_TRUE, gameObj->colorMatrix->components);
-
 			//Set modelMatrix uniform
 			FrameOfReference_ToMatrix4(gameObj->frameOfReference, &modelMatrix);
 			glProgramUniformMatrix4fv(renderingBuffer->shaderPrograms[0]->shaderProgramID, renderingBuffer->shaderPrograms[0]->modelMatrixLocation, 1, GL_TRUE, modelMatrix.components);
@@ -137,16 +134,37 @@ void RenderingManager_Render(LinkedList* gameObjects)
 			//Set modelViewProjectionMatrix uniform
 			glProgramUniformMatrix4fv(renderingBuffer->shaderPrograms[0]->shaderProgramID, renderingBuffer->shaderPrograms[0]->modelViewProjectionMatrixLocation, 1, GL_TRUE, modelViewProjectionMatrix.components);
 
-			if (gameObj->texture != NULL)
+			if (gameObj->material != NULL)
 			{
+				//Set color matrix
+				glProgramUniformMatrix4fv(renderingBuffer->shaderPrograms[0]->shaderProgramID, renderingBuffer->shaderPrograms[0]->colorMatrixLocation, 1, GL_TRUE, gameObj->material->colorMatrix->components);
+
+				//Set the tileVector
+				glProgramUniform2fv(renderingBuffer->shaderPrograms[0]->shaderProgramID, renderingBuffer->shaderPrograms[0]->tileLocation, 1, gameObj->material->tile->components);
+
+
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, gameObj->texture->textureID);
+				glBindTexture(GL_TEXTURE_2D, gameObj->material->texture->textureID);
 
 				//Send texture to uniform
 				glUniform1i(renderingBuffer->shaderPrograms[0]->textureLocation, 0);
 			}
 			else
 			{
+				float tile[2] = {1.0f, 1.0f};
+				float colorMatrix[16] = {
+					1.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, 1.0f, 0.0f, 0.0f,
+					0.0f, 0.0f, 1.0f, 0.0f,
+					0.0f, 0.0f, 0.0f, 1.0f
+				};
+
+				//Set color matrix
+				glProgramUniformMatrix4fv(renderingBuffer->shaderPrograms[0]->shaderProgramID, renderingBuffer->shaderPrograms[0]->colorMatrixLocation, 1, GL_TRUE, colorMatrix);
+
+				//Set the tileVector
+				glProgramUniform2fv(renderingBuffer->shaderPrograms[0]->shaderProgramID, renderingBuffer->shaderPrograms[0]->tileLocation, 1, tile);
+
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, AssetManager_LookupTexture("Test")->textureID);
 
@@ -162,9 +180,21 @@ void RenderingManager_Render(LinkedList* gameObjects)
 		//Render gameObject's collider if it exists & in debug mode
 		if(gameObj->collider != NULL && gameObj->collider->debug)
 		{
-			//Set color matrix
-			glProgramUniformMatrix4fv(renderingBuffer->shaderPrograms[0]->shaderProgramID, renderingBuffer->shaderPrograms[0]->colorMatrixLocation, 1, GL_TRUE, gameObj->collider->colorMatrix->components);
 
+			float tile[2] = {1.0f, 1.0f};
+			float colorMatrix[16] = {
+				0.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f
+			};
+
+			//Set color matrix
+			glProgramUniformMatrix4fv(renderingBuffer->shaderPrograms[0]->shaderProgramID, renderingBuffer->shaderPrograms[0]->colorMatrixLocation, 1, GL_TRUE, colorMatrix);
+
+			//Set the tileVector
+			glProgramUniform2fv(renderingBuffer->shaderPrograms[0]->shaderProgramID, renderingBuffer->shaderPrograms[0]->tileLocation, 1, tile);
+			
 			//Create modelMatrix from correct Frame Of Reference
 			if(gameObj->body != NULL)
 			{

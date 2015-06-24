@@ -21,14 +21,11 @@ void GObject_Initialize(GObject* GO)
 	GO->frameOfReference = FrameOfReference_Allocate();
 	FrameOfReference_Initialize(GO->frameOfReference);
 
-	GO->colorMatrix = Matrix_Allocate();
-	Matrix_Initialize(GO->colorMatrix, 4, 4);
-
 	GO->states = LinkedList_Allocate();
 	LinkedList_Initialize(GO->states);
 
 	GO->mesh = NULL;
-	GO->texture = NULL;
+	GO->material = NULL;
 	GO->body = NULL;
 	GO->collider = NULL;
 
@@ -71,6 +68,10 @@ void GObject_Free(GObject* GO)
 		//Mesh_Free(GO->mesh);
 	//if(GO->texture != NULL)
 		//Texture_Free(GO->texture);
+	if(GO->material != NULL)
+	{
+		Material_Free(GO->material);
+	}
 	if(GO->body != NULL)
 	{
 		RigidBody_Free(GO->body);

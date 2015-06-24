@@ -3,7 +3,7 @@
 
 #include "../Render/FrameOfReference.h"
 #include "../Render/Mesh.h"
-#include "../Render/Texture.h"
+#include "../Render/Material.h"
 
 #include "../State/State.h"
 
@@ -15,12 +15,10 @@ typedef struct GObject
 {
 	FrameOfReference* frameOfReference;
 	Mesh* mesh;
-	Texture* texture;
+	Material* material;
 	LinkedList* states;
 	RigidBody* body;
 	Collider* collider;
-
-	Matrix* colorMatrix;
 } GObject;
 
 ///

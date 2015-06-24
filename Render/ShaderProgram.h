@@ -16,6 +16,7 @@ typedef struct ShaderProgram
 	
 
 	GLint colorMatrixLocation;
+	GLint tileLocation;
 
 	GLint directionalLightVectorLocation;
 
