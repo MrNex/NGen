@@ -1,6 +1,6 @@
 # NGen
 
-###### By: Nicholas Gallagher
+###### By: [Mr. Nex (A. K. A. Nicholas Gallagher)](MrNex.github.io)
 
 ## Description
 
