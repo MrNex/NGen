@@ -75,10 +75,8 @@ static void CollisionManager_UpdateOctTreeNodeArray(GObject** gameObjects, unsig
 //      0 if the test detects no collision
 //      1 if the test detects a collision
 static unsigned char CollisionManager_PerformSATFaces(struct Collision* dest,
-                                                                                const Vector** orientedAxes1, const unsigned int numAxes1,
-                                                                                const Vector** orientedPoints1, const unsigned int numPoints1,
-                                                                                const Vector** orientedAxes2, const unsigned int numAxes2,
-                                                                                const Vector** orientedPoints2, const unsigned int numPoints2);
+	const Vector** orientedAxes1, const unsigned int numAxes1, const Vector** orientedPoints1, const unsigned int numPoints1,
+	const Vector** orientedAxes2, const unsigned int numAxes2, const Vector** orientedPoints2, const unsigned int numPoints2);
 
 ///
 //Performs the Separating axis theorem test with face normals
@@ -94,10 +92,8 @@ static unsigned char CollisionManager_PerformSATFaces(struct Collision* dest,
 //  orientedPoints2: An array of pointers to vectors representing the oriented points of object 2
 //      numPoints2: the number of points belonging to object 2
 static unsigned char CollisionManager_PerformSATEdges(struct Collision* dest,
-                                                                                const Vector** orientedEdges1, const unsigned int numEdges1,
-                                                                                const Vector** orientedPoints1, const unsigned int numPoints1,
-                                                                                const Vector** orientedEdges2, const unsigned int numEdges2,
-                                                                                const Vector** orientedPoints2, const unsigned int numPoints2);
+	const Vector** orientedEdges1, const unsigned int numEdges1, const Vector** orientedPoints1, const unsigned int numPoints1,
+	const Vector** orientedEdges2, const unsigned int numEdges2, const Vector** orientedPoints2, const unsigned int numPoints2);
 
 ///
 //Projects a set of points onto a normalized axis getting the squared magnitude of the projection vector.

@@ -98,9 +98,9 @@ static void PhysicsManager_DetermineCollisionPointAABB(Vector* dest, const Frame
 //      convexFrame2: A pointer to the frame of reference of the other convex hull involved in the collision, whether the object itself has a convex hull or not
 //      relativeMTV: A pointer to a vector representing the MTV !Pointing towards the OTHER object (convexHull2)!
 static void PhysicsManager_DetermineCollisionPointConvexHull(Vector* dest,
-                                                                                                                        const struct ColliderData_ConvexHull* convexHull1, const FrameOfReference* convexFrame1,
-                                                                                                                        const struct ColliderData_ConvexHull* convexHull2, const FrameOfReference* convexFrame2,
-                                                                                                                        const Vector* relativeMTV);
+	const struct ColliderData_ConvexHull* convexHull1, const FrameOfReference* convexFrame1,
+	const struct ColliderData_ConvexHull* convexHull2, const FrameOfReference* convexFrame2,
+	const Vector* relativeMTV);
 
 ///
 //Determines the point of contact of a Convex Hull - Convex Hull collision when
@@ -125,8 +125,8 @@ static void PhysicsManager_DetermineCollisionPointConvexHullVertex(Vector* dest,
 //      furthestOnHull2: A pointer to a dynamic array of vectors containing two vertices oriented in ModelSpace on convexHull2 furthest in the direction of the respective relative MTV
 //      convexFrame2: A pointer to the frame of reference of the convex Hull which the vertices furthestOnHull2 belong to
 static void PhysicsManager_DetermineCollisionPointConvexHullEdge(Vector* dest,
-                                                                                                                          const DynamicArray* furthestOnHull1, const FrameOfReference* convexFrame1,
-                                                                                                                          const DynamicArray* furthestOnHull2, const FrameOfReference* convexFrame2);
+	const DynamicArray* furthestOnHull1, const FrameOfReference* convexFrame1,
+	const DynamicArray* furthestOnHull2, const FrameOfReference* convexFrame2);
 
 ///
 //Determines the point of contact of a convex hull - convex hull collision when
