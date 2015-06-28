@@ -12,7 +12,7 @@ Rapidly create complex 3D graphical games and simulations. Working similarly to 
 
 **Free and Open Features**. Many other engines out there today try to hide and abstract the underlying structure. The NGen *wants* you to view and take advantage of these features! Sure, it's dangerous- you could even mess up & get a few errors, but in the end it opens the door for possibilities. As an example, here are some things I was able to play around with out of sheer curiosity:
 
-I decided it would be cool if the Y axis of an objects local coordinate system were to slowly rotate around the X axis, skewing the object until it's model had fallen flat, that was pretty weird.
+- I decided it would be cool if the Y axis of an objects local coordinate system were to slowly rotate around the X axis, skewing the object until it's model had fallen flat, that was pretty weird.
 
 - I thought it neat to take a pointer to the row of the Camera's transformation matrix which signifies the looking direction of the camera, and sent it to the physics manager as a global acceleration vector (With a magnitude of 9.81)- That was fun!
 
