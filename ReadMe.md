@@ -22,35 +22,6 @@ Rapidly create complex 3D graphical games and simulations. Working similarly to 
 
 Play with my NGen, satiate your curiosity, break things and then fix them, create your own world that defys the laws of all things we know to be simulation, and lastly-- contact me if you have ANY questions.
 
-## Dependencies
+## Usage
 
-OpenGL
-- https://www.opengl.org/
-
-Freeglut
-- http://freeglut.sourceforge.net/
-
-## Build
-
-NGen is compiled using MinGw's gcc compiler. After installing freeglut you can compile the program from the top-level project directory by entering the following command:
-
-Windows:
-> mingw32-make
-
-Linux/Mac:
-> make
-
-The Makefile will take care of the rest. You can then run the project with:
-> NGen
-
-## Installation
-
-Simply download the project, extract to it's own folder if necessary, and then follow the instructions in the Build section. No other installation steps are needed.
-
-## Using the NGen
-
-As engine components are added I will be updating this section with examples of how you can use them.
-
-### Math
-
-ToDo: Provide an example of how to utilize the NGen's Matrix and Vector mathematics library.
+Please refer to the [Wiki](https://github.com/MrNex/NGen/wiki) for [Dependencies](https://github.com/MrNex/NGen/wiki/Installation#dependencies), [Installation](https://github.com/MrNex/NGen/wiki/Installation#linux), and [Getting Started](https://github.com/MrNex/NGen/wiki/Quick-Start-Guide) instructions.
