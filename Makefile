@@ -1,6 +1,3 @@
-##
-#Working through State Implementations
-
 CC=gcc
 CFLAGS=-std=c99 -Wall -pedantic -Wextra
 LIBS=-lm -lGLEW -lglut -lGLU -lGL
@@ -129,7 +126,7 @@ Bin/Collider.o: Collision/Collider.c Collision/Collider.h Bin/ConvexHullCollider
 
 ##
 #GObject
-Bin/GObject.o: GObject/GObject.c GObject/GObject.h Bin/FrameOfReference.o Bin/Mesh.o Bin/Texture.o Bin/State.o Bin/RigidBody.o Bin/Collider.o
+Bin/GObject.o: GObject/GObject.c GObject/GObject.h Bin/FrameOfReference.o Bin/Mesh.o Bin/Texture.o Bin/State/State.o Bin/RigidBody.o Bin/Collider.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##
