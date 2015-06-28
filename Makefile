@@ -1,6 +1,12 @@
 CC=gcc
 CFLAGS=-std=c99 -Wall -pedantic -Wextra
-LIBS=-lm -lGLEW -lglut -lGLU -lGL
+LIBS=-lm
+
+ifeq ($(OS),Windows_NT)
+	LIBS += -lglew32 -lfreeglut -lglu32 -lopengl32
+else
+	LIBS += -lGLEW -lglut -lGLU -lGL
+endif
 
 STATES_C=$(wildcard State/*.c)
 STATES_H=$(wildcard State/*.h)
