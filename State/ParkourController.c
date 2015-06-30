@@ -257,14 +257,11 @@ static void State_ParkourController_Rotate(State* state)
 		int deltaMouseX = (InputManager_GetInputBuffer().mousePosition[0] - InputManager_GetInputBuffer().previousMousePosition[0]);
 		int deltaMouseY = (InputManager_GetInputBuffer().mousePosition[1] - InputManager_GetInputBuffer().previousMousePosition[1]);
 
-		//Get the change in time!
-		float dt = TimeManager_GetDeltaSec();
-
 		//If there is X rotation
 		if(deltaMouseX != 0)
 		{
 			//Rotate the camera
-			Camera_ChangeYaw(cam, dt * (float)deltaMouseX * members->angularVelocity);
+			Camera_ChangeYaw(cam, (float)deltaMouseX * members->angularVelocity);
 		}
 		//If there is Y rotation
 		if(deltaMouseY != 0)
@@ -272,7 +269,7 @@ static void State_ParkourController_Rotate(State* state)
 
 			//TODO: Prevent camera from looking "Too high"
 			//Rotate the camera
-			Camera_ChangePitch(cam, dt * (float)deltaMouseY * members->angularVelocity);
+			Camera_ChangePitch(cam, (float)deltaMouseY * members->angularVelocity);
 		}
 	}
 }

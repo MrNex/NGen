@@ -29,7 +29,7 @@ void InitializeScene(void)
 
 	State* state = State_Allocate();
 
-	State_ParkourController_Initialize(state, 10.0f, 10.0f, 50.0f, 3.0f, 0.1f);
+	State_ParkourController_Initialize(state, 10.0f, 10.0f, 0.005f, 3.0f, 0.1f);
 
 	GObject_AddState(cam,state);
 
