@@ -347,8 +347,12 @@ void OctTree_Update(OctTree* tree, LinkedList* gameObjects)
 
 			if(log->size <= 0)
 			{
-				printf("Not contained in any tree..\n");
+				//printf("Not contained in any tree..\n");
 				//OctTree_AddAndLog(tree, gameObj);
+			}
+			else if(((struct OctTree_NodeStatus*)DynamicArray_Index(log, 0))->node->data->size == 1)
+			{
+				printf("Alone in this node\n");
 			}
 
 			//For each OctTree_Node the game object was in
@@ -364,6 +368,8 @@ void OctTree_Update(OctTree* tree, LinkedList* gameObjects)
 				//If the current status says that the object is no longer in the node
 				if(currentStatus == 0)
 				{
+
+					printf("Object left node\n");
 
 					//Remove the object from this node
 					OctTree_Node_Remove(nodeStatus->node, gameObj);
@@ -385,6 +391,8 @@ void OctTree_Update(OctTree* tree, LinkedList* gameObjects)
 				//Object was fully contained, and now it is not
 				else if(currentStatus == 1)
 				{
+					printf("Object leaving node\n");
+
 					//Update the status
 					nodeStatus->collisionStatus = currentStatus;
 					//Find where it moved
@@ -403,6 +411,7 @@ void OctTree_Update(OctTree* tree, LinkedList* gameObjects)
 				//Object was partially contained and now it is fully contained!
 				else
 				{
+					printf("Object entered node\n");
 
 					//Update the status
 					nodeStatus->collisionStatus = currentStatus;

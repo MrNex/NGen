@@ -156,7 +156,7 @@ static void PhysicsManager_ApplyCollisionImpulses(struct Collision* collision, c
 //      pointsOfCollision: An array of 2 pointers to vectors in 3 space representing the point of collision in global space for obj1 and obj2 respectively
 //      staticCoefficient: The static coefficient of friction between the two colliding surfaces
 //      dynamicCoefficient: The dynamic coefficient of friction between the two colliding surfaces
-static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient);
+static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient, Vector** pointsOfCollision);
 
 ///
 //Calculates and applies the angular frictional forces when two objects spin against each other
@@ -166,7 +166,7 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 //      staticCoefficient: The static coefficient of friction between the two colliding surfaces
 //      dynamicCoefficient: The dynamic coefficient of friction between the two colliding surfaces
 //	pointsOfCollision: An array of two vectors containing the points of collision for obj1 and obj2 respectively
-static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient, Vector**  pointsOfCollision);
+static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient);
 
 
 ///
@@ -569,8 +569,8 @@ static void PhysicsManager_ResolveCollision(struct Collision* collision)
 		float dynamicCoefficient = ((collision->obj1->body != NULL ? collision->obj1->body->dynamicFriction : 1.0f) + (collision->obj2->body != NULL ? collision->obj2->body->dynamicFriction : 1.0f)) / 2.0f;
 
 		//Step 4b: Calculate and apply frictional impulses
-		PhysicsManager_ApplyLinearFrictionalImpulses(collision, staticCoefficient, dynamicCoefficient);
-		PhysicsManager_ApplyFrictionalTorques(collision, staticCoefficient, dynamicCoefficient, pointsOfCollision);
+		PhysicsManager_ApplyLinearFrictionalImpulses(collision, staticCoefficient, dynamicCoefficient, pointsOfCollision);
+		PhysicsManager_ApplyFrictionalTorques(collision, staticCoefficient, dynamicCoefficient);
 
 		//Free the vectors used to hold the collision points
 		Vector_Free(pointsOfCollision[0]);
@@ -1789,7 +1789,7 @@ static void PhysicsManager_ApplyCollisionImpulses(struct Collision* collision, c
 //	pointsOfCollision: An array of 2 pointers to vectors in 3 space representing the point of collision in global space for obj1 and obj2 respectively
 //	staticCoefficient: The static coefficient of friction between the two colliding surfaces
 //	dynamicCoefficient: The dynamic coefficient of friction between the two colliding surfaces
-static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient)
+static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient, Vector** pointsOfCollision)
 {
 	//Step 1) Find the direction of a tangent vector which is tangential to the surface of collision in the direction of movement / applied forces if there is no tangential movement
 	Vector unitTangentVector;
@@ -1798,14 +1798,34 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 	Vector relativeVelocity;
 	Vector_INIT_ON_STACK(relativeVelocity, 3);
 
-	//Find relative velocity of object2 from observer on object1
+	//Find relative velocity of the point of collision on object2 from observer on the point of collsion on object1
 	if(collision->obj2->body != NULL)
 	{
-		Vector_Copy(&relativeVelocity, collision->obj2->body->velocity); 
+		Vector_Copy(&relativeVelocity, collision->obj2->body->velocity);
+		
+		Vector localVelocityAtCollisionPoint;
+		Vector radius;
+		Vector_INIT_ON_STACK(localVelocityAtCollisionPoint, 3);
+		Vector_INIT_ON_STACK(radius, 3);
+
+		Vector_Subtract(&radius, pointsOfCollision[1], collision->obj2->body->frame->position);
+		RigidBody_CalculateLocalLinearVelocity(&localVelocityAtCollisionPoint, collision->obj2->body, &radius);
+
+		Vector_Increment(&relativeVelocity, &localVelocityAtCollisionPoint);
 	}
 	if(collision->obj1->body != NULL)
 	{
 		Vector_Decrement(&relativeVelocity, collision->obj1->body->velocity);
+
+		Vector localVelocityAtCollisionPoint;
+		Vector radius;
+		Vector_INIT_ON_STACK(localVelocityAtCollisionPoint, 3);
+		Vector_INIT_ON_STACK(radius, 3);
+
+		Vector_Subtract(&radius, pointsOfCollision[0], collision->obj1->body->frame->position);
+		RigidBody_CalculateLocalLinearVelocity(&localVelocityAtCollisionPoint, collision->obj1->body, &radius);
+
+		Vector_Decrement(&relativeVelocity, &localVelocityAtCollisionPoint);
 	}
 
 	//Make sure the relative velocity is nonZero
@@ -1935,7 +1955,7 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 //	staticCoefficient: The static coefficient of friction between the two colliding surfaces
 //	dynamicCoefficient: The dynamic coefficient of friction between the two colliding surfaces
 //	pointsOfCollision: An array of two vectors containing the points of collision for object 1 and object 2 respectively
-static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient, Vector** pointsOfCollision)
+static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient)
 {
 
 	//Step 0) Save references to both bodies to reduce typing and increase readability
@@ -1988,9 +2008,9 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 		Vector_GetScalarProduct(&lA, collision->minimumTranslationVector, relAVPerp);
 
 		//Determine the amount of relative angular velocity parallel to the surface to compute rolling motion
-		Vector relAVRolling;
-		Vector_INIT_ON_STACK(relAVRolling, 3);
-		Vector_Subtract(&relAVRolling, &aVRel, &lA);
+		//Vector relAVRolling;
+		//Vector_INIT_ON_STACK(relAVRolling, 3);
+		//Vector_Subtract(&relAVRolling, &aVRel, &lA);
 
 		Matrix_TransformVector(&iA, &lA);
 
@@ -2013,6 +2033,7 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 			RigidBody_ApplyInstantaneousTorque(body1, &lA);
 		}
 
+		/*
 		//Computation for rolling motion begins here
 		//If the object were rotating around the point of collision, find the linear velocity of the center
 		Vector linearVelocityOfCenter;
@@ -2042,7 +2063,8 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 
 			//Apply the impulse
 			RigidBody_ApplyImpulse(body1, &linearVelocityOfCenter, &Vector_ZERO);
-		}	
+		}
+		*/	
 	
 	}
 	
@@ -2058,9 +2080,9 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 		RigidBody_CalculateMomentOfInertiaInWorldSpace(&iB, body2);
 
 		//Determine the amount of relative angular velocity parallel to the surface to compute rolling motion
-		Vector relAVRolling;
-		Vector_INIT_ON_STACK(relAVRolling, 3);
-		Vector_Subtract(&relAVRolling, &aVRel, &lB);
+		//Vector relAVRolling;
+		//Vector_INIT_ON_STACK(relAVRolling, 3);
+		//Vector_Subtract(&relAVRolling, &aVRel, &lB);
 
 		Vector_GetScalarProduct(&lB, collision->minimumTranslationVector, relAVPerp);
 		Matrix_TransformVector(&iB, &lB);
@@ -2087,6 +2109,8 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 			RigidBody_ApplyInstantaneousTorque(body2, &lB);
 		}
 
+
+		/*
 		//Rolling computations begin here
 		//If the object were rotating around the point of collision, find the linear velocity of the center
 		Vector linearVelocityOfCenter;
@@ -2118,156 +2142,7 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 
 			//Apply the impulse
 			RigidBody_ApplyImpulse(body2, &linearVelocityOfCenter, &Vector_ZERO);
-		}	
-	}
-	/*
-	//Step 1) compute static and dynamic frictional torque magnitudes based off of the magnitude of the
-	//component of the reaction instantaneous torque of the collision in the direction of the contact normal
-	float reactionMag1 = 0.0f;
-	float reactionMag2 = 0.0f;
-	if(collision->obj1->body != NULL && collision->obj1->body->inverseMass != 0.0f && !collision->obj1->body->freezeRotation)
-	{
-		//reactionMag = fabs(Vector_DotProduct(collision->obj1->body->netInstantaneousTorque, collision->minimumTranslationVector));
-
-		Vector instantaneousTorqueCausingAngularAcceleration;
-		Vector_INIT_ON_STACK(instantaneousTorqueCausingAngularAcceleration, 3);
-		Matrix_GetProductVector(&instantaneousTorqueCausingAngularAcceleration, collision->obj1->body->inertia, collision->obj1->body->angularVelocity);
-
-		Vector_Increment(&instantaneousTorqueCausingAngularAcceleration, collision->obj1->body->netInstantaneousTorque);
-
-		reactionMag1 = fabs(Vector_DotProduct(&instantaneousTorqueCausingAngularAcceleration, collision->minimumTranslationVector));
-
-	}
-	else if (collision->obj2->body != NULL && collision->obj2->body->inverseMass != 0.0f && !collision->obj2->body->freezeRotation)
-	{
-		//reactionMag = fabs(Vector_DotProduct(collision->obj2->body->netInstantaneousTorque, collision->minimumTranslationVector));
-
-		Vector instantaneousTorqueCausingAngularAcceleration;
-		Vector_INIT_ON_STACK(instantaneousTorqueCausingAngularAcceleration, 3);
-		Matrix_GetProductVector(&instantaneousTorqueCausingAngularAcceleration, collision->obj2->body->inertia, collision->obj2->body->angularVelocity);
-
-		Vector_Increment(&instantaneousTorqueCausingAngularAcceleration, collision->obj2->body->netInstantaneousTorque);
-
-		reactionMag2 = fabs(Vector_DotProduct(&instantaneousTorqueCausingAngularAcceleration, collision->minimumTranslationVector));
-	}
-
-
-	float staticMag1 = staticCoefficient * reactionMag1;
-	float dynamicMag1 = dynamicCoefficient * reactionMag1;
-	float staticMag2 = staticCoefficient * reactionMag2;
-	float dynamicMag2 = dynamicCoefficient * reactionMag2;
-
-	//Step 2) Compute the relative angular velocity between the colliding objects
-	Vector relativeAngularVelocity;
-	Vector_INIT_ON_STACK(relativeAngularVelocity, 3);
-	//Find relative velocity of object2 from observer on object1
-	if(collision->obj2->body != NULL)
-	{//Get members
-		struct State_FirstPersonCamera_Members* members = (struct State_FirstPersonCamera_Members*)state->members;
-		Vector_Copy(&relativeAngularVelocity, collision->obj2->body->angularVelocity); 
-	}
-	if(collision->obj1->body != NULL)
-	{
-		Vector_Decrement(&relativeAngularVelocity, collision->obj1->body->angularVelocity);
-	}
-
-	//Step 3) compute sum of all external torques in the direction of the normal
-	Vector cumNetTorques;
-	Vector_INIT_ON_STACK(cumNetTorques, 3);
-
-	if(collision->obj1->body != NULL)
-	{
-		Vector_Increment(&cumNetTorques, collision->obj1->body->previousNetTorque);
-	}
-	if(collision->obj2->body != NULL)
-	{
-		Vector_Increment(&cumNetTorques, collision->obj2->body->previousNetTorque);
-	}
-
-	Vector_Project(&cumNetTorques, collision->minimumTranslationVector);
-
-	//Step 3) Compute frictional torque
-	Vector frictionalTorque;
-	Vector_INIT_ON_STACK(frictionalTorque, 3);
-
-
-
-
-	if(collision->obj1->body != NULL)
-	{
-		float angularInDirectionOfNormal = Vector_DotProduct(collision->obj1->body->angularVelocity, collision->minimumTranslationVector);
-		float torqueInDirectionOfNormal = Vector_DotProduct(collision->obj1->body->previousNetTorque, collision->minimumTranslationVector);
-
-		//If the object isn't spinning on the collision face, 
-		//and the magnitude of the component of the torque in the direction of the collision face normal is less than the magnitude of static torque due to friction
-		if(angularInDirectionOfNormal == 0.0f && fabs(torqueInDirectionOfNormal) <= staticMag1)
-		{
-
-			//For OBJ1
-			//We can base frictional torque off of the current angular velocity to negate it (Nothing should be moving yet)
-			Matrix_GetProductVector(&frictionalTorque, collision->obj1->body->inertia, &relativeAngularVelocity);
-			Vector_GetScalarProduct(&frictionalTorque, collision->minimumTranslationVector, -1.0f * Vector_DotProduct(&frictionalTorque, collision->minimumTranslationVector));
-
-			RigidBody_ApplyInstantaneousTorque(collision->obj1->body, &frictionalTorque);
-
 		}
-		else
-		{
-			//Find an axis opposite the direction of the current angular velocity
-			Vector axis;
-			Vector_INIT_ON_STACK(axis, 3);
-
-			if(Vector_GetMag(collision->obj2->body->angularVelocity) > 0.0f)
-				Vector_GetProjection(&axis, collision->obj2->body->angularVelocity, collision->minimumTranslationVector);
-			else
-				Vector_GetProjection(&axis, collision->obj2->body->previousNetTorque, collision->minimumTranslationVector);
-
-			Vector_Normalize(&axis);
-
-			//Torque will be in the direction of the collision face normal with a magnitude of -1.0 * dynamic mag
-			Vector_GetScalarProduct(&frictionalTorque, &axis, -1.0f * dynamicMag2);
-
-			RigidBody_ApplyInstantaneousTorque(collision->obj1->body, &frictionalTorque);
-		}
+		*/	
 	}
-
-
-	//OBJ2
-	if(collision->obj2->body != NULL)
-	{
-		float angularInDirectionOfNormal = Vector_DotProduct(collision->obj2->body->angularVelocity, collision->minimumTranslationVector);
-		float torqueInDirectionOfNormal = Vector_DotProduct(collision->obj2->body->previousNetTorque, collision->minimumTranslationVector);
-		//If the object isn't spinning on the collision face, 
-		//and the magnitude of the component of the torque in the direction of the collision face normal is less than the magnitude of static torque due to friction
-		if(angularInDirectionOfNormal == 0.0f && fabs(torqueInDirectionOfNormal) <= staticMag2)
-		{
-
-			//We can base frictional torque off of the current angular velocity to negate it (Nothing should be moving yet)
-			Matrix_GetProductVector(&frictionalTorque, collision->obj2->body->inertia, &relativeAngularVelocity);
-			Vector_GetScalarProduct(&frictionalTorque, collision->minimumTranslationVector, -1.0f * Vector_DotProduct(&frictionalTorque, collision->minimumTranslationVector));
-
-			RigidBody_ApplyInstantaneousTorque(collision->obj2->body, &frictionalTorque);
-		}
-		else
-		{
-			//Find an axis opposite the direction of the current angular velocity
-			Vector axis;
-			Vector_INIT_ON_STACK(axis, 3);
-
-			if(Vector_GetMag(collision->obj2->body->angularVelocity) > 0.0f)
-				Vector_GetProjection(&axis, collision->obj2->body->angularVelocity, collision->minimumTranslationVector);
-			else
-				Vector_GetProjection(&axis, collision->obj2->body->previousNetTorque, collision->minimumTranslationVector);
-
-			Vector_Normalize(&axis);
-
-			Vector_GetScalarProduct(&frictionalTorque, &axis, -1.0f * dynamicMag2);
-
-			RigidBody_ApplyInstantaneousTorque(collision->obj2->body, &frictionalTorque);
-
-		}
-
-	}
-	*/
-
 }

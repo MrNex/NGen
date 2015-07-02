@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=c99 -Wall -pedantic -Wextra
+CFLAGS=-std=c99 -Wall -pedantic -Wextra -g
 LIBS=-lm
 
 ifeq ($(OS),Windows_NT)

@@ -75,18 +75,6 @@ void ObjectManager_Update(void)
 		{
 			if(gameObj->collider->currentCollisions->size > 0)
 			{
-				/*
-				//Clear the current list of collisions
-				LinkedList_Node* currentNode = gameObj->collider->currentCollisions->head;
-				LinkedList_Node* nextNode = NULL;
-				while(currentNode != NULL)
-				{
-					nextNode = currentNode->next;
-					Collision* currentCollision = (Collision*)currentNode->data;
-					CollisionManager_FreeCollision(currentCollision);
-					currentNode = nextNode;
-				}
-				*/
 				LinkedList_Clear(gameObj->collider->currentCollisions);
 			}
 		}
@@ -194,7 +182,7 @@ static void ObjectManager_InitializeBuffer(ObjectBuffer* buffer)
 	LinkedList_Initialize(buffer->gameObjects);
 
 	buffer->octTree = OctTree_Allocate();
-	OctTree_Initialize(buffer->octTree, -5000.0f, 5000.0f, -5000.0f, 5000.0f, -5000.0f, 5000.0f);
+	OctTree_Initialize(buffer->octTree, -50.0f, 50.0f, -50.0f, 50.0f, -50.0f, 50.0f);
 }
 
 ///

@@ -152,13 +152,56 @@ void InitializeScene(void)
 
 	Vector_Copy(&v, &Vector_ZERO);
 	v.components[0] = -3.0f;
-	v.components[1] = -9.0f;
+	v.components[1] = -5.0f;
 	v.components[2] = -10.0f;
 
 	GObject_Translate(block, &v);
 	
 	ObjectManager_AddObject(block);
 
+	//Create rolling block
+	
+	block = GObject_Allocate();
+	GObject_Initialize(block);
+
+	block->mesh = AssetManager_LookupMesh("Cube");
+	block->material = Material_Allocate();
+	Material_Initialize(block->material, AssetManager_LookupTexture("White"));
+
+	*Matrix_Index(block->material->colorMatrix, 2, 2) = 0.0f;
+	*Matrix_Index(block->material->colorMatrix, 1, 1) = 0.0f;
+
+
+	block->collider = Collider_Allocate();
+	ConvexHullCollider_Initialize(block->collider);
+	ConvexHullCollider_MakeCubeCollider(block->collider->data->convexHullData, 2.0f);
+
+	block->body = RigidBody_Allocate();
+	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
+	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
+
+	block->body->coefficientOfRestitution = 0.9f;
+
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 1.0f;
+
+	//RigidBody_ApplyInstantaneousTorque(block->body, &v);
+
+	//Give sphere a little push..
+	v.components[0] = 0.0f;
+	v.components[2] = -5.0f; 
+	//RigidBody_ApplyImpulse(block->body, &v, &Vector_ZERO);
+
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 6.0f;
+	v.components[1] = -5.0f;
+	v.components[2] = -10.0f;
+
+	GObject_Translate(block, &v);
+	
+	ObjectManager_AddObject(block);
+
+	
 	
 	//Set gravity
 	Vector* gravity = Vector_Allocate();
