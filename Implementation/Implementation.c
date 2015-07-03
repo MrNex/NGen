@@ -160,7 +160,7 @@ void InitializeScene(void)
 	ObjectManager_AddObject(block);
 
 	//Create rolling block
-	
+		
 	block = GObject_Allocate();
 	GObject_Initialize(block);
 
@@ -200,7 +200,7 @@ void InitializeScene(void)
 	GObject_Translate(block, &v);
 	
 	ObjectManager_AddObject(block);
-
+	
 	
 	
 	//Set gravity

@@ -347,12 +347,8 @@ void OctTree_Update(OctTree* tree, LinkedList* gameObjects)
 
 			if(log->size <= 0)
 			{
-				//printf("Not contained in any tree..\n");
+				printf("Not contained in any tree..\n");
 				//OctTree_AddAndLog(tree, gameObj);
-			}
-			else if(((struct OctTree_NodeStatus*)DynamicArray_Index(log, 0))->node->data->size == 1)
-			{
-				printf("Alone in this node\n");
 			}
 
 			//For each OctTree_Node the game object was in
@@ -853,11 +849,11 @@ static unsigned char OctTree_Node_DoesSphereCollide(struct OctTree_Node* node, s
 	float bounds[6] = 
 	{
 		frame->position->components[0] - scaledRadius,
+		frame->position->components[0] + scaledRadius,
+		frame->position->components[1] - scaledRadius,
 		frame->position->components[1] + scaledRadius,
 		frame->position->components[2] - scaledRadius,
-		frame->position->components[3] + scaledRadius,
-		frame->position->components[4] - scaledRadius,
-		frame->position->components[5] + scaledRadius
+		frame->position->components[2] + scaledRadius
 	};
 
 	//Determine if the bounds overlap
