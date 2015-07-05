@@ -768,7 +768,7 @@ static void OctTree_Node_SubdivideAndLog(OctTree*tree, struct OctTree_Node* node
 			if(((struct OctTree_NodeStatus*)DynamicArray_Index(log, j))->node == node)
 			{
 				//And remove it
-				DynamicArray_Remove(log, j);
+				DynamicArray_RemoveAndReposition(log, j);
 				break;
 			}
 		}
