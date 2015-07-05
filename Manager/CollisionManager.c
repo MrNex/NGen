@@ -1827,6 +1827,16 @@ static void CollisionManager_InitializeBuffer(CollisionBuffer* buffer)
 //	buffer: A pointer to The collision buffer to free
 static void CollisionManager_FreeBuffer(CollisionBuffer* buffer)
 {
+	//Free all individual collisions in the list of collisions
+	struct LinkedList_Node* currentNode = collisionBuffer->collisions->head;
+	struct LinkedList_Node* nextNode = NULL;
+	while(currentNode != NULL)
+	{
+		nextNode = currentNode->next;
+		CollisionManager_FreeCollision((struct Collision*)currentNode->data);
+		currentNode = nextNode;
+	}
+
 	LinkedList_Free(buffer->collisions);
 	free(buffer);
 }
