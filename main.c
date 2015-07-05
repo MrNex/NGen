@@ -366,7 +366,6 @@ int main(int argc, char* argv[])
 	//Set up callback registration
 	//
 	glutIdleFunc(Update);
-	glutTimerFunc(16, DrawLoop, 16);
 	glutDisplayFunc(Draw);
 
 
@@ -379,6 +378,10 @@ int main(int argc, char* argv[])
 
 	//Initialize engine
 	Init();
+
+	//Start the draw loop
+	glutTimerFunc(16, DrawLoop, 16);
+
 
 	//Start the main loop
 	glutMainLoop();
