@@ -1,5 +1,6 @@
 #include "DynamicArray.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 ///
@@ -93,7 +94,7 @@ void DynamicArray_Clear(DynamicArray* arr)
 //Parameters:
 //	arr: A pointer to the dynamic array to remove an element from
 //	index: The index of the element to remove
-void DynamicArray_Remove(DynamicArray* arr, const unsigned int index)
+void DynamicArray_RemoveAndReposition(DynamicArray* arr, const unsigned int index)
 {
 	//Copy memory following the element to be deleted over the element to be deleted
 	//Get a pointer to the element being deleted
@@ -124,8 +125,43 @@ void DynamicArray_Remove(DynamicArray* arr, const unsigned int index)
 }
 
 ///
+//Removes an element from the dynamic array.
+//
+//Parameters:
+//	arr: A pointer to the dynamic array to remove an element from
+//	index: The index of the element to remove
+void DynamicArray_Remove(DynamicArray* arr, const unsigned int index)
+{
+	if(index >= arr->capacity)
+	{
+		printf("DynamicArray_Remove failed! Index is out of bounds of array capacity!\n");
+		return;
+	}
+	memset((char*)arr->data + (index * arr->dataSize), 0, arr->dataSize);
+	arr->size--;
+}
+
+///
 //Removes a specified data from the dynamic array
 //Then copies all data back one space to ensure no gaps in data exist
+//
+//Parameters:
+//	arr: A pointer to the dynamic array to remove data from
+//	data: The data to remove
+void DynamicArray_RemoveDataAndReposition(DynamicArray* arr, void* data)
+{
+	for(unsigned int i = 0; i < arr->capacity; i++)
+	{
+		if(memcmp(data, (char*)arr->data + (i * arr->dataSize), arr->dataSize) == 0)
+		{
+			DynamicArray_RemoveAndReposition(arr, i);
+			break;
+		}
+	}
+}
+
+///
+//Removes specified data from the dynamic array
 //
 //Parameters:
 //	arr: A pointer to the dynamic array to remove data from

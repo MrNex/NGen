@@ -74,11 +74,27 @@ void DynamicArray_Clear(DynamicArray* arr);
 //Parameters:
 //	arr: A pointer to the dynamic array to remove an element from
 //	index: The index of the element to remove
+void DynamicArray_RemoveAndReposition(DynamicArray* arr, const unsigned int index);
+
+///
+//Removes an element from the dynamic array.
+//
+//Parameters:
+//	arr: A pointer to the dynamic array to remove an element from
+//	index: The index of the element to remove
 void DynamicArray_Remove(DynamicArray* arr, const unsigned int index);
 
 ///
 //Removes a specified data from the dynamic array
 //Then copies all data back one space to ensure no gaps in data exist
+//
+//Parameters:
+//	arr: A pointer to the dynamic array to remove data from
+//	data: The data to remove
+void DynamicArray_RemoveDataAndReposition(DynamicArray* arr, void* data);
+
+///
+//Removes specified data from the dynamic array
 //
 //Parameters:
 //	arr: A pointer to the dynamic array to remove data from

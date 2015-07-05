@@ -1,6 +1,7 @@
 #include "Implementation.h"
 
-#include "../State/FirstPersonCamera.h"
+#include "../State/ParkourController.h"
+#include "../State/ColorCopy.h"
 
 
 ///
@@ -13,9 +14,22 @@ void InitializeScene(void)
 	GObject* cam = GObject_Allocate();
 	GObject_Initialize(cam);
 
+	cam->body = RigidBody_Allocate();
+	RigidBody_Initialize(cam->body, cam->frameOfReference, 1.0f);
+
+	cam->body->freezeRotation = 1;
+	cam->body->coefficientOfRestitution = 0.0f;
+
+	cam->collider = Collider_Allocate();
+	Vector trans;
+	Vector_INIT_ON_STACK(trans, 3);
+	trans.components[1] = -1.0f;
+	AABBCollider_Initialize(cam->collider, 3.0f, 3.0f, 3.0f, &trans);
+	//cam->collider->debug = 1;
+
 	State* state = State_Allocate();
 
-	State_FirstPersonCamera_Initialize(state, 7.0f, 100.0f, 0.1f);
+	State_ParkourController_Initialize(state, 10.0f, 10.0f, 0.005f, 3.0f, 0.1f);
 
 	GObject_AddState(cam,state);
 
@@ -26,6 +40,10 @@ void InitializeScene(void)
 	GObject_Initialize(block);
 
 	block->mesh = AssetManager_LookupMesh("Cube");
+	block->material = Material_Allocate();
+	Material_Initialize(block->material, AssetManager_LookupTexture("Test"));
+	block->material->tile->components[0] = block->material->tile->components[1] = 10.0f;
+
 
 	block->collider = Collider_Allocate();
 	AABBCollider_Initialize(block->collider, 2.0f, 2.0f, 2.0f, &Vector_ZERO);
@@ -48,157 +66,99 @@ void InitializeScene(void)
 	GObject_Translate(block, &v);
 
 	ObjectManager_AddObject(block);
-	
-	//Create block
+
+
+	//Create wall
 	block = GObject_Allocate();
 	GObject_Initialize(block);
 
 	block->mesh = AssetManager_LookupMesh("Cube");
-	block->material = Material_Allocate();
-	Material_Initialize(block->material, AssetManager_LookupTexture("White"));
-
-	*Matrix_Index(block->material->colorMatrix, 0, 0) = 0.0f; 
 
 	block->collider = Collider_Allocate();
-	ConvexHullCollider_Initialize(block->collider);
-	ConvexHullCollider_MakeCubeCollider(block->collider->data->convexHullData, 2.0f);
+	AABBCollider_Initialize(block->collider, 2.0f, 2.0f, 2.0f, &Vector_ZERO);
 
 	block->body = RigidBody_Allocate();
-	RigidBody_Initialize(block->body, block->frameOfReference, 0.1f);
-	block->body->dynamicFriction = block->body->staticFriction = 0.01f;
+	RigidBody_Initialize(block->body, block->frameOfReference, 0.0f);
+	block->body->freezeTranslation = block->body->freezeRotation = 1;
+	block->body->dynamicFriction = block->body->staticFriction = 0.1f;
 
-	block->body->coefficientOfRestitution = 0.8f;
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[1] = 10.0f;
-
-	//RigidBody_ApplyInstantaneousTorque(block->body, &v); 
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 3.0f;
-	v.components[1] = -5.0f;
-	v.components[2] = -10.0f;
-
-	GObject_Translate(block, &v);
-
-	ObjectManager_AddObject(block);
-
-	//Create another block
-
-	block = GObject_Allocate();
-	GObject_Initialize(block);
-
-	block->mesh = AssetManager_LookupMesh("Cube");
-	block->material = Material_Allocate();
-	Material_Initialize(block->material, AssetManager_LookupTexture("White"));
-
-	*Matrix_Index(block->material->colorMatrix, 2, 2) = 0.0f;
-
-	block->collider = Collider_Allocate();
-	ConvexHullCollider_Initialize(block->collider);
-	ConvexHullCollider_MakeCubeCollider(block->collider->data->convexHullData, 2.0f);
-
-	block->body = RigidBody_Allocate();
-	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
-	block->body->dynamicFriction = block->body->staticFriction = 0.5f;
-
-	block->body->coefficientOfRestitution = 0.9f;
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[1] = 10.0f;
-
-	RigidBody_ApplyInstantaneousTorque(block->body, &v); 
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 3.0f;
-	v.components[2] = -10.0f;
-
-	GObject_Translate(block, &v);
 	
-	ObjectManager_AddObject(block);
-
-
-	//Create sphere
-
-	block = GObject_Allocate();
-	GObject_Initialize(block);
-
-	block->mesh = AssetManager_LookupMesh("Sphere");
-	block->material = Material_Allocate();
-	Material_Initialize(block->material, AssetManager_LookupTexture("Earth"));
-
-	//*Matrix_Index(block->material->colorMatrix, 2, 2) = 0.0f;
-	//*Matrix_Index(block->material->colorMatrix, 1, 1) = 0.0f;
-
-
-	block->collider = Collider_Allocate();
-	SphereCollider_Initialize(block->collider, 1.0f);
-
-	block->body = RigidBody_Allocate();
-	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
-	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
-
-	block->body->coefficientOfRestitution = 0.9f;
-
 	Vector_Copy(&v, &Vector_ZERO);
 	v.components[0] = 1.0f;
+	v.components[1] = 20.0f;
+	v.components[2] = 1.0f;
 
-	RigidBody_ApplyInstantaneousTorque(block->body, &v);
-
-	//Give sphere a little push..
-	v.components[0] = 0.0f;
-	v.components[2] = -5.0f; 
-	//RigidBody_ApplyImpulse(block->body, &v, &Vector_ZERO);
+	GObject_Scale(block, &v);
 
 	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = -3.0f;
-	v.components[1] = -5.0f;
-	v.components[2] = -10.0f;
+	v.components[1] = v.components[2] = -4.0f;
 
 	GObject_Translate(block, &v);
-	
+
 	ObjectManager_AddObject(block);
 
-	//Create rolling block
-		
+
+	//Create  second wall
 	block = GObject_Allocate();
 	GObject_Initialize(block);
 
 	block->mesh = AssetManager_LookupMesh("Cube");
-	block->material = Material_Allocate();
-	Material_Initialize(block->material, AssetManager_LookupTexture("White"));
-
-	*Matrix_Index(block->material->colorMatrix, 2, 2) = 0.0f;
-	*Matrix_Index(block->material->colorMatrix, 1, 1) = 0.0f;
-
 
 	block->collider = Collider_Allocate();
-	ConvexHullCollider_Initialize(block->collider);
-	ConvexHullCollider_MakeCubeCollider(block->collider->data->convexHullData, 2.0f);
+	AABBCollider_Initialize(block->collider, 2.0f, 2.0f, 2.0f, &Vector_ZERO);
 
 	block->body = RigidBody_Allocate();
-	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
-	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
+	RigidBody_Initialize(block->body, block->frameOfReference, 0.0f);
+	block->body->freezeTranslation = block->body->freezeRotation = 1;
+	block->body->dynamicFriction = block->body->staticFriction = 0.1f;
 
-	block->body->coefficientOfRestitution = 0.9f;
+	
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 20.0f;
+	v.components[1] = 5.0f;
+	v.components[2] = 1.0f;
+
+	GObject_Scale(block, &v);
 
 	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 1.0f;
-
-	//RigidBody_ApplyInstantaneousTorque(block->body, &v);
-
-	//Give sphere a little push..
-	v.components[0] = 0.0f;
-	v.components[2] = -5.0f; 
-	//RigidBody_ApplyImpulse(block->body, &v, &Vector_ZERO);
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 6.0f;
-	v.components[1] = -5.0f;
-	v.components[2] = -10.0f;
+	v.components[0] = 9.0f;
+	v.components[1] = 24.0f;
+	v.components[2] = 4.0f;
 
 	GObject_Translate(block, &v);
+
+	ObjectManager_AddObject(block);
+
 	
+	//Create third wall
+	block = GObject_Allocate();
+	GObject_Initialize(block);
+
+	block->mesh = AssetManager_LookupMesh("Cube");
+
+	block->collider = Collider_Allocate();
+	AABBCollider_Initialize(block->collider, 2.0f, 2.0f, 2.0f, &Vector_ZERO);
+
+	block->body = RigidBody_Allocate();
+	RigidBody_Initialize(block->body, block->frameOfReference, 0.0f);
+	block->body->freezeTranslation = block->body->freezeRotation = 1;
+	block->body->dynamicFriction = block->body->staticFriction = 0.1f;
+
+	
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 5.0f;
+	v.components[1] = 5.0f;
+	v.components[2] = 1.0f;
+
+	GObject_Scale(block, &v);
+
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 20.0f;
+	v.components[1] = 24.0f;
+	v.components[2] = -1.0f;
+
+	GObject_Translate(block, &v);
+
 	ObjectManager_AddObject(block);
 	
 	

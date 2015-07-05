@@ -382,7 +382,7 @@ void OctTree_Update(OctTree* tree, LinkedList* gameObjects)
 						printf("No node found to relocate\n");
 					}
 					//Remove the ith nodeStatus from the log
-					DynamicArray_Remove(log, i);
+					DynamicArray_RemoveAndReposition(log, i);
 				}
 				//Object was fully contained, and now it is not
 				else if(currentStatus == 1)
@@ -504,8 +504,7 @@ void OctTree_Node_Remove(struct OctTree_Node* current, GObject* obj)
 
 			if(DynamicArray_ContainsWithin(current->data, &obj, current->data->size) == 1)
 			{
-				// this line of code is commented until GetIndexOf is written
-				DynamicArray_RemoveData(current->data, &obj);
+				DynamicArray_RemoveDataAndReposition(current->data, &obj);
 			}
 		}
 	}

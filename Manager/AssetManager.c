@@ -207,22 +207,30 @@ static void AssetManager_FreeBuffer(AssetBuffer* buffer)
 {
 	for (unsigned int i = 0; i < buffer->meshMap->data->capacity; i++)
 	{
-		Mesh* m = *(Mesh**)DynamicArray_Index(buffer->meshMap->data, i);
-		if(m != NULL)
+		struct HashMap_KeyValuePair* pair = *(struct HashMap_KeyValuePair**)DynamicArray_Index(buffer->meshMap->data, i);
+		if(pair != NULL)
 		{
+			Mesh* m = (Mesh*)pair->data;
 			Mesh_Free(m);
+			//Following line will be done by HashMap_Free
+			//HashMap_KeyValuePair_Free(pair);
 		}
 	}
+	printf("Meshes freed\n");
 	HashMap_Free(buffer->meshMap);
+	printf("MeshMap freed\n");
 
 	for (unsigned int i = 0; i < buffer->textureMap->data->capacity; i++)
 	{
-		Texture* t = *(Texture**)DynamicArray_Index(buffer->textureMap->data, i);
-		if(t != NULL)
+		struct HashMap_KeyValuePair* pair = *(struct HashMap_KeyValuePair**)DynamicArray_Index(buffer->textureMap->data, i);
+		if(pair != NULL)
 		{
+			Texture* t = (Texture*)pair->data;
 			Texture_Free(t);
 		}
 	}
-
+	printf("Textures freed.\n");
 	HashMap_Free(buffer->textureMap);
+
+	printf("Texture Map Freed.\n");
 }

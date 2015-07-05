@@ -311,6 +311,12 @@ void Update(void)
 
 	CheckGLErrors();
 
+	//If escape is pressed, leave main loop
+	if(InputManager_IsKeyDown((unsigned char)27))
+	{
+		glutLeaveMainLoop();
+	}
+
 }
 
 void DrawLoop(int val)
@@ -339,6 +345,7 @@ int main(int argc, char* argv[])
 {
 	//Initialize glut
 	glutInit(&argc, argv);
+	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 	glutInitDisplayMode(GLUT_RGBA);
 	glutInitWindowSize(800, 600);
 	glutInitWindowPosition(600, 0);
@@ -376,16 +383,20 @@ int main(int argc, char* argv[])
 	//Start the main loop
 	glutMainLoop();
 
-	//When the loop is over, release all memory
-	glutDestroyWindow(win);
-
 	InputManager_Free();
+	printf("Input done\n");
 	RenderingManager_Free();
+	printf("Rendering done\n");
 	ObjectManager_Free();
+	printf("Object done\n");
 	AssetManager_Free();
+	printf("Assets done\n");
 	CollisionManager_Free();
+	printf("Collision done\n");
 	PhysicsManager_Free();
+	printf("Physics done\n");
 	TimeManager_Free();
+	printf("Time done\n");
 
 	return 0;
 }
