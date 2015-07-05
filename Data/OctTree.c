@@ -185,10 +185,15 @@ static void OctTree_Node_Free(struct OctTree_Node* node)
 		//Free the children container...
 		free(node->children);
 	}
+	else
+	{
+		//TODO: Figure out the proper way to deal with the freeing of the tree's hashmap.
+	}
 
 	//Free the data contained within this tree
 	DynamicArray_Free(node->data);
 
+	//The parent node does the following, we must only free the root at the end.
 	//Free this node
 	//free(node);
 }
@@ -322,6 +327,8 @@ void OctTree_Free(OctTree* tree)
 	OctTree_Node_Free(tree->root);
 	//Free the root
 	free(tree->root);
+	//Free the map
+	HashMap_Free(tree->map);
 	//Free the tree!
 	free(tree);
 }

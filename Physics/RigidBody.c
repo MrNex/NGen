@@ -107,7 +107,9 @@ void RigidBody_Free(RigidBody* body)
 	Vector_Free(body->previousNetTorque);
 	Vector_Free(body->netInstantaneousTorque);
 	Vector_Free(body->acceleration);
+	Vector_Free(body->angularAcceleration);
 	Vector_Free(body->velocity);
+	Vector_Free(body->angularVelocity);
 	FrameOfReference_Free(body->frame);
 	free(body);
 }

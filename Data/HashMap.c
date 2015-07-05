@@ -283,6 +283,9 @@ static void HashMap_Grow(HashMap* map)
 	{
 		HashMap_AddPair(map, copy[i]);
 	}
+
+	//Delete the list of copies
+	free(copy);
 }
 
 ///

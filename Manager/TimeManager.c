@@ -148,6 +148,8 @@ void TimeManager_UpdateBuffer(TimeBuffer* buffer)
 	buffer->deltaTime.tv_sec = (time_t)((float)(now.tv_sec - buffer->currentTime.tv_sec) * buffer->timeScale);
 	buffer->deltaTime.tv_nsec = (time_t)((float)(now.tv_nsec - buffer->currentTime.tv_nsec) * buffer->timeScale);
 
+	//printf("DT:\t%lu\t:\t%lu\n",buffer->deltaTime.tv_sec, buffer->deltaTime.tv_nsec);
+
 	//Update current time
 	buffer->currentTime.tv_sec = now.tv_sec;
 	buffer->currentTime.tv_nsec = now.tv_nsec;
@@ -166,6 +168,7 @@ void TimeManager_UpdateBuffer(TimeBuffer* buffer)
 void TimeManager_SetTimeScale(float scale)
 {
 	timeBuffer->timeScale = scale;
+	//printf("Time scale:\t%f\n", timeBuffer->timeScale);
 }
 
 ///
@@ -176,6 +179,7 @@ void TimeManager_SetTimeScale(float scale)
 void TimeManager_ScaleTimeScale(float scale)
 {
 	timeBuffer->timeScale *= scale;
+	//printf("Time scale:\t%f\n", timeBuffer->timeScale);
 
 }
 
@@ -193,6 +197,7 @@ float TimeManager_GetDeltaSec(void)
 #ifdef linux
 	float dt = (float)timeBuffer->deltaTime.tv_sec;
 	dt += (float)timeBuffer->deltaTime.tv_nsec / 1000000000.0f;
+	//printf("DT:\t%f\n", dt);
 	return dt;	
 #endif
 }
