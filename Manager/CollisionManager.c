@@ -314,6 +314,7 @@ static void CollisionManager_UpdateOctTreeNodeArray(GObject** gameObjects, unsig
 					struct LinkedList_Node* current = collision->obj1->collider->currentCollisions->head;
 					while(current != NULL)
 					{
+						//Ensure that the registered collision is not a duplicate
 						struct Collision* currentCollision = (struct Collision*)current->data;
 						if(currentCollision->obj1 == collision->obj1 || currentCollision->obj2 == collision->obj1)
 						{
@@ -326,6 +327,7 @@ static void CollisionManager_UpdateOctTreeNodeArray(GObject** gameObjects, unsig
 						current = current->next;
 					}
 
+					//If it is a duplicate, don't add it- just keep looking for collisions
 					if(duplicate)
 					{
 						collision->obj1 = NULL;

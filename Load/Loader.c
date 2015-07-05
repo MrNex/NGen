@@ -197,6 +197,9 @@ Mesh* Loader_LoadOBJFile(const char* fPath)
 			}
 		}
 	}//End of file reached
+	
+	fclose(fp);
+
 	//File parsed, creating mesh
 	
 	Mesh* parsed = Mesh_Allocate();
