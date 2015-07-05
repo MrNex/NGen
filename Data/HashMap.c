@@ -66,17 +66,12 @@ void HashMap_Free(HashMap* map)
 		struct HashMap_KeyValuePair* pair = NULL;
 		if((pair = *(struct HashMap_KeyValuePair**)DynamicArray_Index(map->data, i)) != NULL)
 		{
-			printf("Pair:\t%s\n", (char*)pair->key);
 			HashMap_KeyValuePair_Free(pair);
-			printf("Pair freed\n");
 			DynamicArray_Remove(map->data, i);
-			printf("Entry removed from array\n");
 		}
 
 	}
-
-	printf("Freed contents\n");
-	//free(map->data);
+	
 	DynamicArray_Free(map->data);
 	free(map);
 }
