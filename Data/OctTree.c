@@ -38,7 +38,8 @@ static void OctTree_Node_Initialize(struct OctTree_Node* node, OctTree* tree,  s
 //
 //Parameters:
 //	node: A pointer to the oct tree node to free
-static void OctTree_Node_Free(struct OctTree_Node* node);
+//	tree: A pointer to the tree the node being freed belongs to
+static void OctTree_Node_Free(OctTree* tree, struct OctTree_Node* node);
 
 ///
 //Allocates the children of an oct tree node
@@ -171,8 +172,9 @@ static void OctTree_Node_Initialize(struct OctTree_Node* node, OctTree* tree, st
 //Frees data allocated by an oct tree node
 //
 //Parameters:
+//	tree: A pointer to the oct tree which the node being freed is apart of
 //	node: A pointer to the oct tree node to free
-static void OctTree_Node_Free(struct OctTree_Node* node)
+static void OctTree_Node_Free(OctTree* tree, struct OctTree_Node* node)
 {
 	//If this node has children
 	if(node->children != NULL)
@@ -180,7 +182,7 @@ static void OctTree_Node_Free(struct OctTree_Node* node)
 		for(int i = 0; i < 8; i++)
 		{
 			//Free the children!
-			OctTree_Node_Free(node->children + i);
+			OctTree_Node_Free(tree, node->children + i);
 		}
 		//Free the children container...
 		free(node->children);
@@ -188,6 +190,45 @@ static void OctTree_Node_Free(struct OctTree_Node* node)
 	else
 	{
 		//TODO: Figure out the proper way to deal with the freeing of the tree's hashmap.
+		//Loop through the occupants of this list
+		for(unsigned int i = 0; i < node->data->size; i++)
+		{
+			GObject* occupant = *(GObject**)DynamicArray_Index(node->data, i);
+			//If the occupant still has a log in the hashmap
+			if(HashMap_Contains(tree->map, &occupant, sizeof(GObject*)))
+			{
+				//Get the log of the occupant from the hashmap
+				DynamicArray* log = (DynamicArray*)HashMap_LookUp(tree->map, &occupant, sizeof(GObject*))->data;	
+				//Find this node in the log
+				struct OctTree_NodeStatus* status = NULL;
+				for(unsigned int j = 0; j < log->size; j++)
+				{
+					status = (struct OctTree_NodeStatus*)DynamicArray_Index(log, j);
+					
+					if(status->node == node)
+					{
+						printf("Node found at index:\t%du\n", j);
+						//When we find it, remove this node from the log.
+						DynamicArray_RemoveAndReposition(log, j);
+						//If there is no other nodes logged, delete the log.
+						if(log->size == 0)
+						{
+							HashMap_Remove(tree->map, &occupant, sizeof(GObject*));
+							DynamicArray_Free(log);
+						}
+
+						//Stop looping
+						break;
+					}
+					else
+					{
+						printf("%p != %p\n", node, status->node);
+						if(j == log->size - 1) printf("\n");
+					}
+				}
+			}
+			
+		}
 	}
 
 	//Free the data contained within this tree
@@ -196,6 +237,7 @@ static void OctTree_Node_Free(struct OctTree_Node* node)
 	//The parent node does the following, we must only free the root at the end.
 	//Free this node
 	//free(node);
+	printf("\n---\n");
 }
 
 ///
@@ -324,7 +366,7 @@ void OctTree_Initialize(OctTree* tree, float leftBound, float rightBound, float 
 void OctTree_Free(OctTree* tree)
 {
 	//Free the nodes
-	OctTree_Node_Free(tree->root);
+	OctTree_Node_Free(tree, tree->root);
 	//Free the root
 	free(tree->root);
 	//Free the map
@@ -1007,7 +1049,8 @@ static unsigned char OctTree_Node_DoesConvexHullCollide(struct OctTree_Node* nod
 //
 //Parameters:
 //	node: the base node to check
-void OctTree_Node_CleanAll(struct OctTree_Node* node)
+//	tree: The tree the nodes belong to
+void OctTree_Node_CleanAll(OctTree* tree, struct OctTree_Node* node)
 {
 	// Does the current node have children?
 	if(node->children != NULL)
@@ -1031,7 +1074,7 @@ void OctTree_Node_CleanAll(struct OctTree_Node* node)
 			// Recurse through all the children of this node
 			for(int i = 0; i < 8; i++)
 			{
-				OctTree_Node_CleanAll(node->children+i);
+				OctTree_Node_CleanAll(tree, node->children+i);
 			}
 		}
 
@@ -1055,7 +1098,7 @@ void OctTree_Node_CleanAll(struct OctTree_Node* node)
 				// Clean out all the children
 				for(int i = 0; i < 8; i++)
 				{
-					OctTree_Node_Free(node->children+i);
+					OctTree_Node_Free(tree, node->children+i);
 				}
 				free(node->children);
 				node->children = 0;

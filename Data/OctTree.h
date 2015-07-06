@@ -166,8 +166,9 @@ unsigned char OctTree_Node_DoesObjectCollide(struct OctTree_Node* node, GObject*
 //	to clean up all unneeded nodes
 //
 //Parameters:
+//	tree: A pointer to the tree the nodes belong to
 //	node: the base node to check
-void OctTree_Node_CleanAll(struct OctTree_Node* node);
+void OctTree_Node_CleanAll(OctTree* tree, struct OctTree_Node* node);
 
 ///
 //Searches up from a leaf node to find the lowest node which fully contains this object
