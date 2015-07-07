@@ -1907,7 +1907,10 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 
 			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, relImpulseTangentialMag1);
 
-			//RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, pointsOfCollision[0]);
+			//Vector radius;
+			//Vector_INIT_ON_STACK(radius, 3);
+			//Vector_Subtract(&radius, collision->obj1->body->frame->position, pointsOfCollision[0]);
+			//RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &radius);
 			RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &Vector_ZERO);
 		}
 		else
@@ -1916,7 +1919,11 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 			Vector_INIT_ON_STACK(frictionalImpulse, 3);
 
 			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, dynamicMag);
-			//RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, pointsOfCollision[0]);
+			
+			//Vector radius;
+			//Vector_INIT_ON_STACK(radius, 3);
+			//Vector_Subtract(&radius, collision->obj1->body->frame->position, pointsOfCollision[0]);
+			//RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &radius);
 			RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &Vector_ZERO);
 		}
 	}
@@ -1930,7 +1937,11 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 			Vector_INIT_ON_STACK(frictionalImpulse, 3);
 
 			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, -relImpulseTangentialMag2);
-			//RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, pointsOfCollision[1]);
+
+			//Vector radius;
+			//Vector_INIT_ON_STACK(radius, 3);
+			//Vector_Subtract(&radius, collision->obj2->body->frame->position, pointsOfCollision[1]);
+			//RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &radius);
 			RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &Vector_ZERO);
 		}
 		else
@@ -1939,7 +1950,11 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 			Vector_INIT_ON_STACK(frictionalImpulse, 3);
 
 			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, -dynamicMag);
-			//RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, pointsOfCollision[1]);
+
+			//Vector radius;
+			//Vector_INIT_ON_STACK(radius, 3);
+			//Vector_Subtract(&radius, collision->obj2->body->frame->position, pointsOfCollision[1]);
+			//RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &radius);
 			RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &Vector_ZERO);
 		}
 	}
@@ -2007,11 +2022,6 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 
 		Vector_GetScalarProduct(&lA, collision->minimumTranslationVector, relAVPerp);
 
-		//Determine the amount of relative angular velocity parallel to the surface to compute rolling motion
-		//Vector relAVRolling;
-		//Vector_INIT_ON_STACK(relAVRolling, 3);
-		//Vector_Subtract(&relAVRolling, &aVRel, &lA);
-
 		Matrix_TransformVector(&iA, &lA);
 
 		//Step b: Determine if the magnitude of the angular impulse / momentum overcomes the magnitude of static friction
@@ -2032,39 +2042,6 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 			Vector_Scale(&lA, dynamicMag * direction);
 			RigidBody_ApplyInstantaneousTorque(body1, &lA);
 		}
-
-		/*
-		//Computation for rolling motion begins here
-		//If the object were rotating around the point of collision, find the linear velocity of the center
-		Vector linearVelocityOfCenter;
-		Vector_INIT_ON_STACK(linearVelocityOfCenter, 3);
-		
-		Vector collisionPointToCenter;
-		Vector_INIT_ON_STACK(collisionPointToCenter, 3);
-
-		Vector_Subtract(&collisionPointToCenter, body1->frame->position, pointsOfCollision[0]);		
-
-		RigidBody_CalculateLocalLinearVelocity(&linearVelocityOfCenter, body1, &collisionPointToCenter);
-
-		//Allow some slipping to happen
-		if(dynamicCoefficient < 1.0f)
-		{
-			Vector_Scale(&linearVelocityOfCenter, dynamicCoefficient);
-		}
-
-		//Get the current linear velocity in the direction of rolling movement
-		Vector rollingDirection;
-		Vector_INIT_ON_STACK(rollingDirection, 3);
-		Vector_Copy(&rollingDirection, &linearVelocityOfCenter);
-		Vector_Normalize(&rollingDirection);
-		float linearMagInRollingDir = Vector_DotProduct(body1->velocity, &rollingDirection);
-		if(linearMagInRollingDir < Vector_GetMag(&linearVelocityOfCenter))
-		{
-
-			//Apply the impulse
-			RigidBody_ApplyImpulse(body1, &linearVelocityOfCenter, &Vector_ZERO);
-		}
-		*/	
 	
 	}
 	
@@ -2078,11 +2055,6 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 		Matrix iB;
 		Matrix_INIT_ON_STACK(iB, 3, 3);
 		RigidBody_CalculateMomentOfInertiaInWorldSpace(&iB, body2);
-
-		//Determine the amount of relative angular velocity parallel to the surface to compute rolling motion
-		//Vector relAVRolling;
-		//Vector_INIT_ON_STACK(relAVRolling, 3);
-		//Vector_Subtract(&relAVRolling, &aVRel, &lB);
 
 		Vector_GetScalarProduct(&lB, collision->minimumTranslationVector, relAVPerp);
 		Matrix_TransformVector(&iB, &lB);
@@ -2108,41 +2080,5 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 			Vector_Scale(&lB, dynamicMag * direction);
 			RigidBody_ApplyInstantaneousTorque(body2, &lB);
 		}
-
-
-		/*
-		//Rolling computations begin here
-		//If the object were rotating around the point of collision, find the linear velocity of the center
-		Vector linearVelocityOfCenter;
-		Vector_INIT_ON_STACK(linearVelocityOfCenter, 3);
-		
-		Vector collisionPointToCenter;
-		Vector_INIT_ON_STACK(collisionPointToCenter, 3);
-
-		Vector_Subtract(&collisionPointToCenter, body2->frame->position, pointsOfCollision[1]);		
-
-		RigidBody_CalculateLocalLinearVelocity(&linearVelocityOfCenter, body2, &collisionPointToCenter);
-
-			
-		//Allow some slipping to happen
-		if(dynamicCoefficient < 1.0f)
-		{
-			Vector_Scale(&linearVelocityOfCenter, dynamicCoefficient);
-		}
-
-		//Get the current linear velocity in the direction of rolling movement
-		Vector rollingDirection;
-		Vector_INIT_ON_STACK(rollingDirection, 3);
-		Vector_Copy(&rollingDirection, &linearVelocityOfCenter);
-		Vector_Normalize(&rollingDirection);
-		float linearMagInRollingDir = Vector_DotProduct(body2->velocity, &rollingDirection);
-		if(linearMagInRollingDir < Vector_GetMag(&linearVelocityOfCenter))
-		{
-
-
-			//Apply the impulse
-			RigidBody_ApplyImpulse(body2, &linearVelocityOfCenter, &Vector_ZERO);
-		}
-		*/	
 	}
 }
