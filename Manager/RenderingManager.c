@@ -48,18 +48,19 @@ void RenderingManager_Initialize(void)
 
 	renderingBuffer = RenderingManager_AllocateBuffer();
 	RenderingManager_InitializeBuffer(renderingBuffer);
-
-	if (renderingBuffer->shaderPrograms[0]->shaderProgramID != 0)
+	shaderProgramId = renderingBuffer->shaderPrograms[0]->shaderProgramID;
+	if (shaderProgramID != 0)
 	{
 
-		glUseProgram(renderingBuffer->shaderPrograms[0]->shaderProgramID);
+		glUseProgram(shaderProgramID);
 	}
 	else
 	{
-		printf("\nError Creating Shader Program!\nShader Results:\nV: %d\tF: %d\tP: %d\n",
-			renderingBuffer->shaderPrograms[0]->vertexShaderID,
-			renderingBuffer->shaderPrograms[0]->fragmentShaderID,
-			renderingBuffer->shaderPrograms[0]->shaderProgramID);
+		printf("\nError Creating Shader Program!\n"
+				"Shader Results:\nV: %d\tF: %d\tP: %d\n",
+				renderingBuffer->shaderPrograms[0]->vertexShaderID,
+				renderingBuffer->shaderPrograms[0]->fragmentShaderID,
+				renderingBuffer->shaderPrograms[0]->shaderProgramID);
 	}
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -95,19 +96,32 @@ void RenderingManager_Render(LinkedList* gameObjects)
 	//Clear buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	GLuint shaderProgramID = renderingBuffer->shaderPrograms[0]->shaderProgramID;
-	GLint dirLightVectorLoc = renderingBuffer->shaderPrograms[0]->directionalLightVectorLocation;
-	float* components = renderingBuffer->directionalLightVector->components;
-	GLint viewMatrixLocation = renderingBuffer->shaderPrograms[0]->viewMatrixLocation;
-	GLint projectionMatrixLocation = renderingBuffer->shaderPrograms[0]->projectionMatrixLocation;
-	GLint modelMatrixLocation = renderingBuffer->shaderPrograms[0]->modelMatrixLocation;
-	GLint modelViewProjectionMatrixLocation = renderingBuffer->shaderPrograms[0]->modelViewProjectionMatrixLocation;
-	GLint colorMatrixLocation = renderingBuffer->shaderPrograms[0]->colorMatrixLocation;
-	GLint tileLocation = renderingBuffer->shaderPrograms[0]->tileLocation;
-	GLint textureLocation = renderingBuffer->shaderPrograms[0]->textureLocation;
-	
+	GLuint shaderProgramID = renderingBuffer->shaderPrograms[0]
+		->shaderProgramID;
+	GLint dirLightVectorLoc = renderingBuffer->shaderPrograms[0]
+		->directionalLightVectorLocation;
+	float* components = renderingBuffer->directionalLightVector
+		->components;
+	GLint viewMatrixLocation = renderingBuffer->shaderPrograms[0]
+		->viewMatrixLocation;
+	GLint projectionMatrixLocation = renderingBuffer->shaderPrograms[0]
+		->projectionMatrixLocation;
+	GLint modelMatrixLocation = renderingBuffer->shaderPrograms[0]
+		->modelMatrixLocation;
+	GLint modelViewProjectionMatrixLocation = renderingBuffer
+		->shaderPrograms[0]
+		->modelViewProjectionMatrixLocation;
+	GLint colorMatrixLocation = renderingBuffer->shaderPrograms[0]
+		->colorMatrixLocation;
+	GLint tileLocation = renderingBuffer->shaderPrograms[0]
+		->tileLocation;
+	GLint textureLocation = renderingBuffer->shaderPrograms[0]
+		->textureLocation;
+	float* projectionMatrixComponents = renderingBuffer->camera
+		->projectionMatrix->components;
+	float* colorMatrixComponents = gameObj->material->colorMatrixLocation					->components;	
 	//Set directional Light
-		ProgramUniform3fv(shaderProgramID, dirLightVectorLoc,  1, components);
+	ProgramUniform3fv(shaderProgramID, dirLightVectorLoc,  1, components);
 
 
 	Matrix modelMatrix;
@@ -119,12 +133,12 @@ void RenderingManager_Render(LinkedList* gameObjects)
 
 	//Turn camera's frame of reference into view matrix
 	Camera_ToMatrix4(renderingBuffer->camera, &viewMatrix);
-	
+
 	//Set viewMatrix uniform
-		ProgramUniformMatrix4fv(shaderProgramID, viewMatrixLocation,  1, GL_TRUE, viewMatrix.components);
+	ProgramUniformMatrix4fv(shaderProgramID, viewMatrixLocation,  1, GL_TRUE, viewMatrix.components);
 
 	//Set projectionMatrix Uniform
-		ProgramUniformMatrix4fv(shaderProgramID, projectionMatrixLocation,  1, GL_TRUE, renderingBuffer->camera->projectionMatrix->components);
+	ProgramUniformMatrix4fv(shaderProgramID, projectionMatrixLocation,  1, GL_TRUE, projectionMatrixComponents);
 
 
 	struct LinkedList_Node* current = gameObjects->head;
@@ -137,7 +151,7 @@ void RenderingManager_Render(LinkedList* gameObjects)
 		{
 			//Set modelMatrix uniform
 			FrameOfReference_ToMatrix4(gameObj->frameOfReference, &modelMatrix);
-				
+
 			ProgramUniformMatrix4fv(shaderProgramID, modelMatrixLocation,  1, GL_TRUE, modelMatrix.components);
 
 			//Construct modelViewProjectionMatrix
@@ -145,22 +159,22 @@ void RenderingManager_Render(LinkedList* gameObjects)
 			Matrix_TransformMatrix(&viewMatrix, &modelViewProjectionMatrix);
 			Matrix_TransformMatrix(renderingBuffer->camera->projectionMatrix, &modelViewProjectionMatrix);
 			//Set modelViewProjectionMatrix uniform
-			
+
 			ProgramUniformMatrix4fv(shaderProgramID, modelViewProjectionMatrixLocation,  1, GL_TRUE, modelViewProjectionMatrix.components);
 
 			if (gameObj->material != NULL)
 			{
-			   //Set color matrix
-			   ProgramUniformMatrix4fv(shaderProgramID, colorMatrixLocation,  1, GL_TRUE, gameObj->material->colorMatrix->components);
+				//Set color matrix
+				ProgramUniformMatrix4fv(shaderProgramID, colorMatrixLocation,  1, GL_TRUE, colorMatrixComponents);
 
-			   ProgramUniform2fv(shaderProgramID, tileLocation,  1, gameObj->material->tile->components);
+				ProgramUniform2fv(shaderProgramID, tileLocation,  1, gameObj->material->tile->components);
 
 
-			   glActiveTexture(GL_TEXTURE0);
-			   glBindTexture(GL_TEXTURE_2D, gameObj->material->texture->textureID);
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, gameObj->material->texture->textureID);
 
-			   //Send texture to uniform
-			   ProgramUniform1i(shaderProgramID, textureLocation, 0);
+				//Send texture to uniform
+				ProgramUniform1i(shaderProgramID, textureLocation, 0);
 			}
 			else
 			{
@@ -235,7 +249,7 @@ void RenderingManager_Render(LinkedList* gameObjects)
 			Matrix_Copy(&modelViewProjectionMatrix, &modelMatrix);
 			Matrix_TransformMatrix(&viewMatrix, &modelViewProjectionMatrix);
 			Matrix_TransformMatrix(renderingBuffer->camera->projectionMatrix, &modelViewProjectionMatrix);
-		
+
 			//Set modelViewProjectionMatrix uniform
 			ProgramUniformMatrix4fv(shaderProgramID, modelViewProjectionMatrixLocation,  1, GL_TRUE, modelViewProjectionMatrix.components);
 
@@ -325,7 +339,7 @@ void RenderingManager_RenderOctTree(struct OctTree_Node* nodeToRender, Matrix* m
 		//Construct modelViewProjection
 		Matrix_TransformMatrix(viewMatrix, modelViewProjectionMatrix);
 		Matrix_TransformMatrix(projectionMatrix, modelViewProjectionMatrix);
-	
+
 		//Set modelViewProjectionMatrix uniform
 		ProgramUniformMatrix4fv(renderingBuffer->shaderPrograms[0]->shaderProgramID, renderingBuffer->shaderPrograms[0]->modelViewProjectionMatrixLocation, 1, GL_TRUE, modelViewProjectionMatrix->components);
 
@@ -352,37 +366,37 @@ static RenderingBuffer* RenderingManager_AllocateBuffer(void)
 //      buffer: Rendering buffer to initialize
 static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 {
-        //Shaders
-        buffer->shaderPrograms = (ShaderProgram**)malloc(sizeof(ShaderProgram*));
+	//Shaders
+	buffer->shaderPrograms = (ShaderProgram**)malloc(sizeof(ShaderProgram*));
 
-        buffer->shaderPrograms[0] = ShaderProgram_Allocate();
-        ShaderProgram_Initialize(buffer->shaderPrograms[0], "./Shader/VertexShader.glsl", "./Shader/FragmentShader.glsl");
-
-
-        //Checking shaders
-        if (buffer->shaderPrograms[0]->shaderProgramID == 0)
-        {
-                printf("\nError Creating Shader Program!\nShader Results:\nV: %d\tF: %d\tP: %d\n",
-                        buffer->shaderPrograms[0]->vertexShaderID,
-                        buffer->shaderPrograms[0]->fragmentShaderID,
-                        buffer->shaderPrograms[0]->shaderProgramID);
-
-        }
+	buffer->shaderPrograms[0] = ShaderProgram_Allocate();
+	ShaderProgram_Initialize(buffer->shaderPrograms[0], "./Shader/VertexShader.glsl", "./Shader/FragmentShader.glsl");
 
 
-        //Camera
-        buffer->camera = Camera_Allocate();
-        Camera_Initialize(buffer->camera);
+	//Checking shaders
+	if (buffer->shaderPrograms[0]->shaderProgramID == 0)
+	{
+		printf("\nError Creating Shader Program!\nShader Results:\nV: %d\tF: %d\tP: %d\n",
+				buffer->shaderPrograms[0]->vertexShaderID,
+				buffer->shaderPrograms[0]->fragmentShaderID,
+				buffer->shaderPrograms[0]->shaderProgramID);
 
-        //Lighting
-        buffer->directionalLightVector = Vector_Allocate();
-        Vector_Initialize(buffer->directionalLightVector, 3);
-        buffer->directionalLightVector->components[0] = -1.0f;
-        //buffer->directionalLightVector->components[2] = -0.77f;
-        //buffer->directionalLightVector->components[2] = -1.0f;
+	}
 
-        //Debug
-        buffer->debugOctTree = 0;
+
+	//Camera
+	buffer->camera = Camera_Allocate();
+	Camera_Initialize(buffer->camera);
+
+	//Lighting
+	buffer->directionalLightVector = Vector_Allocate();
+	Vector_Initialize(buffer->directionalLightVector, 3);
+	buffer->directionalLightVector->components[0] = -1.0f;
+	//buffer->directionalLightVector->components[2] = -0.77f;
+	//buffer->directionalLightVector->components[2] = -1.0f;
+
+	//Debug
+	buffer->debugOctTree = 0;
 }
 
 ///
@@ -392,8 +406,8 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 //      buffer: The buffer to free
 static void RenderingManager_FreeBuffer(RenderingBuffer* buffer)
 {
-        ShaderProgram_Free(buffer->shaderPrograms[0]);
-        free(buffer->shaderPrograms);
-        Camera_Free(buffer->camera);
-        Vector_Free(buffer->directionalLightVector);
+	ShaderProgram_Free(buffer->shaderPrograms[0]);
+	free(buffer->shaderPrograms);
+	Camera_Free(buffer->camera);
+	Vector_Free(buffer->directionalLightVector);
 }
