@@ -1,6 +1,8 @@
 # NGen
 
 ###### By: [Mr. Nex (A. K. A. Nicholas Gallagher)](http://mrnex.github.io)
+###### The NGen was made possible by the effort put forth from it's [contributors](https://github.com/MrNex/NGen/wiki/Credits)
+###### Thank you!
 
 ## Description
 
