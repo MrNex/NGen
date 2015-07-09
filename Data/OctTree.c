@@ -207,7 +207,6 @@ static void OctTree_Node_Free(OctTree* tree, struct OctTree_Node* node)
 					
 					if(status->node == node)
 					{
-						printf("Node found at index:\t%du\n", j);
 						//When we find it, remove this node from the log.
 						DynamicArray_RemoveAndReposition(log, j);
 						//If there is no other nodes logged, delete the log.
@@ -219,11 +218,6 @@ static void OctTree_Node_Free(OctTree* tree, struct OctTree_Node* node)
 
 						//Stop looping
 						break;
-					}
-					else
-					{
-						printf("%p != %p\n", node, status->node);
-						if(j == log->size - 1) printf("\n");
 					}
 				}
 			}
@@ -237,7 +231,6 @@ static void OctTree_Node_Free(OctTree* tree, struct OctTree_Node* node)
 	//The parent node does the following, we must only free the root at the end.
 	//Free this node
 	//free(node);
-	printf("\n---\n");
 }
 
 ///

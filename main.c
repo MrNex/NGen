@@ -353,7 +353,8 @@ int main(int argc, char* argv[])
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 
 	//Window creation
-	int win = glutCreateWindow("NGenVS V3.8: Shooting Gallery");
+	/*int win = */	//Should be cleaned up automatically upon exiting the main loop
+	glutCreateWindow("NGenVS V3.9");
 
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK) { return -1; }
