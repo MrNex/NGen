@@ -110,7 +110,7 @@ void Matrix_ToIdentity(Matrix* mat)
 }
 
 ///
-//Indexes an array representing amatrix
+//Indexes an array representing a matrix
 //
 //Parameters:
 //	mat: The matrix to index
@@ -325,7 +325,7 @@ void Matrix_SliceRow(Vector* destination, const Matrix* mat, const int desiredRo
 }
 
 ///
-//Slices a row of a matrix storing the contents in a Vector
+//Slices a column of a matrix storing the contents in a Vector
 //
 //Parameters:
 //	destination: The destination array to hold the row contents
@@ -348,7 +348,7 @@ void Matrix_SliceColumn(Vector* destination, const Matrix* mat, const int desire
 		{
 			if(destination->dimension >= sliceRange)
 			{
-				Matrix_SliceRowArray(destination->components, mat->components, desiredColumn, sliceStart, sliceRange, mat->numColumns);
+				Matrix_SliceColumnArray(destination->components, mat->components, desiredColumn, sliceStart, sliceRange, mat->numColumns);
 			}
 			else
 			{
