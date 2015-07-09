@@ -88,7 +88,7 @@ Bin/HashMap.o: Data/HashMap.c Data/HashMap.h Bin/DynamicArray.o Bin/Hash.o
 Bin/FrameOfReference.o: Render/FrameOfReference.c Render/FrameOfReference.h Bin/Matrix.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
-Bin/ShaderProgram.o: Render/ShaderProgram.c Render/ShaderProgram.o
+Bin/ShaderProgram.o: Render/ShaderProgram.c Render/ShaderProgram.h
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/Camera.o: Render/Camera.c Render/Camera.h Bin/FrameOfReference.o
