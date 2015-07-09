@@ -48,16 +48,15 @@ void RenderingManager_Initialize(void)
 
 	renderingBuffer = RenderingManager_AllocateBuffer();
 	RenderingManager_InitializeBuffer(renderingBuffer);
-	shaderProgramId = renderingBuffer->shaderPrograms[0]->shaderProgramID;
-	if (shaderProgramID != 0)
+
+	if (renderingBuffer->shaderPrograms[0]->shaderProgramID != 0)
 	{
 
-		glUseProgram(shaderProgramID);
+		glUseProgram(renderingBuffer->shaderPrograms[0]->shaderProgramID);
 	}
 	else
 	{
-		printf("\nError Creating Shader Program!\n"
-				"Shader Results:\nV: %d\tF: %d\tP: %d\n",
+		printf("\nError Creating Shader Program!\nShader Results:\nV: %d\tF: %d\tP: %d\n",
 				renderingBuffer->shaderPrograms[0]->vertexShaderID,
 				renderingBuffer->shaderPrograms[0]->fragmentShaderID,
 				renderingBuffer->shaderPrograms[0]->shaderProgramID);
@@ -96,30 +95,17 @@ void RenderingManager_Render(LinkedList* gameObjects)
 	//Clear buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	GLuint shaderProgramID = renderingBuffer->shaderPrograms[0]
-		->shaderProgramID;
-	GLint dirLightVectorLoc = renderingBuffer->shaderPrograms[0]
-		->directionalLightVectorLocation;
-	float* components = renderingBuffer->directionalLightVector
-		->components;
-	GLint viewMatrixLocation = renderingBuffer->shaderPrograms[0]
-		->viewMatrixLocation;
-	GLint projectionMatrixLocation = renderingBuffer->shaderPrograms[0]
-		->projectionMatrixLocation;
-	GLint modelMatrixLocation = renderingBuffer->shaderPrograms[0]
-		->modelMatrixLocation;
-	GLint modelViewProjectionMatrixLocation = renderingBuffer
-		->shaderPrograms[0]
-		->modelViewProjectionMatrixLocation;
-	GLint colorMatrixLocation = renderingBuffer->shaderPrograms[0]
-		->colorMatrixLocation;
-	GLint tileLocation = renderingBuffer->shaderPrograms[0]
-		->tileLocation;
-	GLint textureLocation = renderingBuffer->shaderPrograms[0]
-		->textureLocation;
-	float* projectionMatrixComponents = renderingBuffer->camera
-		->projectionMatrix->components;
-	float* colorMatrixComponents = gameObj->material->colorMatrixLocation					->components;	
+	GLuint shaderProgramID = renderingBuffer->shaderPrograms[0]->shaderProgramID;
+	GLint dirLightVectorLoc = renderingBuffer->shaderPrograms[0]->directionalLightVectorLocation;
+	float* components = renderingBuffer->directionalLightVector->components;
+	GLint viewMatrixLocation = renderingBuffer->shaderPrograms[0]->viewMatrixLocation;
+	GLint projectionMatrixLocation = renderingBuffer->shaderPrograms[0]->projectionMatrixLocation;
+	GLint modelMatrixLocation = renderingBuffer->shaderPrograms[0]->modelMatrixLocation;
+	GLint modelViewProjectionMatrixLocation = renderingBuffer->shaderPrograms[0]->modelViewProjectionMatrixLocation;
+	GLint colorMatrixLocation = renderingBuffer->shaderPrograms[0]->colorMatrixLocation;
+	GLint tileLocation = renderingBuffer->shaderPrograms[0]->tileLocation;
+	GLint textureLocation = renderingBuffer->shaderPrograms[0]->textureLocation;
+
 	//Set directional Light
 	ProgramUniform3fv(shaderProgramID, dirLightVectorLoc,  1, components);
 
@@ -138,7 +124,7 @@ void RenderingManager_Render(LinkedList* gameObjects)
 	ProgramUniformMatrix4fv(shaderProgramID, viewMatrixLocation,  1, GL_TRUE, viewMatrix.components);
 
 	//Set projectionMatrix Uniform
-	ProgramUniformMatrix4fv(shaderProgramID, projectionMatrixLocation,  1, GL_TRUE, projectionMatrixComponents);
+	ProgramUniformMatrix4fv(shaderProgramID, projectionMatrixLocation,  1, GL_TRUE, renderingBuffer->camera->projectionMatrix->components);
 
 
 	struct LinkedList_Node* current = gameObjects->head;
@@ -165,7 +151,7 @@ void RenderingManager_Render(LinkedList* gameObjects)
 			if (gameObj->material != NULL)
 			{
 				//Set color matrix
-				ProgramUniformMatrix4fv(shaderProgramID, colorMatrixLocation,  1, GL_TRUE, colorMatrixComponents);
+				ProgramUniformMatrix4fv(shaderProgramID, colorMatrixLocation,  1, GL_TRUE, gameObj->material->colorMatrix->components);
 
 				ProgramUniform2fv(shaderProgramID, tileLocation,  1, gameObj->material->tile->components);
 
