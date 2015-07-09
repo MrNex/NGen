@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "ProgramUniform.h"
+#include "../Compatibility/ProgramUniform.h"
 
 #include "AssetManager.h"
 
