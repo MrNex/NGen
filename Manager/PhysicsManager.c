@@ -1980,30 +1980,30 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 	//if the unit tangent vector is still 0
 	if(Vector_GetMag(&unitTangentVector) == 0.0f)
 	{
-		//We must use the sum of the external forces to compute the unit tangent vector instead of the relative velocity
-		Vector cumulativeNetForce;
-		Vector_INIT_ON_STACK(cumulativeNetForce, 3);
+		//We must use the relative net force, the net force applied to rigidbody 2 relative to rigidbody1
+		Vector relativeNetForce;
+		Vector_INIT_ON_STACK(relativeNetForce, 3);
 
 
-		if(collision->obj1->body != NULL)
-		{
-			Vector_Increment(&cumulativeNetForce, collision->obj1->body->previousNetForce);
-		}
 		if(collision->obj2->body != NULL)
 		{
-			Vector_Increment(&cumulativeNetForce, collision->obj2->body->previousNetForce);
+			Vector_Increment(&relativeNetForce, collision->obj2->body->previousNetForce);
+		}
+		if(collision->obj1->body != NULL)
+		{
+			Vector_Decrement(&relativeNetForce, collision->obj1->body->previousNetForce);
 		}
 
 		//Project the net external force onto the surface normal
-		Vector cumNetForcePerp;
-		Vector_INIT_ON_STACK(cumNetForcePerp, 3);
+		Vector relNetForcePerp;
+		Vector_INIT_ON_STACK(relNetForcePerp, 3);
 
 		//Vector_GetScalarProduct(&cumNetForcePerp, &cumulativeNetForce, Vector_DotProduct(&cumulativeNetForce, collision->minimumTranslationVector));
-		Vector_GetProjection(&cumNetForcePerp, &cumulativeNetForce, collision->minimumTranslationVector);
+		Vector_GetProjection(&relNetForcePerp, &relativeNetForce, collision->minimumTranslationVector);
 
 
 		//VTangential = V - VPerpendicular
-		Vector_Subtract(&unitTangentVector, &cumulativeNetForce, &cumNetForcePerp);
+		Vector_Subtract(&unitTangentVector, &relativeNetForce, &relNetForcePerp);
 		Vector_Normalize(&unitTangentVector);
 	}
 
