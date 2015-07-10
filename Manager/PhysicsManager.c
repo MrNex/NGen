@@ -1601,10 +1601,10 @@ static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest, c
 		else if(dotProd > max2) max2 = dotProd;
 	}
 
-	//First we must order the points from lowest to highest
-	float lBound, lMid, uMid, uBound;
-	lBound = min1 < min2 ? ((lMid = min2), min1) : ((lMid = min1), min2);
-	uBound = max1 > max2 ? ((uMid = max2), max1) : ((uMid = max1), max2);
+	//First we must order the points from lowest to highest, but we only care about the middle 2.
+	float lMid, uMid;
+	lMid = min1 < min2 ?  min2 : min1;
+	uMid = max1 > max2 ? max2 : max1;
 
 	//Now we must find the scalar midpoint of the projections on this axis.
 	float mid = lMid + 0.5f * (uMid - lMid);
@@ -1638,8 +1638,8 @@ static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest, c
 	}
 
 	//First we must order the points from lowest to highest
-	lBound = min1 < min2 ? ((lMid = min2), min1) : ((lMid = min1), min2);
-	uBound = max1 > max2 ? ((uMid = max2), max1) : ((uMid = max1), max2);
+	lMid = min1 < min2 ?  min2 : min1;
+	uMid = max1 > max2 ? max2 : max1;
 
 	//Now we must find the scalar midpoint of the projections on this axis.
 	mid = lMid + 0.5f * (uMid - lMid);

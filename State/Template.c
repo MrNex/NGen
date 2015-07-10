@@ -1,9 +1,11 @@
 #include "Template.h"
 
+/* Commented out to avoid empty struct warning
 struct State_Template_Members
 {
 	//Insert members here
 };
+*/
 
 ///
 //Initializes a Template state
@@ -12,7 +14,8 @@ struct State_Template_Members
 //	s: A pointer to the state to initialize
 void State_Template_Initialize(State* state)
 {
-	
+	//State is currently unused.
+	(void)state;
 }
 
 ///
@@ -23,7 +26,9 @@ void State_Template_Initialize(State* state)
 //	state: A pointer to the state updating the GObject
 void State_Template_Update(GObject* obj, State* state)
 {
-
+	//state and obj are currently unused
+	(void)obj;
+	(void)state;
 }
 
 ///
@@ -33,5 +38,6 @@ void State_Template_Update(GObject* obj, State* state)
 //	state: The Template state to free
 void State_Template_Free(State* state)
 {
-
+	//State is currently unused
+	(void)state;
 }

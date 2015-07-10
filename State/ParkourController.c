@@ -557,7 +557,9 @@ void State_ParkourController_Shoot(GObject* obj, State* state)
 			//Create ridgid body
 			bullet->body = RigidBody_Allocate();
 			RigidBody_Initialize(bullet->body, bullet->frameOfReference, 1.0f);
-			bullet->body->coefficientOfRestitution = 0.2f;		
+			bullet->body->coefficientOfRestitution = 0.2f;	
+			bullet->body->staticFriction = 0.6f;
+			bullet->body->dynamicFriction = 0.4f;	
 	
 			//Create collider
 			bullet->collider = Collider_Allocate();
@@ -574,7 +576,7 @@ void State_ParkourController_Shoot(GObject* obj, State* state)
 
 			//Scale bullet
 			Vector_Copy(&transform, &Vector_ZERO);
-			transform.components[0] = transform.components[1] = transform.components[2] = 0.1f;
+			transform.components[0] = transform.components[1] = transform.components[2] = 0.5f;
 			GObject_Scale(bullet, &transform);
 
 			//Apply impulse
