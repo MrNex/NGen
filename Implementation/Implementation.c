@@ -67,24 +67,23 @@ void InitializeScene(void)
 	RigidBody_Initialize(block->body, block->frameOfReference, 0.1f);
 	block->body->dynamicFriction = block->body->staticFriction = 0.01f;
 
-	block->body->coefficientOfRestitution = 0.8f;
+	block->body->coefficientOfRestitution = 0.8f; 
 
 	Vector_Copy(&v, &Vector_ZERO);
-	v.components[1] = 10.0f;
-
-	//RigidBody_ApplyInstantaneousTorque(block->body, &v); 
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 3.0f;
-	v.components[1] = -5.0f;
+	v.components[0] = -10.0f;
+	v.components[1] = -0.5f;
 	v.components[2] = -10.0f;
 
 	GObject_Translate(block, &v);
 
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 0.3f;
+	RigidBody_ApplyImpulse(block->body, &v, &Vector_ZERO);
+
 	ObjectManager_AddObject(block);
 
-	//Create another block
 
+	//Create another block
 	block = GObject_Allocate();
 	GObject_Initialize(block);
 
@@ -105,12 +104,8 @@ void InitializeScene(void)
 	block->body->coefficientOfRestitution = 0.9f;
 
 	Vector_Copy(&v, &Vector_ZERO);
-	v.components[1] = 10.0f;
-
-	RigidBody_ApplyInstantaneousTorque(block->body, &v); 
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 3.0f;
+	v.components[0] = 10.0f;
+	v.components[1] = 0.5f;
 	v.components[2] = -10.0f;
 
 	GObject_Translate(block, &v);
@@ -118,6 +113,7 @@ void InitializeScene(void)
 	ObjectManager_AddObject(block);
 
 
+	
 	//Create sphere
 
 	block = GObject_Allocate();
@@ -204,10 +200,11 @@ void InitializeScene(void)
 	
 	
 	//Set gravity
+	/*
 	Vector* gravity = Vector_Allocate();
 	Vector_Initialize(gravity, 3);
 	gravity->components[1] = -9.81f;
 	
 	PhysicsManager_AddGlobalAcceleration(gravity);
-
+	*/
 }

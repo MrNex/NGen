@@ -1,6 +1,7 @@
 #include "PhysicsManager.h"
 
 #include <stdio.h>
+#include <float.h>
 #include <math.h>
 
 #include "TimeManager.h"
@@ -138,7 +139,8 @@ static void PhysicsManager_DetermineCollisionPointConvexHullEdge(Vector* dest,
 //      dest: A pointer to he vector to store the collision in
 //      furthestOnHull1: A pointer to the dynamic array of vectors containing the vertices IN WORLDSPACE belonging to convexHull1 furthest in the direction of it's respective MTV
 //      furthestOnHull2: A pointer to the dynamic array of vectors containing the vertices IN WORLDSPACE belongong to convexHull2 furthest in the direction of it's respective MTV
-static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest, const DynamicArray* furthestOnHull1, const DynamicArray* furthestOnHull2);
+//	MTV: The minimum translation vector in the direction of convexHull1
+static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest, const DynamicArray* furthestOnHull1, const DynamicArray* furthestOnHull2, const Vector* MTV);
 
 ///
 //Calculates and imparts the resulting collision impulse from the collision 
@@ -1402,7 +1404,7 @@ static void PhysicsManager_DetermineCollisionPointConvexHull(Vector* dest,
 		}
 
 		//Calculate approximate collision point of general case
-		PhysicsManager_DetermineCollisionPointConvexHullFace(dest, furthestPoints1, furthestPoints2);
+		PhysicsManager_DetermineCollisionPointConvexHullFace(dest, furthestPoints1, furthestPoints2, relativeMTV);
 		//Collision point was determined, flag found
 		found = 1;
 	}
@@ -1523,9 +1525,137 @@ static void PhysicsManager_DetermineCollisionPointConvexHullEdge(Vector* dest,
 //	dest: A pointer to he vector to store the collision in
 //	furthestOnHull1: A pointer to the dynamic array of vectors containing the vertices belonging to convexHull1 furthest in the direction of it's respective MTV
 //	furthestOnHull2: A pointer to the dynamic array of vectors containing the vertices belongong to convexHull2 furthest in the direction of it's respective MTV
-static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest, const DynamicArray* furthestOnHull1, const DynamicArray* furthestOnHull2)
+//	MTV: The minimum translation vector pointing toward convexHull1 by convention
+static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest, const DynamicArray* furthestOnHull1, const DynamicArray* furthestOnHull2, const Vector* MTV)
 {
 
+	//We must construct two axes which, along with the MTV, form a basis for 3-space.
+	//These two axes will form a basis for the collision plane.
+	Vector x;
+	Vector y;
+
+	Vector_INIT_ON_STACK(x, 3);
+	Vector_INIT_ON_STACK(y, 3);
+
+	Vector proj;
+	Vector sum;
+	Vector_INIT_ON_STACK(proj, 3);
+	Vector_INIT_ON_STACK(sum, 3);
+	//Perform the Graham Schmidt process to form a basis for 3-space from the MTV
+	//First let X be the Perpendicular component of the X axis with respect to the MTV
+	Vector_GetProjection(&proj, &Vector_E1, MTV);
+	Vector_Subtract(&x, &Vector_E1, &proj);
+
+	//Make sure x is not the zero vector
+	if(Vector_DotProduct(&x, &x) < FLT_EPSILON)
+	{
+		//Let X be the perpendicular component of the Z axis with respect to the MTV
+		Vector_GetProjection(&proj, &Vector_E3, MTV);
+		Vector_Subtract(&x, &Vector_E3, &proj);
+
+	}
+
+	//Let y be the perpendicular component of the Y xis with respect to the subspace spanned by {MTV, x}
+	Vector_GetProjection(&sum, &Vector_E2, MTV);
+	Vector_GetProjection(&proj, &Vector_E2, &x);
+	Vector_Increment(&sum, &proj);
+
+	Vector_Subtract(&y, &Vector_E2, &sum);
+
+	//Make sure y is not the zero vector
+	if(Vector_DotProduct(&y, &y) < FLT_EPSILON)
+	{
+		//Let X be the perpendicular component of the Z axis with respect to the MTV
+		Vector_GetProjection(&sum, &Vector_E3, MTV);
+		Vector_GetProjection(&proj, &Vector_E3, MTV);
+		Vector_Increment(&sum, &proj);
+
+		Vector_Subtract(&y, &Vector_E3, &sum);
+	}
+
+	//Now that we have a basis for the collision plane, we can determine the span of overlap on each axis of both sets of points.
+	float min1, max1, min2, max2;
+
+	//Start with axis x	
+	Vector* current = (Vector*)DynamicArray_Index((DynamicArray*)furthestOnHull1, 0);
+	min1 = max1 = Vector_DotProduct(current, &x);
+
+	current = (Vector*)DynamicArray_Index((DynamicArray*)furthestOnHull2, 0);
+	min2 = max2 = Vector_DotProduct(current, &x);
+
+	for(unsigned int i = 1; i < furthestOnHull1->size; i++)
+	{
+		current = DynamicArray_Index((DynamicArray*)furthestOnHull1, i);
+		float dotProd = Vector_DotProduct(current, &x);
+
+		if(dotProd < min1) min1 = dotProd;
+		else if(dotProd > max1) max1 = dotProd;
+	}
+
+	for(unsigned int i = 1; i < furthestOnHull2->size; i++)
+	{
+		current = DynamicArray_Index((DynamicArray*)furthestOnHull2, i);
+		float dotProd = Vector_DotProduct(current, &x);
+
+		if(dotProd < min2) min2 = dotProd;
+		else if(dotProd > max2) max2 = dotProd;
+	}
+
+	//First we must order the points from lowest to highest
+	float lBound, lMid, uMid, uBound;
+	lBound = min1 < min2 ? ((lMid = min2), min1) : ((lMid = min1), min2);
+	uBound = max1 > max2 ? ((uMid = max2), max1) : ((uMid = max1), max2);
+
+	//Now we must find the scalar midpoint of the projections on this axis.
+	float mid = lMid + 0.5f * (uMid - lMid);
+
+	//Set the "x" component of the point of collision
+	Vector_GetScalarProduct(dest, &x, mid);
+
+	//Next do the y axis	
+	current = (Vector*)DynamicArray_Index((DynamicArray*)furthestOnHull1, 0);
+	min1 = max1 = Vector_DotProduct(current, &y);
+
+	current = (Vector*)DynamicArray_Index((DynamicArray*)furthestOnHull2, 0);
+	min2 = max2 = Vector_DotProduct(current, &y);
+
+	for(unsigned int i = 1; i < furthestOnHull1->size; i++)
+	{
+		current = DynamicArray_Index((DynamicArray*)furthestOnHull1, i);
+		float dotProd = Vector_DotProduct(current, &y);
+
+		if(dotProd < min1) min1 = dotProd;
+		else if(dotProd > max1) max1 = dotProd;
+	}
+
+	for(unsigned int i = 1; i < furthestOnHull2->size; i++)
+	{
+		current = DynamicArray_Index((DynamicArray*)furthestOnHull2, i);
+		float dotProd = Vector_DotProduct(current, &y);
+
+		if(dotProd < min2) min2 = dotProd;
+		else if(dotProd > max2) max2 = dotProd;
+	}
+
+	//First we must order the points from lowest to highest
+	lBound = min1 < min2 ? ((lMid = min2), min1) : ((lMid = min1), min2);
+	uBound = max1 > max2 ? ((uMid = max2), max1) : ((uMid = max1), max2);
+
+	//Now we must find the scalar midpoint of the projections on this axis.
+	mid = lMid + 0.5f * (uMid - lMid);
+
+	//Set the "y" component of the point of collision
+	Vector_GetScalarProduct(&proj, &y, mid);
+	Vector_Increment(dest, &proj);
+
+	//Perform the final component in the direction of the collision normal
+	current = (Vector*)DynamicArray_Index((DynamicArray*)furthestOnHull1, 0);
+	mid = Vector_DotProduct(current, MTV);
+	//Set the final component
+	Vector_GetScalarProduct(&proj, MTV, mid);
+	Vector_Increment(dest, &proj);
+
+	/*
 	//Create a linked list of points to find the inner most points
 	LinkedList* innerPoints = LinkedList_Allocate();
 	LinkedList_Initialize(innerPoints);
@@ -1540,6 +1670,7 @@ static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest, c
 	Vector* minVector = NULL;
 	Vector* maxVector = NULL;
 
+	
 	for(unsigned int i = 0; i < 3; i++)
 	{
 		//Add all points translated into worldspace to the list
@@ -1610,6 +1741,7 @@ static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest, c
 	}
 
 	LinkedList_Free(innerPoints);
+	*/
 }
 
 ///

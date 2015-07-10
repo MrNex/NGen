@@ -1,6 +1,7 @@
 #include "ConvexHullCollider.h"
 
 #include <stdlib.h>
+#include <float.h>
 
 #include "Collider.h"
 
@@ -512,6 +513,9 @@ void ConvexHullCollider_GetOrientedEdges(Vector** dest, const struct ColliderDat
 void ConvexHullCollider_GetFurthestPoints(DynamicArray* dest, const struct ColliderData_ConvexHull* collider, const Vector** modelOrientedPoints, const Vector* direction)
 {
 
+	//This is a tolerance range within which we consider points just as far.
+	static const float tolerance = 0.001f;
+
 	//Find the points furthest in direction of relative MTV for convexHull1
 	float currentMaxDistance = 0.0f;
 	float currentDistance = 0.0f;
@@ -536,7 +540,7 @@ void ConvexHullCollider_GetFurthestPoints(DynamicArray* dest, const struct Colli
 			DynamicArray_Append(dest, (void*)modelOrientedPoints[i]);
 		}
 		//If it's not further, it may be just as far
-		else if(currentDistance == currentMaxDistance)
+		else if( currentMaxDistance - currentDistance <= FLT_EPSILON + tolerance)
 		{
 			//Log this point as one of the furthest
 			DynamicArray_Append(dest, (void*)modelOrientedPoints[i]);
