@@ -2029,7 +2029,7 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 
 	float relImpulseTangentialMag1;
 	float relImpulseTangentialMag2;
-	if(collision->obj1->body != NULL && collision->obj1->body->inverseMass != 0.0f)
+	if(collision->obj1->body != NULL && collision->obj1->body->inverseMass != 0.0f && !collision->obj1->body->freezeTranslation)
 	{
 		relImpulseTangentialMag1 = relVelocityTangentialMag / collision->obj1->body->inverseMass;	
 		if(relImpulseTangentialMag1 <= staticMag)
@@ -2039,11 +2039,16 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 
 			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, relImpulseTangentialMag1);
 
-			//Vector radius;
-			//Vector_INIT_ON_STACK(radius, 3);
-			//Vector_Subtract(&radius, collision->obj1->body->frame->position, pointsOfCollision[0]);
-			//RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &radius);
-			RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &Vector_ZERO);
+
+			Vector radius;
+			Vector_INIT_ON_STACK(radius, 3);
+			if(!collision->obj1->body->freezeRotation)
+			{
+				Vector_Subtract(&radius, pointsOfCollision[0], collision->obj1->body->frame->position);
+			}
+			
+			RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &radius);
+			//RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &Vector_ZERO);
 		}
 		else
 		{
@@ -2051,12 +2056,16 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 			Vector_INIT_ON_STACK(frictionalImpulse, 3);
 
 			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, dynamicMag);
+
+			Vector radius;
+			Vector_INIT_ON_STACK(radius, 3);
+			if(!collision->obj1->body->freezeRotation)
+			{
+				Vector_Subtract(&radius, pointsOfCollision[0], collision->obj1->body->frame->position);
+			}
 			
-			//Vector radius;
-			//Vector_INIT_ON_STACK(radius, 3);
-			//Vector_Subtract(&radius, collision->obj1->body->frame->position, pointsOfCollision[0]);
-			//RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &radius);
-			RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &Vector_ZERO);
+			RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &radius);
+			//RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &Vector_ZERO);
 		}
 	}
 	if(collision->obj2->body != NULL && collision->obj2->body->inverseMass != 0.0f)
@@ -2070,11 +2079,14 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 
 			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, -relImpulseTangentialMag2);
 
-			//Vector radius;
-			//Vector_INIT_ON_STACK(radius, 3);
-			//Vector_Subtract(&radius, collision->obj2->body->frame->position, pointsOfCollision[1]);
-			//RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &radius);
-			RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &Vector_ZERO);
+			Vector radius;
+			Vector_INIT_ON_STACK(radius, 3);
+			if(!collision->obj2->body->freezeRotation)
+			{
+				Vector_Subtract(&radius, pointsOfCollision[1], collision->obj2->body->frame->position);
+			}
+			RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &radius);
+			//RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &Vector_ZERO);
 		}
 		else
 		{
@@ -2083,11 +2095,14 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 
 			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, -dynamicMag);
 
-			//Vector radius;
-			//Vector_INIT_ON_STACK(radius, 3);
-			//Vector_Subtract(&radius, collision->obj2->body->frame->position, pointsOfCollision[1]);
-			//RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &radius);
-			RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &Vector_ZERO);
+			Vector radius;
+			Vector_INIT_ON_STACK(radius, 3);
+			if(!collision->obj2->body->freezeRotation)
+			{
+				Vector_Subtract(&radius, pointsOfCollision[1], collision->obj2->body->frame->position);
+			}
+			RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &radius);
+			//RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &Vector_ZERO);
 		}
 	}
 
