@@ -2,6 +2,7 @@
 #define MATRIX_H
 
 #include "Vector.h"
+#include <stdint.h>
 
 #define Matrix_INIT_ON_STACK( mat, numRow, numCol) \
 	mat.numRows = numRow; \
@@ -12,8 +13,8 @@
 
 typedef struct Matrix
 {
-	int numRows;
-	int numColumns;
+	uint16_t numRows;
+	uint16_t numColumns;
 
 	float* components;
 }Matrix;
@@ -34,7 +35,7 @@ Matrix* Matrix_Allocate();
 //
 //Parameters:
 //	mat: Matrix to initialize
-void Matrix_Initialize(Matrix* mat, const int numRows, const int numCols);
+void Matrix_Initialize(Matrix* mat, const uint16_t numRows, const uint16_t numCols);
 
 
 ///
@@ -52,7 +53,7 @@ void Matrix_Free(Matrix* mat);
 //	source: The matrix to copy
 //	numRows: The number of rows in the matrix being copied
 //	numCols: The number of columns in the matrix being copied
-void Matrix_CopyArray(float* dest, const float* source, const int numRows, const int numCols);
+void Matrix_CopyArray(float* dest, const float* source, const uint16_t numRows, const uint16_t numCols);
 //Checks for errors then calls matrix_CopyArray
 void Matrix_Copy(Matrix* dest, const Matrix* src);
 
@@ -62,7 +63,7 @@ void Matrix_Copy(Matrix* dest, const Matrix* src);
 //Parameters:
 //	mat: The matrix to transform
 //	dim: The dimension of the desired identity matrix
-void Matrix_ToIdentityArray(float* mat, const int dim);
+void Matrix_ToIdentityArray(float* mat, const uint16_t dim);
 //Calls Matrix_ToIdentityArray after error checking
 void Matrix_ToIdentity(Matrix* mat);
 
@@ -75,13 +76,13 @@ void Matrix_ToIdentity(Matrix* mat);
 //	col: The column of the element we wish to index
 //	numRows: The numberof rows in the matrix
 //	numCols: The number of columns in the matrix
-float* Matrix_IndexArray(float* mat, const int row, const int col, const int numCols);
+float* Matrix_IndexArray(float* mat, const uint16_t row, const uint16_t col, const uint16_t numCols);
 //Const correct indexing
-float Matrix_GetIndexArray(const float* mat, const int row, const int col, const int numCols);
+float Matrix_GetIndexArray(const float* mat, const uint16_t row, const uint16_t col, const uint16_t numCols);
 //Performs error checking then calls Matrix_IndexArray
-float* Matrix_Index(Matrix* mat, const int row, const int col);
+float* Matrix_Index(Matrix* mat, const uint16_t row, const uint16_t col);
 //Const correct error checking indexing! Wahooo!
-float Matrix_GetIndex(const Matrix* mat, const int row, const int col);
+float Matrix_GetIndex(const Matrix* mat, const uint16_t row, const uint16_t col);
 
 ///
 //Gets the minor matrix corresponding to the specified index
@@ -93,9 +94,9 @@ float Matrix_GetIndex(const Matrix* mat, const int row, const int col);
 //	col: The column of the index to get the corresponding minor of
 //	numRows: The number of rows in the matrix
 //	numColumns: The number of columns in the matrix
-void Matrix_GetMinorArray(float* dest, const float* mat, const unsigned int row, const unsigned int col, const unsigned int numRows, const unsigned int numColumns);
+void Matrix_GetMinorArray(float* dest, const float* mat, const uint16_t row, const uint16_t col, const uint16_t numRows, const uint16_t numColumns);
 //Checks for errors then calls CMatrix_GetMinorArray
-void Matrix_GetMinor(Matrix* dest, const Matrix* mat, const int row, const int col);
+void Matrix_GetMinor(Matrix* dest, const Matrix* mat, const uint16_t row, const uint16_t col);
 
 ///
 //Gets an array representing a row Vector of this matrix
@@ -105,9 +106,9 @@ void Matrix_GetMinor(Matrix* dest, const Matrix* mat, const int row, const int c
 //	mat: The matrix to get a row from
 //	desiredRow: The row to get
 //	numColumns: The number of columns in the source matrix
-void Matrix_GetRowVectorArray(float* destination, const float* mat, const int desiredRow, const int numColumns);
+void Matrix_GetRowVectorArray(float* destination, const float* mat, const uint16_t desiredRow, const uint16_t numColumns);
 //Checks for errors then calls Matrix_GetRowVectorArray
-void Matrix_GetRowVector(Vector* destination, const Matrix* mat, const int desiredRow);
+void Matrix_GetRowVector(Vector* destination, const Matrix* mat, const uint16_t desiredRow);
 
 ///
 //Gets an array representing a column of this Vector
@@ -118,9 +119,9 @@ void Matrix_GetRowVector(Vector* destination, const Matrix* mat, const int desir
 //	desiredCol: The column to get from the matrix
 //	numRows: The number of rows in the matrix
 //	numColumns: The number of columns in the matrix
-void Matrix_GetColumnVectorArray(float* destination, const float* mat, const int desiredCol, const int numRows, const int numColumns); 
+void Matrix_GetColumnVectorArray(float* destination, const float* mat, const uint16_t desiredCol, const uint16_t numRows, const uint16_t numColumns); 
 //Checks for errors then calls Matrix_GetColumnVectorArray
-void Matrix_GetColumnVector(Vector* destination, const Matrix* mat, const int desiredCol);
+void Matrix_GetColumnVector(Vector* destination, const Matrix* mat, const uint16_t desiredCol);
 
 ///
 //Slices a row of a matrix storing the contents in a Vector
@@ -132,9 +133,9 @@ void Matrix_GetColumnVector(Vector* destination, const Matrix* mat, const int de
 //	sliceStart: The index to begin slicing the row (inclusive)
 //	sliceRange: The amount of indices to slice
 //	numColumns:	The number of columns in the matrix
-void Matrix_SliceRowArray(float* destination, const float* mat, const int desiredRow, const int sliceStart, const int sliceRange, const int numColumns);
+void Matrix_SliceRowArray(float* destination, const float* mat, const uint16_t desiredRow, const uint16_t sliceStart, const uint16_t sliceRange, const uint16_t numColumns);
 //Checks for errors then calls Matrix_SliceRowArray
-void Matrix_SliceRow(Vector* destination, const Matrix* mat, const int desiredRow, const int sliceStart, const int sliceRange);
+void Matrix_SliceRow(Vector* destination, const Matrix* mat, const uint16_t desiredRow, const uint16_t sliceStart, const uint16_t sliceRange);
 
 ///
 //Slices a row of a matrix storing the contents in a Vector
@@ -146,9 +147,9 @@ void Matrix_SliceRow(Vector* destination, const Matrix* mat, const int desiredRo
 //	sliceStart: The index to begin slicing the row (inclusive)
 //	sliceRange: The amount of indices to slice
 //	numColumns:	The number of columns in the matrix
-void Matrix_SliceColumnArray(float* destination, const float* mat, const int desiredColumn, const int sliceStart, const int sliceRange, const int numColumns);
+void Matrix_SliceColumnArray(float* destination, const float* mat, const uint16_t desiredColumn, const uint16_t sliceStart, const uint16_t sliceRange, const uint16_t numColumns);
 //Checks for errors then calls Matrix_SliceColumnArray
-void Matrix_SliceColumn(Vector* destination, const Matrix* mat, const int desiredRow, const int sliceStart, const int sliceRange); 
+void Matrix_SliceColumn(Vector* destination, const Matrix* mat, const uint16_t desiredRow, const uint16_t sliceStart, const uint16_t sliceRange); 
 
 ///
 //Scales a matrix by a scalar
@@ -158,7 +159,7 @@ void Matrix_SliceColumn(Vector* destination, const Matrix* mat, const int desire
 //	numRows: The number of rows in the matrix
 //	numCols: The number of columns in the matrix
 //	scalarValue: The value by which to scale the matrix
-void Matrix_ScaleArray(float* matrix, const unsigned int numRows, const unsigned int numColumns, const float scalarValue);
+void Matrix_ScaleArray(float* matrix, const uint16_t numRows, const uint16_t numColumns, const float scalarValue);
 //Calls Matrix_ScaleArray
 void Matrix_Scale(Matrix* matrix, const float scalarValue);
 
@@ -169,7 +170,7 @@ void Matrix_Scale(Matrix* matrix, const float scalarValue);
 //	mat: The matrix to calculate the determinate of
 //	numColumns: The number of columns in the matrix
 //	numRows: The number of rows in the matrix
-float Matrix_GetDeterminateArray(const float* mat, const int numRows, const int numColumns);
+float Matrix_GetDeterminateArray(const float* mat, const uint16_t numRows, const uint16_t numColumns);
 //Checks for errors then calls CMatrix_GetDeterminateArray
 float Matrix_GetDeterminate(const Matrix* mat);
 
@@ -181,7 +182,7 @@ float Matrix_GetDeterminate(const Matrix* mat);
 //	mat: The matrix to transpose in array form
 //	numRows: The number of rows in the matrix
 //	numColumns: the number of columns in the matrix
-void Matrix_TransposeArray(float* mat, const int numRows, const int numColumns);
+void Matrix_TransposeArray(float* mat, const uint16_t numRows, const uint16_t numColumns);
 //Checks for errors then calls Matrix_TransposeArray
 void Matrix_Transpose(Matrix* mat);
 
@@ -193,7 +194,7 @@ void Matrix_Transpose(Matrix* mat);
 //	matrix: A pointer to an array of floats representing the matrix to transpose
 //	numRows: the number of rows in the matrix
 //	numColumns: The number of columns in the matrix
-void Matrix_GetTransposeArray(float* dest,const float* matrix, const int numRows, const int numColumns);
+void Matrix_GetTransposeArray(float* dest,const float* matrix, const uint16_t numRows, const uint16_t numColumns);
 //Checks for errors, then calls Matrix_GetTransposeArray
 void Matrix_GetTranspose(Matrix* dest, Matrix* src);
 
@@ -205,7 +206,7 @@ void Matrix_GetTranspose(Matrix* dest, Matrix* src);
 //	matrix: A pointer to an array of floats containing the components of the matrix to invert
 //	numRows: The number of rows in the matrix being inverted
 //	numCols: The number of columns in the matrix being inverted
-void Matrix_GetInverseArray(float* dest, const float* matrix, const unsigned  int numRows, const unsigned int numCols);
+void Matrix_GetInverseArray(float* dest, const float* matrix, const uint16_t numRows, const uint16_t numCols);
 //Checks for errors, then calls Matrix_GetInverseArray
 void Matrix_GetInverse(Matrix* dest, const Matrix* matrix);
 
@@ -217,7 +218,7 @@ void Matrix_GetInverse(Matrix* dest, const Matrix* matrix);
 //	RHSMatrix: Right hand side matrix (Destination of product)
 //	LHSNumRows: Number of rows in the left hand side matrix (Must be equal to the number of columns in the right hand side matrix)
 //	LHSNumCols: Number of columns in the left hand side matrix (Must be equal to the number of rows in the right hand side matrix)
-void Matrix_TransformMatrixArray(const float* LHSMatrix, float* RHSMatrix, const int LHSNumRows, const int LHSNumCols, const int RHSNumCols);
+void Matrix_TransformMatrixArray(const float* LHSMatrix, float* RHSMatrix, const uint16_t LHSNumRows, const uint16_t LHSNumCols, const uint16_t RHSNumCols);
 //Checks for errors then calls Matrix_TransformMatrixArray
 void Matrix_TransformMatrix(const Matrix* LHSMatrix, Matrix* RHSMatrix);
 
@@ -230,7 +231,7 @@ void Matrix_TransformMatrix(const Matrix* LHSMatrix, Matrix* RHSMatrix);
 //	RHSMatrix: The right hand side matrix
 //	LHSNumRows: The number of rows in the left hand side matrix
 //	LHSNumCols: The number of columns in the left hand side matrix
-void Matrix_GetProductMatrixArray(float* destMatrix, const float* LHSMatrix, const float* RHSMatrix, const int LHSNumRows, const int LHSNumCols, const int RHSNumCols);
+void Matrix_GetProductMatrixArray(float* destMatrix, const float* LHSMatrix, const float* RHSMatrix, const uint16_t LHSNumRows, const uint16_t LHSNumCols, const uint16_t RHSNumCols);
 //Checks for errors then calls GetProductMatrixArray
 void Matrix_GetProductMatrix(Matrix* destMatrix, const Matrix* LHSMatrix, const Matrix* RHSMatrix);
 
@@ -242,7 +243,7 @@ void Matrix_GetProductMatrix(Matrix* destMatrix, const Matrix* LHSMatrix, const 
 //	RHSVector: The right had side operand and the destination, the Vector
 //	LHSNumRows: The number of rows in the Left Hand Side matrix
 //	LHSNumCols: The number of rows in the Right Hand Side matrix
-void Matrix_TransformVectorArray(const float* LHSMatrix, float* RHSVector, const int LHSNumRows, const int LHSNumCols);
+void Matrix_TransformVectorArray(const float* LHSMatrix, float* RHSVector, const uint16_t LHSNumRows, const uint16_t LHSNumCols);
 //Checks for errors then calls Matrix_TransformVectorArray
 void Matrix_TransformVector(const Matrix* LHSMatrix, Vector* RHSVector);
 
@@ -256,7 +257,7 @@ void Matrix_TransformVector(const Matrix* LHSMatrix, Vector* RHSVector);
 //	RHSVector: The right hand side Vector operand
 //	LHSNumRows: The number of rows in the LHS Matrix operand
 //	LHSNumCols: The number of columns in the LHS MatrixOperand
-void Matrix_GetProductVectorArray(float* destVector, const float* LHSMatrix, const float* RHSVector, const int LHSNumRows, const int LHSNumCols);
+void Matrix_GetProductVectorArray(float* destVector, const float* LHSMatrix, const float* RHSVector, const uint16_t LHSNumRows, const uint16_t LHSNumCols);
 //Checks for errors then calls Matrix_GetPRoductVectorArray
 void Matrix_GetProductVector(Vector* destVector, const Matrix* LHSMatrix, const Vector* RHSVector);
 
@@ -269,7 +270,7 @@ void Matrix_GetProductVector(Vector* destVector, const Matrix* LHSMatrix, const 
 //	mat: The Matrix to print
 //	numRows: The number of rows in the matrix
 //	numCols: The number of columns in the matrix
-void Matrix_PrintArray(const float* mat, const int numRows, const int numCols);
+void Matrix_PrintArray(const float* mat, const uint16_t numRows, const uint16_t numCols);
 //Calls Matrix_PrintArray
 void Matrix_Print(const Matrix* mat);
 
