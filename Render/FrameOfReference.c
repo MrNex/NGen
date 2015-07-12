@@ -16,7 +16,7 @@ FrameOfReference* FrameOfReference_Allocate(void)
 }
 
 ///
-//Initializes a Frame of REference
+//Initializes a Frame of Reference
 //
 //Parameters:
 //	FoRef: The frame of reference to initialize
@@ -37,7 +37,7 @@ void FrameOfReference_Initialize(FrameOfReference* FoRef)
 //Frees resources allocated for a Frame of Reference
 //
 //Parameters:
-//	FoRef: A pointer to the frame of reference to free
+//	FoRef: A pointer to the frame of reference being freed
 void FrameOfReference_Free(FrameOfReference* FoRef)
 {
 	Vector_Free(FoRef->position);
@@ -74,29 +74,12 @@ void FrameOfReference_Rotate(FrameOfReference* FoRef, const Vector* axis, const 
 
 	Vector_Normalize(&copyOfAxis);
 
-	//Construct a rotation matrix based on rodriguez' formula
 	Matrix rotMat;
 	Matrix_INIT_ON_STACK(rotMat, 3, 3);
 
-	//Row 1
-	*Matrix_Index(&rotMat, 0, 0) = cosf(radians) + powf(copyOfAxis.components[0], 2.0f) * (1.0f - cosf(radians));
-	*Matrix_Index(&rotMat, 0, 1) = copyOfAxis.components[0] * copyOfAxis.components[1] * (1.0f - cosf(radians)) - copyOfAxis.components[2] * sinf(radians);
-	*Matrix_Index(&rotMat, 0, 2) = copyOfAxis.components[0] * copyOfAxis.components[2] * (1.0f - cosf(radians)) + copyOfAxis.components[1] * sinf(radians);
-
-	//Row 2
-	*Matrix_Index(&rotMat, 1, 0) = copyOfAxis.components[0] * copyOfAxis.components[1] * (1.0f - cosf(radians)) + copyOfAxis.components[2] * sinf(radians);
-	*Matrix_Index(&rotMat, 1, 1) = cosf(radians) + powf(copyOfAxis.components[1], 2.0f) * (1.0f - cosf(radians));
-	*Matrix_Index(&rotMat, 1, 2) = copyOfAxis.components[1] * copyOfAxis.components[2] * (1.0f - cosf(radians)) - copyOfAxis.components[0] * sinf(radians);
-
-	//Row 3
-	*Matrix_Index(&rotMat, 2, 0) = copyOfAxis.components[0] * copyOfAxis.components[2] * (1.0f - cosf(radians)) - copyOfAxis.components[1] * sinf(radians);
-	*Matrix_Index(&rotMat, 2, 1) = copyOfAxis.components[1] * copyOfAxis.components[2] * (1.0f - cosf(radians)) + copyOfAxis.components[0] * sinf(radians);
-	*Matrix_Index(&rotMat, 2, 2) = cosf(radians) + powf(copyOfAxis.components[2], 2.0f) * (1.0f - cosf(radians));
-
-
+	//Construct a rotation matrix based on rodriguez' formula
+	FrameOfReference_ConstructRotationMatrix(&rotMat, &copyOfAxis, radians);
 	Matrix_TransformMatrix(&rotMat, FoRef->rotation);
-
-	//Matrix_Free(&rotMat);
 }
 
 ///
@@ -118,12 +101,12 @@ void FrameOfReference_Scale(FrameOfReference* FoRef, const Vector* scaleVector)
 //Constructs a 3x3 rotation matrix to rotate the coordinate system of a frame of reference
 //
 //PArameters:
-//	destination:	The destination of the matrix
+//	destination: The destination of the matrix
 //	axis: The axis to rotate around
 //	radians: The amound of radians to rotate by
 void FrameOfReference_ConstructRotationMatrix(Matrix* destination, const Vector* axis, const float radians)
 {
-		//Row 1
+	//Row 1
 	*Matrix_Index(destination, 0, 0) = cosf(radians) + powf(axis->components[0], 2.0f) * (1.0f - cosf(radians));
 	*Matrix_Index(destination, 0, 1) = axis->components[0] * axis->components[1] * (1.0f - cosf(radians)) - axis->components[2] * sinf(radians);
 	*Matrix_Index(destination, 0, 2) = axis->components[0] * axis->components[2] * (1.0f - cosf(radians)) + axis->components[1] * sinf(radians);
