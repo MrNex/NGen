@@ -1,9 +1,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-//#include <cuda.h>
 
-//#include "Vector.h"
 #include "Matrix.h"
 
 const Vector Vector_ZERO =
@@ -52,7 +50,7 @@ Vector* Vector_Allocate()
 //
 //Parameters:
 //	vec: The Vector to initialize
-void Vector_Initialize(Vector* vec, int dim)
+void Vector_Initialize(Vector* vec, uint16_t dim)
 {
 	vec->dimension = dim;
 	vec->components = (float*)calloc(sizeof(float), vec->dimension);
@@ -76,7 +74,7 @@ void Vector_Free(Vector* vec)
 //	dest: The destination of the copy
 //	src: the Vector to copy
 //	dim: The dimension of the Vector being copied
-void Vector_CopyArray(float* dest, const float* src, const int dim)
+void Vector_CopyArray(float* dest, const float* src, const uint16_t dim)
 {
 	memcpy(dest, src, sizeof(float)* dim);
 }
@@ -99,10 +97,10 @@ void Vector_Copy(Vector* dest, const Vector* src)
 //Parameters:
 //	vec: The Vector being zeroed
 //	dim: The number of components the Vector has
-void Vector_ZeroArray(float* vec, const int dim)
+void Vector_ZeroArray(float* vec, const uint16_t dim)
 {
-	for (int i = 0; i < dim; i++)
-		vec[i] = 0;
+	for (uint16_t i = 0; i < dim; i++)
+		vec[i] = 0.0f;
 }
 //Calls Vector_ZeroArray
 void Vector_Zero(Vector* vec)
@@ -116,10 +114,10 @@ void Vector_Zero(Vector* vec)
 //Parameters:
 //	vec: The vector to find the mag squared of
 //	dim: The number of components in the vector
-float Vector_GetMagSqFromArray(const float* vec, const int dim)
+float Vector_GetMagSqFromArray(const float* vec, const uint16_t dim)
 {
 	float mag = 0.0f;
-	for (int i = 0; i < dim; i++)
+	for (uint16_t i = 0; i < dim; i++)
 		mag += pow(vec[i], 2.0f);
 	return mag;
 }
@@ -145,13 +143,8 @@ float Vector_GetMag(const Vector* vec)
 //Parameters:
 //	vec: The Vector to find the magnitude of
 //	dim: the number of components in the Vector
-float Vector_GetMagFromArray(const float* vec, const int dim)
+float Vector_GetMagFromArray(const float* vec, const uint16_t dim)
 {
-	/*
-	float mag = 0.0f;
-	for (int i = 0; i < dim; i++)
-		mag += pow(vec[i], 2.0f);
-		*/
 	float mag = Vector_GetMagSqFromArray(vec, dim);
 	return sqrtf(mag);
 }
@@ -174,7 +167,7 @@ void Vector_Normalize(Vector* vec)
 //Parameters:
 //	vec: the components to normalize
 //	dim: the dimension of the Vector
-void Vector_NormalizeArray(float* vec, const int dim)
+void Vector_NormalizeArray(float* vec, const uint16_t dim)
 {
 	float mag = Vector_GetMagFromArray(vec, dim);
 	if(mag != 0.0f)
@@ -182,7 +175,6 @@ void Vector_NormalizeArray(float* vec, const int dim)
 		for (int i = 0; i < dim; i++)
 		vec[i] /= mag;
 	}
-	
 }
 
 ///
@@ -195,7 +187,7 @@ void Vector_NormalizeArray(float* vec, const int dim)
 //
 //Returns:
 //	Float representing value of the dot product
-float Vector_DotProductArray(const float* vec1, const float* vec2, const int dim)
+float Vector_DotProductArray(const float* vec1, const float* vec2, const uint16_t dim)
 {
 	float dotProd = 0.0f;
 
@@ -226,7 +218,7 @@ float Vector_DotProduct(const Vector* vec1, const Vector* vec2)
 //	dest: The destination of the cross product result
 //	dim: The dimension of the resulting vector
 //	vectors: an array of dim - 1 vectors of dimension dim
-void Vector_CrossProductArray(float* dest, const unsigned int dim, float** vectors)
+void Vector_CrossProductArray(float* dest, const uint16_t dim, float** vectors)
 {
 	//Construct Crossproduct Matrix
 	float* crossMatrix = (float*)malloc(sizeof(float) * dim * dim);
@@ -280,7 +272,7 @@ void Vector_CrossProduct(Vector* dest, ...)
 //
 //returns:
 //	Angle in radians
-float Vector_GetAngleArray(const float* vec1, const float* vec2, const int dim)
+float Vector_GetAngleArray(const float* vec1, const float* vec2, const uint16_t dim)
 {
 	float dotProduct = Vector_DotProductArray(vec1, vec2, dim);
 	return 	acosf(dotProduct / (Vector_GetMagFromArray(vec1, dim) * Vector_GetMagFromArray(vec2, dim)));
@@ -304,7 +296,7 @@ float Vector_GetAngle(const Vector* vec1, const Vector* vec2)
 //	dest: the Vector getting incremented
 //	src: The addend Vector, or the Vector being added to the destination
 //	dim: The number of components in the Vectors
-void Vector_IncrementArray(float* dest, const float* src, const int dim)
+void Vector_IncrementArray(float* dest, const float* src, const uint16_t dim)
 {
 	for (int row = 0; row < dim; row++)
 	{
@@ -334,7 +326,7 @@ void Vector_Increment(Vector* dest, const Vector* src)
 //	dest: the Vector getting incremented
 //	src: The addend Vector, or the Vector being added to the destination
 //	dim: The number of components in the Vectors
-void Vector_DecrementArray(float* dest, const float* src, const int dim)
+void Vector_DecrementArray(float* dest, const float* src, const uint16_t dim)
 {
 	for (int row = 0; row < dim; row++)
 	{
@@ -362,9 +354,9 @@ void Vector_Decrement(Vector* dest, const Vector* src)
 //	vec: The Vector to be scaled
 //	scaleValue: the scale factor
 //	dim: the dimension of the Vector being scaled
-void Vector_ScaleArray(float* vec, const float scaleValue, const int dim)
+void Vector_ScaleArray(float* vec, const float scaleValue, const uint16_t dim)
 {
-	for (int row = 0; row < dim; row++)
+	for (uint16_t row = 0; row < dim; row++)
 	{
 		vec[row] *= scaleValue;
 	}
@@ -383,9 +375,9 @@ void Vector_Scale(Vector* vec, const float scaleValue)
 //	src: the initial Vector to be scaled
 //	scaleValue: the amount by which to scale the initial Vector
 //	dim: The number of components in the initial Vector
-void Vector_GetScalarProductFromArray(float* dest, const float* src, const float scaleValue, const int dim)
+void Vector_GetScalarProductFromArray(float* dest, const float* src, const float scaleValue, const uint16_t dim)
 {
-	for (int row = 0; row < dim; row++)
+	for (uint16_t row = 0; row < dim; row++)
 	{
 		dest[row] = src[row] * scaleValue;
 	}
@@ -411,9 +403,9 @@ void Vector_GetScalarProduct(Vector* dest, const Vector* src, const float scaleV
 //	vec1: the first addend Vector
 //	vec2: the second addend Vector
 //	dim: the dimension of the Vectors being added
-void Vector_AddArray(float* dest, const float* vec1, const float* vec2, const int dim)
+void Vector_AddArray(float* dest, const float* vec1, const float* vec2, const uint16_t dim)
 {
-	for (int row = 0; row < dim; row++)
+	for (uint16_t row = 0; row < dim; row++)
 	{
 		dest[row] = vec1[row] + vec2[row];
 	}
@@ -439,9 +431,9 @@ void Vector_Add(Vector* dest, const Vector* vec1, const Vector* vec2)
 //	vec1: the first addend Vector
 //	vec2: the second addend Vector
 //	dim: the dimension of the Vectors being added
-void Vector_SubtractArray(float* dest, const float* vec1, const float* vec2, const int dim)
+void Vector_SubtractArray(float* dest, const float* vec1, const float* vec2, const uint16_t dim)
 {
-	for (int row = 0; row < dim; row++)
+	for (uint16_t row = 0; row < dim; row++)
 	{
 		dest[row] = vec1[row] - vec2[row];
 	}
@@ -467,13 +459,14 @@ void Vector_Subtract(Vector* dest, const Vector* vec1, const Vector* vec2)
 //	vec1: The vector being projected
 //	vec2: The vector representing the projection axis
 //	dim: the dimension of the vectors
-void Vector_GetProjectionArray(float* dest, const float* vec1, const float* vec2, const int dim)
+void Vector_GetProjectionArray(float* dest, const float* vec1, const float* vec2, const uint16_t dim)
 {
 	float numerator = Vector_DotProductArray(vec1, vec2, dim);
 	float denominator = Vector_GetMagSqFromArray(vec2, dim);
+	
+	//Return 0 vector
 	if(numerator == 0.0f || denominator == 0.0f)
 	{
-		//Return 0 vector
 		for(int i = 0; i < dim; i++)
 		{
 			dest[i] = 0.0f;
@@ -497,13 +490,14 @@ void Vector_GetProjection(Vector* dest, const Vector* vec1, const Vector* vec2)
 //	vec1: The vector being projected
 //	vec2: The vector representing the projection axis
 //	dim: The dimension of the vectors
-void Vector_ProjectArray(float* vec1, const float* vec2, const int dim)
+void Vector_ProjectArray(float* vec1, const float* vec2, const uint16_t dim)
 {
 	float numerator = Vector_DotProductArray(vec1, vec2, dim);
 	float denominator = Vector_GetMagSqFromArray(vec2, dim);
+	
+	//Return 0 vector
 	if(numerator == 0.0f || denominator == 0.0f)
 	{
-		//Return 0 vector
 		for(int i = 0; i < dim; i++)
 		{
 			vec1[i] = 0.0f;
@@ -526,7 +520,7 @@ void Vector_Project(Vector* vec1, const Vector* vec2)
 //Parameters:
 //	vec: the Vector to print
 //	dim: the number of components in the Vector
-void Vector_PrintTransposeArray(const float* vec, const int dim)
+void Vector_PrintTransposeArray(const float* vec, const uint16_t dim)
 {
 	printf("[%f", vec[0]);
 	for (int row = 1; row < dim; row++)
@@ -548,7 +542,7 @@ void Vector_PrintTranspose(const Vector* vec)
 //Parameters:
 //	vec: the Vector to print
 //	dim: the number of components in the Vector
-void Vector_PrintArray(const float* vec, const int dim)
+void Vector_PrintArray(const float* vec, const uint16_t dim)
 {
 	for (int row = 0; row < dim; row++)
 	{
