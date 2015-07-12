@@ -1,9 +1,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-//#include <cuda.h>
 
-//#include "Vector.h"
 #include "Matrix.h"
 
 const Vector Vector_ZERO =
@@ -102,7 +100,7 @@ void Vector_Copy(Vector* dest, const Vector* src)
 void Vector_ZeroArray(float* vec, const uint16_t dim)
 {
 	for (uint16_t i = 0; i < dim; i++)
-		vec[i] = 0;
+		vec[i] = 0.0f;
 }
 //Calls Vector_ZeroArray
 void Vector_Zero(Vector* vec)
@@ -147,11 +145,6 @@ float Vector_GetMag(const Vector* vec)
 //	dim: the number of components in the Vector
 float Vector_GetMagFromArray(const float* vec, const uint16_t dim)
 {
-	/*
-	float mag = 0.0f;
-	for (int i = 0; i < dim; i++)
-		mag += pow(vec[i], 2.0f);
-		*/
 	float mag = Vector_GetMagSqFromArray(vec, dim);
 	return sqrtf(mag);
 }
@@ -182,7 +175,6 @@ void Vector_NormalizeArray(float* vec, const uint16_t dim)
 		for (int i = 0; i < dim; i++)
 		vec[i] /= mag;
 	}
-	
 }
 
 ///
@@ -471,9 +463,10 @@ void Vector_GetProjectionArray(float* dest, const float* vec1, const float* vec2
 {
 	float numerator = Vector_DotProductArray(vec1, vec2, dim);
 	float denominator = Vector_GetMagSqFromArray(vec2, dim);
+	
+	//Return 0 vector
 	if(numerator == 0.0f || denominator == 0.0f)
 	{
-		//Return 0 vector
 		for(int i = 0; i < dim; i++)
 		{
 			dest[i] = 0.0f;
@@ -501,9 +494,10 @@ void Vector_ProjectArray(float* vec1, const float* vec2, const uint16_t dim)
 {
 	float numerator = Vector_DotProductArray(vec1, vec2, dim);
 	float denominator = Vector_GetMagSqFromArray(vec2, dim);
+	
+	//Return 0 vector
 	if(numerator == 0.0f || denominator == 0.0f)
 	{
-		//Return 0 vector
 		for(int i = 0; i < dim; i++)
 		{
 			vec1[i] = 0.0f;

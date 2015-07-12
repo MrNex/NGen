@@ -6,8 +6,6 @@
 #include <stdarg.h>
 #include <stdint.h>
 
-//#include <cuda.h>
-
 
 //Voodoo Magick
 #define Vector_INIT_ON_STACK( vec , dim ) \
@@ -244,4 +242,3 @@ void Vector_PrintArray(const float* vec, const uint16_t  dim);
 void Vector_Print(const Vector* vec);
 
 #endif
-
