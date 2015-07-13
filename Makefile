@@ -20,7 +20,7 @@ MANAGERS_O= \
 	Bin/RenderingManager.o \
 	Bin/InputManager.o \
 	Bin/TimeManager.o \
-	Bin/VariableManager.o
+	Bin/SystemManager.o
 
 OBJ= \
 	Bin/Vector.o \
@@ -164,7 +164,7 @@ Bin/CollisionManager.o: Manager/CollisionManager.c Manager/CollisionManager.h Bi
 Bin/PhysicsManager.o: Manager/PhysicsManager.c Manager/PhysicsManager.h Bin/CollisionManager.o Bin/GObject.o Bin/DynamicArray.o Bin/LinkedList.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
-Bin/VariableManager.o: Manager/VariableManager.c Manager/VariableManager.h
+Bin/SystemManager.o: Manager/SystemManager.c Manager/SystemManager.h
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##
