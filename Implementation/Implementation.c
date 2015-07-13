@@ -65,7 +65,7 @@ void InitializeScene(void)
 
 	block->body = RigidBody_Allocate();
 	RigidBody_Initialize(block->body, block->frameOfReference, 0.1f);
-	block->body->dynamicFriction = block->body->staticFriction = 0.2f;
+	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
 
 	block->body->coefficientOfRestitution = 0.5f;
 
