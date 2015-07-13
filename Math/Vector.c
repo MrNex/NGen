@@ -222,7 +222,7 @@ void Vector_CrossProductArray(float* dest, const uint16_t dim, float** vectors)
 {
 	//Construct Crossproduct Matrix
 	float* crossMatrix = (float*)malloc(sizeof(float) * dim * dim);
-	for(unsigned int i = 0; i < dim - 1; i++)
+	for(uint16_t i = 0; i < dim - 1; i++)
 	{
 		for(unsigned int j = 0; j < dim; j++)
 		{

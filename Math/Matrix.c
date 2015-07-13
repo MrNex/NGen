@@ -130,12 +130,7 @@ float Matrix_GetIndexArray(const float* mat, const uint16_t row, const uint16_t 
 float* Matrix_Index(Matrix* mat, const uint16_t row, const uint16_t col)
 {
 	//Make sure the desired index is valid
-	if (row < 0 || col < 0)
-	{
-		printf("Matrix_Index failed! Index is not valid. Index not founnd. Returning null pointer.\n");
-		return 0x0;
-	}
-	else if (row >= mat->numRows && col >= mat->numColumns)
+	if (row >= mat->numRows && col >= mat->numColumns)
 	{
 		printf("Matrix_Index failed! Index is not valid. Index not found, returning null pointer.\n");
 		return 0x0;
@@ -149,12 +144,7 @@ float* Matrix_Index(Matrix* mat, const uint16_t row, const uint16_t col)
 float Matrix_GetIndex(const Matrix* mat, const uint16_t row, const uint16_t col)
 {
 	//Make sure the desired index is valid
-	if (row < 0 || col < 0)
-	{
-		printf("Matrix_Index failed! Index is not valid. Index not founnd. Returning null pointer.\n");
-		return 0x0;
-	}
-	else if (row >= mat->numRows && col >= mat->numColumns)
+	if (row >= mat->numRows && col >= mat->numColumns)
 	{
 		printf("Matrix_Index failed! Index is not valid. Index not found, returning null pointer.\n");
 		return 0x0;
@@ -231,7 +221,7 @@ void Matrix_GetRowVector(Vector* destination, const Matrix* mat, const uint16_t 
 {
 	if (destination->dimension == mat->numColumns)
 	{
-		if (desiredRow >= 0 && desiredRow < mat->numRows)
+		if (desiredRow < mat->numRows)
 		{
 			Matrix_GetRowVectorArray(destination->components, mat->components, desiredRow, mat->numColumns);
 		}
@@ -257,7 +247,7 @@ void Matrix_GetRowVector(Vector* destination, const Matrix* mat, const uint16_t 
 //	numColumns: The number of columns in the matrix
 void Matrix_GetColumnVectorArray(float* destination, const float* mat, const uint16_t desiredCol, const uint16_t numRows, const uint16_t numColumns)
 {
-	for(int i = 0; i < numRows; i++)
+	for(uint16_t i = 0; i < numRows; i++)
 	{
 		destination[i] = Matrix_GetIndexArray(mat, i, desiredCol, numColumns);
 	}
@@ -267,7 +257,7 @@ void Matrix_GetColumnVector(Vector* destination, const Matrix* mat, const uint16
 {
 	if (destination->dimension == mat->numRows)
 	{
-		if (desiredCol >= 0 && desiredCol < mat->numColumns)
+		if (desiredCol < mat->numColumns)
 		{
 			Matrix_GetColumnVectorArray(destination->components, mat->components, desiredCol, mat->numRows, mat->numColumns);
 		}
@@ -300,7 +290,7 @@ void Matrix_SliceRowArray(float* destination, const float* mat, const uint16_t d
 //Checks for errors then calls Matrix_SliceRowArray
 void Matrix_SliceRow(Vector* destination, const Matrix* mat, const uint16_t desiredRow, const uint16_t sliceStart, const uint16_t sliceRange)
 {
-	if(desiredRow >= 0 && desiredRow < mat->numRows)
+	if(desiredRow < mat->numRows)
 	{
 		if(sliceStart + sliceRange <= mat->numColumns)
 		{
