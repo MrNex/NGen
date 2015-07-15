@@ -51,6 +51,7 @@ OBJ= \
 	Bin/TimeManager.o \
 	Bin/CollisionManager.o \
 	Bin/PhysicsManager.o \
+	Bin/SystemManager.o \
 	Bin/Implementation.o \
 	Bin/main.o
 

@@ -86,17 +86,6 @@ void TimeManager_TimeBuffer_Initialize(TimeBuffer* buffer)
 	buffer->deltaTime = (LARGE_INTEGER*)malloc(sizeof(LARGE_INTEGER));
 	buffer->deltaTime->QuadPart = 0L;
 
-	buffer->physicsAccumulator = (LARGE_INTEGER*)malloc(sizeof(LARGE_INTEGER));
-	buffer->physicsAccumulator->QuadPart = 0L;
-
-	buffer->renderAccumulator = (LARGE_INTEGER*)malloc(sizeof(LARGE_INTEGER));
-	buffer->renderAccumulator->QuadPart = 0L;
-
-	buffer->physicsTimeStep = (LARGE_INTEGER*)malloc(sizeof(LARGE_INTEGER));
-	buffer->physicsTimeStep->QuadPart = 4166L;
-
-	buffer->renderTimeStep = (LARGE_INTEGER*)malloc(sizeof(LARGE_INTEGER));
-	buffer->renderTimeStep->QuadPart = 16666L;
 #endif
 
 #ifdef linux
@@ -106,13 +95,6 @@ void TimeManager_TimeBuffer_Initialize(TimeBuffer* buffer)
 
 	buffer->deltaTime.tv_sec = 0;
 	buffer->deltaTime.tv_nsec = 0L;	
-
-	buffer->renderAccumulator.tv_sec = buffer->physicsAccumulator.tv_sec = 0;
-	buffer->renderAccumulator.tv_nsec = buffer->physicsAccumulator.tv_nsec = 0L;
-
-	buffer->physicsTimeStep.tv_sec = buffer->renderTimeStep.tv_sec = 0;
-	buffer->physicsTimeStep.tv_nsec = 4166666L;
-	buffer->renderTimeStep.tv_nsec = 16666666L;
 
 #endif
 	buffer->timeScale = 1.0f;
@@ -136,12 +118,6 @@ void TimeManager_TimeBuffer_Free(TimeBuffer* buffer)
 	free(buffer->deltaTime);
 
 	free(buffer->previousTick);
-
-	free(buffer->physicsAccumulator);
-	free(buffer->renderAccumulator);
-	
-	free(buffer->physicsTimeStep);
-	free(buffer->renderTimeStep);
 
 #endif
 
@@ -175,20 +151,6 @@ void TimeManager_UpdateBuffer(TimeBuffer* buffer)
 	buffer->elapsedTicks->QuadPart += buffer->deltaTicks->QuadPart;
 	buffer->elapsedTime->QuadPart = (buffer->elapsedTicks->QuadPart * 1000000.0) / buffer->ticksPerSecond->QuadPart;
 
-	
-	//Add dt to accumulators, but limit the amount they can be incremented by 1/4th of a second.
-	//THis will prevent game logic from continuing to update in the case of a freeze(Such as window drag)
-	if(buffer->deltaTime->QuadPart < 250000L)
-	{
-	buffer->physicsAccumulator->QuadPart += buffer->deltaTime->QuadPart;
-	buffer->renderAccumulator->QuadPart += buffer->deltaTime->QuadPart;
-	}
-	else
-	{
-		buffer->physicsAccumulator->QuadPart += 250000L;
-		buffer->renderAccumulator->QuadPart += 250000L;
-	}
-
 	buffer->previousTick->QuadPart = currentTick.QuadPart;
 #endif
 
@@ -200,20 +162,6 @@ void TimeManager_UpdateBuffer(TimeBuffer* buffer)
 	buffer->deltaTime.tv_sec = (time_t)((float)(now.tv_sec - buffer->currentTime.tv_sec) * buffer->timeScale);
 	buffer->deltaTime.tv_nsec = (time_t)((float)(now.tv_nsec - buffer->currentTime.tv_nsec) * buffer->timeScale);
 
-	//Add dt to accumulators, but limit the amount they can be incremented by 1/4th of a second.
-	//THis will prevent game logic from continuing to update in the case of a freeze(Such as window drag)
-	if(buffer->deltaTime.tv_nsec < 250000000L)
-	{
-		buffer->physicsAccumulator.tv_nsec += buffer->deltaTime.tv_nsec;
-		buffer->renderAccumulator.tv_nsec += buffer->deltaTime.tv_nsec;
-	}
-	else
-	{
-		buffer->physicsAccumulator.tv_nsec += 250000000L;
-		buffer->renderAccumulator.tv_nsec += 250000000L;
-	}
-	//printf("DT:\t%lu\t:\t%lu\n",buffer->deltaTime.tv_sec, buffer->deltaTime.tv_nsec);
-
 	//Update current time
 	buffer->currentTime.tv_sec = now.tv_sec;
 	buffer->currentTime.tv_nsec = now.tv_nsec;
@@ -222,69 +170,7 @@ void TimeManager_UpdateBuffer(TimeBuffer* buffer)
 
 }
 
-///
-//Checks if the physics timer is ready to perform a new time step.
-//If it is, the timestep will be removed from the TimeManager's internal buffer's physics accumulator
-//
-//Returns:
-//	1 if it is time for the physics to update
-//	0 if it is not yet time for physics to update
-unsigned char TimeManager_CheckPhysicsTime()
-{
 
-#if defined windows
-	
-	if(timeBuffer->physicsAccumulator->QuadPart > timeBuffer->physicsTimeStep->QuadPart)
-	{
-		timeBuffer->physicsAccumulator->QuadPart -= timeBuffer->physicsTimeStep->QuadPart;
-		return 1;
-	}
-	return 0;
-
-#elif defined linux
-
-	if(timeBuffer->physicsAccumulator.tv_nsec > timeBuffer->physicsTimeStep.tv_nsec)
-	{
-		timeBuffer->physicsAccumulator.tv_nsec -= timeBuffer->physicsTimeStep.tv_nsec;
-		return 1;
-	}
-	return 0;
-
-#endif
-
-}
-
-///
-//Checks if the render timer is ready to perform a new time step.
-//If it is, the TimeManager's internal buffer's render accumulator will be set to 0
-//
-//Returns:
-//	1 if it is time for rendering
-//	0 if it is not yet time for rendering
-unsigned char TimeManager_CheckRenderTime()
-{
-
-#if defined windows
-	
-	if(timeBuffer->renderAccumulator->QuadPart > timeBuffer->renderTimeStep->QuadPart)
-	{
-		timeBuffer->renderAccumulator->QuadPart -= 0L;
-		return 1;
-	}
-	return 0;
-
-#elif defined linux
-
-	if(timeBuffer->renderAccumulator.tv_nsec > timeBuffer->renderTimeStep.tv_nsec)
-	{
-		timeBuffer->renderAccumulator.tv_nsec -= 0L;
-		return 1;
-	}
-	return 0;
-
-#endif
-
-}
 
 ///
 //Sets the time manager's internal buffer's timeScale
@@ -324,7 +210,6 @@ float TimeManager_GetDeltaSec(void)
 #ifdef linux
 	float dt = (float)timeBuffer->deltaTime.tv_sec;
 	dt += (float)timeBuffer->deltaTime.tv_nsec / 1000000000.0f;
-	//printf("DT:\t%f\n", dt);
 	return dt;	
 #endif
 }

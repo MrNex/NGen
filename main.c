@@ -26,6 +26,7 @@
 #include <GL/freeglut.h>
 
 #include "Implementation/Implementation.h"
+#include "Manager/SystemManager.h"
 
 #include "Math/Matrix.h"
 
@@ -70,6 +71,7 @@ void Init(void)
 	ObjectManager_Initialize();
 	CollisionManager_Initialize();
 	PhysicsManager_Initialize();
+	SystemManager_Initialize();
 
 	//Load assets
 	AssetManager_LoadAssets();
@@ -104,67 +106,22 @@ void CalculateOctTreeCollisions(struct OctTree_Node* node)
 
 
 ///
+//Draws the current state of the engine
+void Draw(void)
+{
+	RenderingManager_Render(ObjectManager_GetObjectBuffer().gameObjects);
+}
+
+///
 //Updates engine
 //
 void Update(void)
 {
-
 	//Update time manager
 	TimeManager_Update();
 
-	/*
-	long  dt = TimeManager_GetTimeBuffer().deltaTime->QuadPart;
-	timer += dt;
-	if (timer >= 100000)
-	{
-		printf("dt:\t%d\tmicroseconds\n", dt);
-		timer = 0;
-
-	}
-	*/
-
 	//Update objects.
 	ObjectManager_Update();
-
-	//Feature in development
-	if(InputManager_IsKeyDown('g'))
-	{
-		TimeManager_SetTimeScale(0.0f);
-	}
-	if(InputManager_IsKeyDown('t'))
-	{
-		TimeManager_SetTimeScale(1.0f);
-	}
-	if (InputManager_IsKeyDown('r') || InputManager_IsKeyDown('y') || InputManager_IsKeyDown('o') || InputManager_IsKeyDown('p'))
-	{
-		if (keyTrigger == 0)
-		{
-			if (InputManager_IsKeyDown('r'))
-			{
-				TimeManager_ScaleTimeScale(0.9f);
-			}
-			else if (InputManager_IsKeyDown('y'))
-			{
-				TimeManager_ScaleTimeScale(1.1f);
-			}
-			else if (InputManager_IsKeyDown('o'))
-			{
-				RenderingManager_GetRenderingBuffer()->debugOctTree = 0;
-			}
-			else if (InputManager_IsKeyDown('p'))
-			{
-				RenderingManager_GetRenderingBuffer()->debugOctTree = 1;
-			}
-		}
-		keyTrigger = 1;
-	}
-	else
-	{
-		keyTrigger = 0;
-	}
-
-
-
 
 	PhysicsManager_Update(ObjectManager_GetObjectBuffer().gameObjects);
 
@@ -203,12 +160,7 @@ void DrawLoop(int val)
 
 }
 
-///
-//Draws the current state of the engine
-void Draw(void)
-{
-	RenderingManager_Render(ObjectManager_GetObjectBuffer().gameObjects);
-}
+
 
 
 ///
