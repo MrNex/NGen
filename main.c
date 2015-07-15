@@ -36,12 +36,6 @@
 
 #include "Generation/Generator.h"
 
-#ifdef ENABLE_CUDA
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include "AcceleratedVector.h"
-#endif
-
 long timer;
 unsigned char keyTrigger;
 
@@ -79,124 +73,6 @@ void Init(void)
 
 	//Load assets
 	AssetManager_LoadAssets();
-
-
-	//Cuda Testing
-#ifdef ENABLE_CUDA
-	//CUDA Test
-	//Create Host variables
-	int numVectors = 5;
-	int vectorDim = 3;
-
-	Vector* dotProd = Vector_Allocate();
-	Vector_Initialize(dotProd, numVectors);
-
-	Vector* scaledDotProd = Vector_Allocate();
-	Vector_Initialize(scaledDotProd, numVectors);
-
-	Vector* dests = Vector_Allocate();
-	Vector_Initialize(dests, vectorDim);
-
-
-	Vector** srcs = (Vector**)malloc(sizeof(Vector*)* numVectors);
-	Vector** srcs2 = (Vector**)malloc(sizeof(Vector*)* numVectors);
-	for (int i = 0; i < numVectors; i++)
-	{
-
-
-		srcs[i] = Vector_Allocate();
-		srcs2[i] = Vector_Allocate();
-
-		Vector_Initialize(srcs[i], vectorDim);
-		Vector_Initialize(srcs2[i], vectorDim);
-
-		//Set vectors value to 1
-		for (int j = 0; j < vectorDim; j++)
-		{	
-			srcs[i]->components[j] = j;
-			srcs2[i]->components[j] = 10;
-		}
-
-	}
-
-	//Create device variables
-	AcceleratedVector* aSrcs = AcceleratedVector_Allocate();
-	AcceleratedVector* aSrcs2 = AcceleratedVector_Allocate();
-	AcceleratedVector* aDests = AcceleratedVector_Allocate();
-	AcceleratedVector* aDotProd = AcceleratedVector_Allocate();
-	AcceleratedVector* aScaledDotProd = AcceleratedVector_Allocate();
-
-
-	AcceleratedVector_Initialize(aSrcs, numVectors * vectorDim);
-	AcceleratedVector_Initialize(aSrcs2, numVectors * vectorDim);
-	AcceleratedVector_Initialize(aDests, vectorDim);
-	AcceleratedVector_Initialize(aDotProd, numVectors);
-	AcceleratedVector_Initialize(aScaledDotProd, numVectors);
-
-
-	//Copy memory from host to device
-	AcceleratedVector_CopyVector(aDests, dests);
-	AcceleratedVector_CopyVector(aDotProd, dotProd);
-	AcceleratedVector_CopyVector(aScaledDotProd, scaledDotProd);
-
-	//Copy a metric fuckton of memory from the host to the device
-	AcceleratedVector_CopyVectors(aSrcs, (const Vector**) srcs, vectorDim, numVectors);
-	AcceleratedVector_CopyVectors(aSrcs2, (const Vector**) srcs2, vectorDim, numVectors);
-
-	float scalar = 0.0625f;
-
-	float* d_mag;
-	float mag = 0.0f;
-	cudaMalloc((void**)&d_mag, sizeof(float)* 1);
-
-	//Launch kernel on GPU
-	AcceleratedVector_LaunchAddAll(aDests->d_components, aSrcs->d_components, vectorDim, numVectors);
-	AcceleratedVector_LaunchMagnitude(d_mag, aDests->d_components, vectorDim);
-	AcceleratedVector_LaunchDotProductAll(aDotProd->d_components, aSrcs->d_components, aSrcs2->d_components, vectorDim, numVectors);
-	AcceleratedVector_LaunchGetNormalize(aScaledDotProd->d_components, aDotProd->d_components, aDotProd->dimension);
-	AcceleratedVector_LaunchProjectAll(aSrcs->d_components, aSrcs2->d_components, vectorDim, numVectors);
-
-	//Copy memory from device to host	
-	AcceleratedVector_PasteVector(dests, aDests);
-	AcceleratedVector_PasteVector(dotProd, aDotProd);
-	AcceleratedVector_PasteVector(scaledDotProd, aScaledDotProd);
-	AcceleratedVector_PasteVectors(srcs, aSrcs, vectorDim, numVectors);
-	AcceleratedVector_PasteVectors(srcs2, aSrcs2, vectorDim, numVectors);
-
-	cudaMemcpy(&mag, d_mag, sizeof(float)* 1, cudaMemcpyDeviceToHost);
-
-	//Print results
-	Vector_Print(dests);
-	Vector_Print(dotProd);
-	Vector_Print(scaledDotProd);
-
-	for (int i = 0; i < numVectors; i++)
-	{
-		Vector_Print(srcs[i]);
-	}
-
-	//Free device memory
-	AcceleratedVector_Free(aDests);
-	AcceleratedVector_Free(aSrcs);
-	AcceleratedVector_Free(aSrcs2);
-	AcceleratedVector_Free(aDotProd);
-	AcceleratedVector_Free(aScaledDotProd);
-
-	cudaFree(d_mag);
-
-	//Free host memory
-
-	for (int i = 0; i < numVectors; i++)
-	{
-		Vector_Free(srcs[i]);
-		Vector_Free(srcs2[i]);
-	}
-
-	Vector_Free(dotProd);
-	Vector_Free(dests);
-	Vector_Free(scaledDotProd);
-
-#endif
 
 	//Initialize the scene
 	InitializeScene();
