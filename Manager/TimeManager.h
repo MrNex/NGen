@@ -38,6 +38,12 @@ typedef struct TimeBuffer
 
 	LARGE_INTEGER* previousTick;
 
+	LARGE_INTEGER* physicsAccumulator;
+	LARGE_INTEGER* renderAccumulator;
+
+	LARGE_INTEGER* physicsTimeStep;
+	LARGE_INTEGER* renderTimeStep;
+
 	float timeScale;
 
 } TimeBuffer;
@@ -47,6 +53,12 @@ typedef struct TimeBuffer
 	struct timespec startTime;
 	struct timespec currentTime;
 	struct timespec deltaTime;
+
+	struct timespec physicsAccumulator;
+	struct timespec renderAccumulator;
+
+	struct timespec physicsTimeStep;
+	struct timespec renderTimeStep;
 
 	float timeScale;	
 
@@ -105,6 +117,24 @@ void TimeManager_Update(void);
 //Parameters:
 //	buffer: Time buffer to update
 void TimeManager_UpdateBuffer(TimeBuffer* buffer);
+
+///
+//Checks if the physics timer is ready to perform a new time step.
+//If it is, the timestep will be removed from the TimeManager's internal buffer's physics accumulator
+//
+//Returns:
+//	1 if it is time for the physics to update
+//	0 if it is not yet time for physics to update
+unsigned char TimeManager_CheckPhysicsTime();
+
+///
+//Checks if the render timer is ready to perform a new time step.
+//If it is, the TimeManager's internal buffer's render accumulator will be set to 0
+//
+//Returns:
+//	1 if it is time for rendering
+//	0 if it is not yet time for rendering
+unsigned char TimeManager_CheckRenderTime();
 
 ///
 //Sets the time manager's internal buffer's timeScale
