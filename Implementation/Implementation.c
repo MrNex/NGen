@@ -1,7 +1,7 @@
 #include "Implementation.h"
 
 #include "../State/FirstPersonCamera.h"
-
+#include "../State/Debug.h"
 
 ///
 //Initializes the scene within the engine.
@@ -81,10 +81,13 @@ void InitializeScene(void)
 
 	GObject_Translate(block, &v);
 
+	state = State_Allocate();
+	State_Debug_Initialize(state, "Bottom Block");
+	GObject_AddState(block, state);
+
 	ObjectManager_AddObject(block);
 
 	//Create another block
-	/*
 	block = GObject_Allocate();
 	GObject_Initialize(block);
 
@@ -107,7 +110,7 @@ void InitializeScene(void)
 	Vector_Copy(&v, &Vector_ZERO);
 	v.components[1] = 10.0f;
 
-	RigidBody_ApplyInstantaneousTorque(block->body, &v); 
+	//RigidBody_ApplyInstantaneousTorque(block->body, &v); 
 
 	Vector_Copy(&v, &Vector_ZERO);
 	v.components[0] = 3.0f;
@@ -116,7 +119,6 @@ void InitializeScene(void)
 	GObject_Translate(block, &v);
 	
 	ObjectManager_AddObject(block);
-	*/
 
 	//Create sphere
 
