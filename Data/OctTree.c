@@ -389,7 +389,7 @@ void OctTree_Update(OctTree* tree, LinkedList* gameObjects)
 
 			if(log->size <= 0)
 			{
-				printf("Not contained in any tree..\n");
+				//printf("Not contained in any tree..\n");
 				//OctTree_AddAndLog(tree, gameObj);
 			}
 
