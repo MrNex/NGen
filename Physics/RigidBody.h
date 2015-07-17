@@ -7,25 +7,26 @@
 typedef struct RigidBody
 {
 	float coefficientOfRestitution;		//How elastic will this float act in a collision (0.0f - 1.0f)
-	float staticFriction;				//Static coefficient of friction for the surface attached to this object
-	float dynamicFriction;				//Dynamic coefficient of friction for the surface attached to this object
-	float inverseMass;					//Because schwartz
-	Matrix* inverseInertia;				//inverse moment of inertia matrix
-	Matrix* inertia;					//Moment of inertia matrix
-	Vector* netForce;					//Total net force this instant
-	Vector* previousNetForce;			//Total net force previous instant
-	Vector* netImpulse;					//net impulses this instant
-	Vector* netTorque;					//Total net torque this instant
-	Vector* previousNetTorque;			//net Torque previous instant
+	float staticFriction;			//Static coefficient of friction for the surface attached to this object
+	float dynamicFriction;			//Dynamic coefficient of friction for the surface attached to this object
+	float rollingResistance;		//Coefficient of rolling Resistance
+	float inverseMass;			//Because schwartz
+	Matrix* inverseInertia;			//inverse moment of inertia matrix
+	Matrix* inertia;			//Moment of inertia matrix
+	Vector* netForce;			//Total net force this instant
+	Vector* previousNetForce;		//Total net force previous instant
+	Vector* netImpulse;			//net impulses this instant
+	Vector* netTorque;			//Total net torque this instant
+	Vector* previousNetTorque;		//net Torque previous instant
 	Vector* netInstantaneousTorque;		//Total instantaneous torque this instant
-	Vector* acceleration;				//current acceleration of point mass
+	Vector* acceleration;			//current acceleration of point mass
 	Vector* angularAcceleration;		//current angular acceleration
-	Vector* velocity;					//current velocity of point mass
-	Vector* angularVelocity;			//Current angular velocity
-	FrameOfReference* frame;			//Position and orientation of point mass in global space
+	Vector* velocity;			//current velocity of point mass
+	Vector* angularVelocity;		//Current angular velocity
+	FrameOfReference* frame;		//Position and orientation of point mass in global space
 	unsigned char freezeTranslation;	//Freezes the rigidbody so it can not have any linear forces applied
 	unsigned char freezeRotation;		//Freezes the rigidbody so it cannot have any torques applied
-	unsigned char physicsOn;			//Boolean to turn physics off. 1 = on | 0 = off.
+	unsigned char physicsOn;		//Boolean to turn physics off. 1 = on | 0 = off.
 } RigidBody;
 
 ///

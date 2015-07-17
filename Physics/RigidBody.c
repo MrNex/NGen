@@ -25,6 +25,7 @@ void RigidBody_Initialize(RigidBody* body, const FrameOfReference* startingFrame
 	body->coefficientOfRestitution = 1.0f;
 	body->staticFriction = 1.0f;
 	body->dynamicFriction = 1.0f;
+	body->rollingResistance = 1.0f;
 
 	if(mass != 0.0f)
 	{
