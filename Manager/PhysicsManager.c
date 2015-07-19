@@ -1661,92 +1661,8 @@ static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest, c
 	mid = Vector_DotProduct(current, MTV);
 	//Set the final component
 	Vector_GetScalarProduct(&proj, MTV, mid);
-	Vector_Increment(dest, &proj);
+	Vector_Increment(dest, &proj);	
 
-	/*
-
-
-	//We must cycle through all points for each axis removing the minimum and maximum bounds each cycle until there remains only 2 points or less.
-	struct LinkedList_Node* iterator = NULL;
-	struct LinkedList_Node* minNode = NULL;
-	struct LinkedList_Node* maxNode = NULL;
-
-	Vector* currentVector = NULL;
-	Vector* minVector = NULL;
-	Vector* maxVector = NULL;
-
-	
-	for(unsigned int i = 0; i < 3; i++)
-	{
-		//Add all points translated into worldspace to the list
-		for(unsigned int j = 0; j < furthestOnHull1->size; j++)
-		{
-			//Const modifier on furthestHull1 is removed, but data will not be changed
-			LinkedList_Append(innerPoints, DynamicArray_Index((DynamicArray*)furthestOnHull1, j));
-		}
-
-		for(unsigned int j = 0; j < furthestOnHull2->size; j++)
-		{
-			//Const modifier on furthestHull1 is removed, but data will not be changed
-			LinkedList_Append(innerPoints, DynamicArray_Index((DynamicArray*)furthestOnHull2, j));
-		}
-
-		//Until we have only 2 points left for the ith axis test
-		while(innerPoints->size > 2)
-		{
-
-			iterator = innerPoints->head;
-			minNode = iterator;
-			maxNode = iterator;
-			for(unsigned int j = 0; j < innerPoints->size - 1; j++)
-			{
-				//Move to next point
-				iterator = iterator->next;
-				//Get point as vector
-				currentVector = (Vector*)iterator->data;
-				minVector = (Vector*)minNode->data;
-				maxVector = (Vector*)maxNode->data;
-
-				//Compare ith values to max and min
-				if(currentVector->components[i] <= minVector->components[i])
-				{
-					minNode = iterator;
-				}
-				else if(currentVector->components[i] >= maxVector->components[i])
-				{
-					maxNode = iterator;
-				}
-			}
-			//In case they are somehow the same, only remove one.
-			if(minNode == maxNode)
-			{
-				LinkedList_RemoveNode(innerPoints, minNode);
-			}
-			else
-			{
-				//Each loop remove the max and min from the list
-				LinkedList_RemoveNode(innerPoints, minNode);
-				LinkedList_RemoveNode(innerPoints, maxNode);
-			}
-
-		}
-
-		//Find the average ith value of remaining nodes
-		iterator = innerPoints->head;
-		while(iterator != NULL)
-		{
-			Vector* currentVector = (Vector*)iterator->data;
-			dest->components[i] += currentVector->components[i];
-			iterator = iterator->next;
-		}
-		dest->components[i] /= (float)innerPoints->size;
-
-		//Clear remaining contents of list for next axis test
-		LinkedList_Clear(innerPoints);
-	}
-
-	LinkedList_Free(innerPoints);
-	*/
 }
 
 ///
@@ -2052,85 +1968,6 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 		{
 			Vector_Subtract(&radius, pointsOfCollision[0], collision->obj1->body->frame->position);
 
-			/*
-			//Create a vector to hold the force due to rolling resistance
-			Vector rollingResistance;
-			Vector_INIT_ON_STACK(rollingResistance, 3);
-
-			//The direction of the rolling resistance should be negative of the direction of angular motion
-			//which is parallel to the surface of collision.
-			Vector proj;
-			Vector_INIT_ON_STACK(proj, 3);
-			Vector_GetProjection(&proj, collision->obj1->body->angularVelocity, collision->minimumTranslationVector);
-			Vector_Subtract(&rollingResistance, collision->obj1->body->angularVelocity, &proj);
-
-			//Create a float to hold the magnitude of current angular momentum paraallel to surface
-			float currentAngularMomentumMag = 0.0f;
-
-			//If the rolling resistance direction due to angular velocity is 0, we must
-			//calculate the direction using the netInstantaneousAngularImpulse
-			if(Vector_GetMag(&rollingResistance) <= FLT_EPSILON)
-			{
-				Vector_GetProjection(&proj, collision->obj1->body->netInstantaneousTorque, collision->minimumTranslationVector);
-				Vector_Subtract(&rollingResistance, collision->obj1->body->netInstantaneousTorque, &proj);
-				currentAngularMomentumMag = Vector_GetMag(&rollingResistance);
-				if(currentAngularMomentumMag > FLT_EPSILON)
-				{
-					printf("Here!\n");
-				}
-			}
-			else
-			{
-				//Determine the current angular momentum parallel to the surface of collision
-				Matrix worldInertia;
-				Matrix_INIT_ON_STACK(worldInertia, 3, 3);
-				RigidBody_CalculateMomentOfInertiaInWorldSpace(&worldInertia, collision->obj1->body);
-
-				Matrix_GetProductVector(&proj, &worldInertia, &rollingResistance);
-	
-				currentAngularMomentumMag = Vector_GetMag(&proj);
-
-			}
-
-			//Continue only if there is rolling motion parallel to surface
-			if(Vector_GetMag(&rollingResistance) > FLT_EPSILON)
-			{
-				if(collision->obj1->collider->type == collision->obj2->collider->type)
-				{
-					printf("Pause\n");
-				}
-
-				//Create float to hold the magnitude of the rolling resistance forcee
-				float rollingResistanceMag = -collision->obj1->body->rollingResistance;
-
-				//Determine the maximum magnitude of rolling resistance
-				//This is given by the coefficient of rolling resistance * the magnitude of the normal force/impulse
-				//At this point in the physics pipeline, 
-				//the magnitude of the net impulse on the body normal to the surface
-				//is the only impulse in the bodies netImpulse, so we can just use that.
-				rollingResistanceMag *= Vector_GetMag(collision->obj1->body->netImpulse) * Vector_GetMag(&radius);
-
-				printf("Rolling Resistance:\t%f\n", rollingResistanceMag);
-				
-
-				if(fabs(rollingResistanceMag) > currentAngularMomentumMag)
-				{
-					rollingResistanceMag = -currentAngularMomentumMag;
-				}
-
-				Vector_Normalize(&rollingResistance);
-				Vector_Scale(&rollingResistance, rollingResistanceMag);
-
-				//Now we have rolling resistance as an impulse, but we would like to have it as an angular Impulse
-				//Vector_CrossProduct(&angularImpulseDueToRollingResistance, &radius, &rollingResistance);
-				Vector_Copy(&angularImpulseDueToRollingResistance, &rollingResistance);
-			}
-			//else
-			//{
-				//Vector_CrossProduct(&rollingResistance, &radius, &unitTangentVector);
-			//}
-			*/
-
 		}
 
 		if(relImpulseTangentialMag1 <= staticMag)
@@ -2144,10 +1981,7 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 
 		//Apply linear friction
 		RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &radius);
-		//RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &Vector_ZERO);
 
-		//Apply rolling resistance
-		//RigidBody_ApplyInstantaneousTorque(collision->obj1->body, &angularImpulseDueToRollingResistance);
 	}
 	if(collision->obj2->body != NULL && collision->obj2->body->inverseMass != 0.0f)
 	{
@@ -2165,68 +1999,6 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 		if(!collision->obj2->body->freezeRotation)
 		{
 			Vector_Subtract(&radius, pointsOfCollision[1], collision->obj2->body->frame->position);
-		/*
-			//Create a vector to hold the force due to rolling resistance
-			Vector rollingResistance;
-			Vector_INIT_ON_STACK(rollingResistance, 3);
-
-			//The direction of the rolling resistance should be negative of the direction of angular motion
-			//which is parallel to the surface of collision.
-			Vector proj;
-			Vector_INIT_ON_STACK(proj, 3);
-			Vector_GetProjection(&proj, collision->obj2->body->angularVelocity, collision->minimumTranslationVector);
-			Vector_Subtract(&rollingResistance, collision->obj2->body->angularVelocity, &proj);
-
-			//Create a float to hold the magnitude of the current angular momentum parallel to surface
-			float currentAngularMomentumMag = 0.0f;
-
-			//If the rolling resistance direction due to angular velocity is 0, we must calculate
-			//the direction using the netInstantaneousAngularImpulse
-			if(Vector_GetMag(&rollingResistance) <= FLT_EPSILON)
-			{
-				Vector_GetProjection(&proj, collision->obj2->body->netInstantaneousTorque, collision->minimumTranslationVector);
-				Vector_Subtract(&rollingResistance, collision->obj2->body->netInstantaneousTorque, &proj);
-				currentAngularMomentumMag = Vector_GetMag(&rollingResistance);
-			}
-			else
-			{
-				//Determine the current angular momentum parallel to the surface of collision
-				Matrix worldInertia;
-				Matrix_INIT_ON_STACK(worldInertia, 3, 3);
-				RigidBody_CalculateMomentOfInertiaInWorldSpace(&worldInertia, collision->obj2->body);
-
-				Matrix_GetProductVector(&proj, &worldInertia, &rollingResistance);
-	
-				currentAngularMomentumMag = Vector_GetMag(&proj);
-			}
-
-			//Continue only if there is rolling motion parallel to surface
-			if(Vector_GetMag(&rollingResistance) > FLT_EPSILON)
-			{
-				//Create float to hold the magnitude of the rolling resistance forcee
-				float rollingResistanceMag = -collision->obj2->body->rollingResistance;
-
-				//Determine the maximum magnitude of rolling resistance
-				//This is given by the coefficient of rolling resistance * the magnitude of the normal force/impulse
-				//At this point in the physics pipeline, 
-				//the magnitude of the net impulse on the body normal to the surface
-				//is the only impulse in the bodies netImpulse, so we can just use that.
-				rollingResistanceMag *= Vector_GetMag(collision->obj2->body->netImpulse) * Vector_GetMag(&radius);
-
-				if(fabs(rollingResistanceMag) > currentAngularMomentumMag)
-				{
-					rollingResistanceMag = -currentAngularMomentumMag;
-				}
-
-				Vector_Normalize(&rollingResistance);
-				Vector_Scale(&rollingResistance, rollingResistanceMag);
-
-				//Now we have rolling resistance as an impulse, but we would like to have it as an angular Impulse
-				//Vector_CrossProduct(&angularImpulseDueToRollingResistance, &radius, &rollingResistance);
-				Vector_Copy(&angularImpulseDueToRollingResistance, &rollingResistance);
-			}
-		*/	
-
 		}
 
 		if(relImpulseTangentialMag2 <= staticMag)
@@ -2240,10 +2012,7 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 
 
 		RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &radius);
-		//RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &Vector_ZERO);
 
-		//Apply rolling resistance
-		//RigidBody_ApplyInstantaneousTorque(collision->obj2->body, &angularImpulseDueToRollingResistance);
 	}
 
 
