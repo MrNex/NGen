@@ -170,6 +170,14 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 //	pointsOfCollision: An array of two vectors containing the points of collision for obj1 and obj2 respectively
 static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, const float staticCoefficient, const float dynamicCoefficient);
 
+///
+//Calculates and applies the rolling resistance between two objects
+//
+//Parameters:
+//	collision: A pointer to the collision on which to compute rolling resistances
+//	pointsOfCollision: An array of pointers to vectors containing the points of collision in worldspace for each object
+//	resistanceCoefficient: The net rolling resistance coefficient between the two objects
+static void PhysicsManager_ApplyRollingResistance(struct Collision* collision, Vector** pointsOfCollision, const float resistanceCoefficient);
 
 ///
 //Implementations
@@ -385,18 +393,18 @@ void PhysicsManager_UpdateLinearPhysicsOfBody(RigidBody* body, float dt)
 	Vector_INIT_ON_STACK( VAT2 , 3);
 
 	//Get V0T
-	Vector_GetScalarProduct(&VT, body->velocity, dt);			//VT = V0 * dt		
+	Vector_GetScalarProduct(&VT, body->velocity, dt);	//VT = V0 * dt		
 
 	//Get AT
-	Vector_GetScalarProduct(&AT, body->acceleration, dt);		//AT = A1 * dt
+	Vector_GetScalarProduct(&AT, body->acceleration, dt);	//AT = A1 * dt
 
 	//Get AT^2
-	Vector_GetScalarProduct(&VAT2, &AT, dt);	//VAT2 = A1 * dt ^ 2
+	Vector_GetScalarProduct(&VAT2, &AT, dt);		//VAT2 = A1 * dt ^ 2
 	//Get 1/2AT^2
-	Vector_Scale(&VAT2, 0.5f);	//VAT2 = 1/2 * A1 * dt ^ 2
+	Vector_Scale(&VAT2, 0.5f);				//VAT2 = 1/2 * A1 * dt ^ 2
 
 	//Get VT + 1/2AT^2
-	Vector_Increment(&VAT2, &VT);	//VAT2 = VT + 1/2 * A1 * dt^2
+	Vector_Increment(&VAT2, &VT);				//VAT2 = VT + 1/2 * A1 * dt^2
 
 	//X = X0 + V0T + 1/2AT^2
 	Vector_Increment(body->frame->position, &VAT2);
@@ -1565,9 +1573,9 @@ static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest, c
 	//Make sure y is not the zero vector
 	if(Vector_DotProduct(&y, &y) < FLT_EPSILON)
 	{
-		//Let X be the perpendicular component of the Z axis with respect to the MTV
+		//Let y be the perpendicular component of the Z axis with respect to the subspace spanned by MTV and x
 		Vector_GetProjection(&sum, &Vector_E3, MTV);
-		Vector_GetProjection(&proj, &Vector_E3, MTV);
+		Vector_GetProjection(&proj, &Vector_E3, &x);
 		Vector_Increment(&sum, &proj);
 
 		Vector_Subtract(&y, &Vector_E3, &sum);
@@ -1653,95 +1661,8 @@ static void PhysicsManager_DetermineCollisionPointConvexHullFace(Vector* dest, c
 	mid = Vector_DotProduct(current, MTV);
 	//Set the final component
 	Vector_GetScalarProduct(&proj, MTV, mid);
-	Vector_Increment(dest, &proj);
+	Vector_Increment(dest, &proj);	
 
-	/*
-	//Create a linked list of points to find the inner most points
-	LinkedList* innerPoints = LinkedList_Allocate();
-	LinkedList_Initialize(innerPoints);
-
-
-	//We must cycle through all points for each axis removing the minimum and maximum bounds each cycle until there remains only 2 points or less.
-	struct LinkedList_Node* iterator = NULL;
-	struct LinkedList_Node* minNode = NULL;
-	struct LinkedList_Node* maxNode = NULL;
-
-	Vector* currentVector = NULL;
-	Vector* minVector = NULL;
-	Vector* maxVector = NULL;
-
-	
-	for(unsigned int i = 0; i < 3; i++)
-	{
-		//Add all points translated into worldspace to the list
-		for(unsigned int j = 0; j < furthestOnHull1->size; j++)
-		{
-			//Const modifier on furthestHull1 is removed, but data will not be changed
-			LinkedList_Append(innerPoints, DynamicArray_Index((DynamicArray*)furthestOnHull1, j));
-		}
-
-		for(unsigned int j = 0; j < furthestOnHull2->size; j++)
-		{
-			//Const modifier on furthestHull1 is removed, but data will not be changed
-			LinkedList_Append(innerPoints, DynamicArray_Index((DynamicArray*)furthestOnHull2, j));
-		}
-
-		//Until we have only 2 points left for the ith axis test
-		while(innerPoints->size > 2)
-		{
-
-			iterator = innerPoints->head;
-			minNode = iterator;
-			maxNode = iterator;
-			for(unsigned int j = 0; j < innerPoints->size - 1; j++)
-			{
-				//Move to next point
-				iterator = iterator->next;
-				//Get point as vector
-				currentVector = (Vector*)iterator->data;
-				minVector = (Vector*)minNode->data;
-				maxVector = (Vector*)maxNode->data;
-
-				//Compare ith values to max and min
-				if(currentVector->components[i] <= minVector->components[i])
-				{
-					minNode = iterator;
-				}
-				else if(currentVector->components[i] >= maxVector->components[i])
-				{
-					maxNode = iterator;
-				}
-			}
-			//In case they are somehow the same, only remove one.
-			if(minNode == maxNode)
-			{
-				LinkedList_RemoveNode(innerPoints, minNode);
-			}
-			else
-			{
-				//Each loop remove the max and min from the list
-				LinkedList_RemoveNode(innerPoints, minNode);
-				LinkedList_RemoveNode(innerPoints, maxNode);
-			}
-
-		}
-
-		//Find the average ith value of remaining nodes
-		iterator = innerPoints->head;
-		while(iterator != NULL)
-		{
-			Vector* currentVector = (Vector*)iterator->data;
-			dest->components[i] += currentVector->components[i];
-			iterator = iterator->next;
-		}
-		dest->components[i] /= (float)innerPoints->size;
-
-		//Clear remaining contents of list for next axis test
-		LinkedList_Clear(innerPoints);
-	}
-
-	LinkedList_Free(innerPoints);
-	*/
 }
 
 ///
@@ -1890,6 +1811,7 @@ static void PhysicsManager_ApplyCollisionImpulses(struct Collision* collision, c
 
 	//Calculate impulse
 	float impulse = numerator/denominator;
+	collision->resolutionImpulse = impulse;
 
 	Vector impulseVector;
 	Vector_INIT_ON_STACK(impulseVector, 3);
@@ -2032,78 +1954,65 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 	if(collision->obj1->body != NULL && collision->obj1->body->inverseMass != 0.0f && !collision->obj1->body->freezeTranslation)
 	{
 		relImpulseTangentialMag1 = relVelocityTangentialMag / collision->obj1->body->inverseMass;	
+		
+		Vector frictionalImpulse;
+		Vector_INIT_ON_STACK(frictionalImpulse, 3);
+
+		Vector radius;
+		Vector_INIT_ON_STACK(radius, 3);
+
+		Vector angularImpulseDueToRollingResistance;
+		Vector_INIT_ON_STACK(angularImpulseDueToRollingResistance, 3);
+		
+		if(!collision->obj1->body->freezeRotation)
+		{
+			Vector_Subtract(&radius, pointsOfCollision[0], collision->obj1->body->frame->position);
+
+		}
+
 		if(relImpulseTangentialMag1 <= staticMag)
 		{
-			Vector frictionalImpulse;
-			Vector_INIT_ON_STACK(frictionalImpulse, 3);
-
 			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, relImpulseTangentialMag1);
-
-
-			Vector radius;
-			Vector_INIT_ON_STACK(radius, 3);
-			if(!collision->obj1->body->freezeRotation)
-			{
-				Vector_Subtract(&radius, pointsOfCollision[0], collision->obj1->body->frame->position);
-			}
-			
-			RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &radius);
-			//RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &Vector_ZERO);
 		}
 		else
 		{
-			Vector frictionalImpulse;
-			Vector_INIT_ON_STACK(frictionalImpulse, 3);
-
-			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, dynamicMag);
-
-			Vector radius;
-			Vector_INIT_ON_STACK(radius, 3);
-			if(!collision->obj1->body->freezeRotation)
-			{
-				Vector_Subtract(&radius, pointsOfCollision[0], collision->obj1->body->frame->position);
-			}
-			
-			RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &radius);
-			//RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &Vector_ZERO);
+			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, dynamicMag);	
 		}
+
+		//Apply linear friction
+		RigidBody_ApplyImpulse(collision->obj1->body, &frictionalImpulse, &radius);
+
 	}
 	if(collision->obj2->body != NULL && collision->obj2->body->inverseMass != 0.0f)
 	{
 		relImpulseTangentialMag2 = relVelocityTangentialMag / collision->obj2->body->inverseMass;
 
+		Vector frictionalImpulse;
+		Vector_INIT_ON_STACK(frictionalImpulse, 3);
+
+		Vector radius;
+		Vector_INIT_ON_STACK(radius, 3);
+
+		Vector angularImpulseDueToRollingResistance;
+		Vector_INIT_ON_STACK(angularImpulseDueToRollingResistance, 3);
+
+		if(!collision->obj2->body->freezeRotation)
+		{
+			Vector_Subtract(&radius, pointsOfCollision[1], collision->obj2->body->frame->position);
+		}
+
 		if(relImpulseTangentialMag2 <= staticMag)
 		{
-			Vector frictionalImpulse;
-			Vector_INIT_ON_STACK(frictionalImpulse, 3);
-
 			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, -relImpulseTangentialMag2);
-
-			Vector radius;
-			Vector_INIT_ON_STACK(radius, 3);
-			if(!collision->obj2->body->freezeRotation)
-			{
-				Vector_Subtract(&radius, pointsOfCollision[1], collision->obj2->body->frame->position);
-			}
-			RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &radius);
-			//RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &Vector_ZERO);
 		}
 		else
 		{
-			Vector frictionalImpulse;
-			Vector_INIT_ON_STACK(frictionalImpulse, 3);
-
 			Vector_GetScalarProduct(&frictionalImpulse, &unitTangentVector, -dynamicMag);
-
-			Vector radius;
-			Vector_INIT_ON_STACK(radius, 3);
-			if(!collision->obj2->body->freezeRotation)
-			{
-				Vector_Subtract(&radius, pointsOfCollision[1], collision->obj2->body->frame->position);
-			}
-			RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &radius);
-			//RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &Vector_ZERO);
 		}
+
+
+		RigidBody_ApplyImpulse(collision->obj2->body, &frictionalImpulse, &radius);
+
 	}
 
 
@@ -2228,4 +2137,37 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 			RigidBody_ApplyInstantaneousTorque(body2, &lB);
 		}
 	}
+}
+
+
+///
+//Calculates and applies the rolling resistance between two objects
+//
+//Parameters:
+//	collision: A pointer to the collision on which to compute rolling resistances
+//	pointsOfCollision: An array of pointers to vectors containing the points of collision in worldspace for each object
+//	resistanceCoefficient: The net rolling resistance coefficient between the two objects
+static void PhysicsManager_ApplyRollingResistance(struct Collision* collision, Vector** pointsOfCollision, const float resistanceCoefficient)
+{
+	//Step 1: Compute the magnitude of the rolling resistance force
+	float resistanceMag = collision->resolutionImpulse * resistanceCoefficient;
+
+	//Step 2: Compute the radii from the center of mass to the point of collision for each object
+	Vector radius1;
+	Vector radius2;
+
+	Vector_INIT_ON_STACK(radius1, 3);
+	Vector_INIT_ON_STACK(radius2, 3);
+	
+	Vector_Subtract(&radius1, pointsOfCollision[0], collision->obj1Frame->position);
+	Vector_Subtract(&radius2, pointsOfCollision[1], collision->obj2Frame->position);
+
+	//Step 3: Compute the maximum angular impulse for each object due to rolling resistance
+	float angularResistance1 = resistanceMag * Vector_GetMag(&radius1);
+	float angularResistance2 = resistanceMag * Vector_GetMag(&radius2);
+
+	
+	//Step 4: limit the resistances if they are larger than the current angular momentum
+	
+
 }

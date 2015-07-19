@@ -13,7 +13,8 @@ struct Collision
 	GObject* obj2;
 	FrameOfReference* obj2Frame;
 	Vector* minimumTranslationVector;	//Normalized vector describing the collision / contact normal
-	float overlap;						//The magnitude of the overlap on the minimum translation axis
+	float overlap;				//The magnitude of the overlap on the minimum translation axis
+	float resolutionImpulse;		//The magnitude of the impulse which resolved the collision
 };
 
 typedef struct CollisionBuffer
