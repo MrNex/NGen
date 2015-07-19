@@ -581,6 +581,10 @@ static void PhysicsManager_ResolveCollision(struct Collision* collision)
 		//Step 4b: Calculate and apply frictional impulses
 		PhysicsManager_ApplyLinearFrictionalImpulses(collision, staticCoefficient, dynamicCoefficient, pointsOfCollision);
 		PhysicsManager_ApplyFrictionalTorques(collision, staticCoefficient, dynamicCoefficient);
+		
+		float rollingResistance = ((collision->obj1->body != NULL ? collision->obj1->body->rollingResistance : 0.0f) + (collision->obj2->body != NULL ? collision->obj2->body->rollingResistance : 1.0f)) * 0.5f;
+		
+		PhysicsManager_ApplyRollingResistance(collision, pointsOfCollision, rollingResistance);
 
 		//Free the vectors used to hold the collision points
 		Vector_Free(pointsOfCollision[0]);
@@ -1960,9 +1964,6 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 
 		Vector radius;
 		Vector_INIT_ON_STACK(radius, 3);
-
-		Vector angularImpulseDueToRollingResistance;
-		Vector_INIT_ON_STACK(angularImpulseDueToRollingResistance, 3);
 		
 		if(!collision->obj1->body->freezeRotation)
 		{
@@ -1993,8 +1994,6 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 		Vector radius;
 		Vector_INIT_ON_STACK(radius, 3);
 
-		Vector angularImpulseDueToRollingResistance;
-		Vector_INIT_ON_STACK(angularImpulseDueToRollingResistance, 3);
 
 		if(!collision->obj2->body->freezeRotation)
 		{
@@ -2167,7 +2166,55 @@ static void PhysicsManager_ApplyRollingResistance(struct Collision* collision, V
 	float angularResistance2 = resistanceMag * Vector_GetMag(&radius2);
 
 	
-	//Step 4: limit the resistances if they are larger than the current angular momentum
+	//Step 4: Calculate the current angular momentum
+	Vector angularMomentum1;
+	Vector angularMomentum2;
+
+	Vector_INIT_ON_STACK(angularMomentum1, 3);
+	Vector_INIT_ON_STACK(angularMomentum2, 3);
+
+	RigidBody_CalculateAngularMomentum(&angularMomentum1, collision->obj1->body);
+	RigidBody_CalculateAngularMomentum(&angularMomentum2, collision->obj2->body);
+
+	//Include the angular impulse which is about to be applied!
+	Vector_Increment(&angularMomentum1, collision->obj1->body->netInstantaneousTorque);
+	Vector_Increment(&angularMomentum2, collision->obj2->body->netInstantaneousTorque);
+
+	//Step 5: Get the magnitudes of the momentum along the collision plane
+	Vector proj;
+	Vector_INIT_ON_STACK(proj, 3);
+
+	Vector_GetProjection(&proj, &angularMomentum1, collision->minimumTranslationVector);
+	Vector_Decrement(&angularMomentum1, &proj);
 	
 
+	Vector_GetProjection(&proj, &angularMomentum2, collision->minimumTranslationVector);
+	Vector_Decrement(&angularMomentum2, &proj);
+
+	//float mag1 = Vector_GetMag(&angularMomentum1);
+	//float mag2 = Vector_GetMag(&angularMomentum2);
+
+	//Step 6: Limit the magnitude of rolling resistance by the magnitude of angular momenum along collision plane
+	//if(angularResistance1 > mag1) angularResistance1 = mag1;
+	//if(angularResistance2 > mag2) angularResistance2 = mag2;
+
+	//Step 7: Create rolling resistance angular impulses
+	Vector resistance1;
+	Vector resistance2;
+	Vector_INIT_ON_STACK(resistance1, 3);
+	Vector_INIT_ON_STACK(resistance2, 3);
+
+	Vector_Normalize(&angularMomentum1);
+	Vector_Normalize(&angularMomentum2);
+
+	Vector_GetScalarProduct(&resistance1, &angularMomentum1, -angularResistance1);
+	Vector_GetScalarProduct(&resistance2, &angularMomentum2, -angularResistance2);
+
+	//Step 8: apply the rolling resistance
+	RigidBody_ApplyInstantaneousTorque(collision->obj1->body, &resistance1);
+	RigidBody_ApplyInstantaneousTorque(collision->obj2->body, &resistance2);
+
+	//RigidBody_ApplyTorque(collision->obj1->body, &resistance1);
+	//RigidBody_ApplyTorque(collision->obj2->body, &resistance2);
+	
 }

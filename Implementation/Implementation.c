@@ -34,6 +34,7 @@ void InitializeScene(void)
 	RigidBody_Initialize(block->body, block->frameOfReference, 0.0f);
 	block->body->freezeTranslation = block->body->freezeRotation = 1;
 	block->body->dynamicFriction = block->body->staticFriction = 0.1f;
+	block->body->rollingResistance = 0.1f;
 
 	Vector v;
 	Vector_INIT_ON_STACK(v, 3);
@@ -64,9 +65,10 @@ void InitializeScene(void)
 	ConvexHullCollider_MakeCubeCollider(block->collider->data->convexHullData, 2.0f);
 
 	block->body = RigidBody_Allocate();
-	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
+	RigidBody_Initialize(block->body, block->frameOfReference, 0.1f);
 	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
-	//block->body->rollingResistance = 10.0f;
+	
+	block->body->rollingResistance = 0.5f;
 
 	block->body->coefficientOfRestitution = 0.5f;
 
@@ -106,6 +108,8 @@ void InitializeScene(void)
 	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
 	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
 
+	block->body->rollingResistance = 0.5f;
+
 	block->body->coefficientOfRestitution = 0.5f;
 
 	Vector_Copy(&v, &Vector_ZERO);
@@ -140,14 +144,14 @@ void InitializeScene(void)
 	block->body = RigidBody_Allocate();
 	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
 	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
-	block->body->rollingResistance = 0.01f;
+	block->body->rollingResistance = 0.00001f;
 
 	block->body->coefficientOfRestitution = 0.5f;
 
 	Vector_Copy(&v, &Vector_ZERO);
 	
 	//Apply a small torque
-	v.components[0] = -4.0f;
+	v.components[0] = -10.0f;
 
 	RigidBody_ApplyInstantaneousTorque(block->body, &v);
 
