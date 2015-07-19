@@ -307,6 +307,60 @@ void RigidBody_CalculateMomentOfInertiaInWorldSpace(Matrix* dest, const RigidBod
 }
 
 ///
+//Calculates the linear momentum of a rigidbody
+//
+//PArameters:
+//	dest: A pointer to the vector to store the linear momentum in
+//	body: A pointer to the rigidbody to calculate the linear momentum of
+void RigidBody_CalculateLinearMomentum(Vector* dest, const RigidBody* body)
+{
+	//Let the linear momentum of the body be denoted as 'j'
+	//j = mv
+	float mass = body->inverseMass != 0.0f ? 1.0f / body->inverseMass : 0.0f;
+	Vector_GetScalarProduct(dest, body->velocity, mass);
+}
+
+///
+//Calculates the angular momentum of a rigidbody
+//
+//PArameters:
+//	dest: A pointer to the vector to store the angular momentum
+//	body: A pointer to the rigidbody to calculate the angular momentum of
+void RigidBody_CalculateAngularMomentum(Vector* dest, const RigidBody* body)
+{
+	//Let 'l' denote the angular momentum and 'w' denote the angular velocity
+	//Let "I'" denote the moment of intertia in worldspace
+	//l = I'w
+	Matrix worldInertia;
+	Matrix_INIT_ON_STACK(worldInertia, 3, 3);
+
+	RigidBody_CalculateMomentOfInertiaInWorldSpace(&worldInertia, body);
+
+	Matrix_GetProductVector(dest, &worldInertia, body->angularVelocity);
+}
+
+///
+//Calculates the linear momentum of a point of a rigidbody due to both linear and angular motion of the body
+//
+//Parameters:
+//	dest: A pointer to a vector to store the momentum in
+//	body: A pointer to the rigidbody to canculate the momentum of
+//	radius: A pointer to a vector which contans the vector from the center of mass of the body to the point
+//			at which the momentum is being calculated
+void RigidBody_CalculateLinearMomentumAtPoint(Vector* dest, const RigidBody* body, const Vector* radius)
+{
+	Vector velocityAtPoint;
+	Vector_INIT_ON_STACK(velocityAtPoint, 3);
+
+	RigidBody_CalculateLocalLinearVelocity(&velocityAtPoint, body, radius);
+
+	Vector_Increment(&velocityAtPoint, body->velocity);
+
+	float mass = body->inverseMass != 0.0f ? 1.0f / body->inverseMass : 0.0f;
+	Vector_GetScalarProduct(dest, &velocityAtPoint, mass);
+}
+
+///
 //Translates a rigidbody in world space
 //
 //Parameters:

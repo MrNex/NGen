@@ -128,6 +128,32 @@ void RigidBody_CalculateMaxLocalLinearVelocity(Vector* dest, const RigidBody* bo
 void RigidBody_CalculateMomentOfInertiaInWorldSpace(Matrix* dest, const RigidBody* body);
 
 ///
+//Calculates the linear momentum of a rigidbody
+//
+//PArameters:
+//	dest: A pointer to the vector to store the linear momentum in
+//	body: A pointer to the rigidbody to calculate the linear momentum of
+void RigidBody_CalculateLinearMomentum(Vector* dest, const RigidBody* body);
+
+///
+//Calculates the angular momentum of a rigidbody
+//
+//PArameters:
+//	dest: A pointer to the vector to store the angular momentum
+//	body: A pointer to the rigidbody to calculate the angular momentum of
+void RigidBody_CalculateAngularMomentum(Vector* dest, const RigidBody* body);
+
+///
+//Calculates the linear momentum of a point of a rigidbody due to both linear and angular motion of the body
+//
+//Parameters:
+//	dest: A pointer to a vector to store the momentum in
+//	body: A pointer to the rigidbody to canculate the momentum of
+//	radius: A pointer to a vector which contans the vector from the center of mass of the body to the point
+//			at which the momentum is being calculated
+void RigidBody_CalculateLinearMomentumAtPoint(Vector* dest, const RigidBody* body, const Vector* radius);
+
+///
 //Translates a rigidbody in world space
 //
 //Parameters:
