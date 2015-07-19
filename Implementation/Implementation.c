@@ -64,8 +64,9 @@ void InitializeScene(void)
 	ConvexHullCollider_MakeCubeCollider(block->collider->data->convexHullData, 2.0f);
 
 	block->body = RigidBody_Allocate();
-	RigidBody_Initialize(block->body, block->frameOfReference, 0.1f);
+	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
 	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
+	//block->body->rollingResistance = 10.0f;
 
 	block->body->coefficientOfRestitution = 0.5f;
 
@@ -81,9 +82,9 @@ void InitializeScene(void)
 
 	GObject_Translate(block, &v);
 
-	state = State_Allocate();
-	State_Debug_Initialize(state, "Bottom Block");
-	GObject_AddState(block, state);
+	//state = State_Allocate();
+	//State_Debug_Initialize(state, "Bottom Block");
+	//GObject_AddState(block, state);
 
 	ObjectManager_AddObject(block);
 
@@ -105,7 +106,7 @@ void InitializeScene(void)
 	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
 	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
 
-	block->body->coefficientOfRestitution = 0.6f;
+	block->body->coefficientOfRestitution = 0.5f;
 
 	Vector_Copy(&v, &Vector_ZERO);
 	v.components[1] = 10.0f;
@@ -138,21 +139,22 @@ void InitializeScene(void)
 
 	block->body = RigidBody_Allocate();
 	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
-	block->body->dynamicFriction = block->body->staticFriction = 0.2f;
+	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
+	block->body->rollingResistance = 0.01f;
 
-	block->body->coefficientOfRestitution = 0.9f;
+	block->body->coefficientOfRestitution = 0.5f;
 
 	Vector_Copy(&v, &Vector_ZERO);
 	
 	//Apply a small torque
-	//v.components[0] = 1.0f;
+	v.components[0] = -4.0f;
 
-	//RigidBody_ApplyInstantaneousTorque(block->body, &v);
+	RigidBody_ApplyInstantaneousTorque(block->body, &v);
 
 	//Give sphere a little push..
 	v.components[0] = 0.0f;
 	v.components[2] = -4.0f; 
-	RigidBody_ApplyImpulse(block->body, &v, &Vector_ZERO);
+	//RigidBody_ApplyImpulse(block->body, &v, &Vector_ZERO);
 
 	Vector_Copy(&v, &Vector_ZERO);
 	v.components[0] = 3.0f;
@@ -164,7 +166,7 @@ void InitializeScene(void)
 	ObjectManager_AddObject(block);
 
 	//Create rolling block
-		
+	/*	
 	block = GObject_Allocate();
 	GObject_Initialize(block);
 
@@ -183,8 +185,9 @@ void InitializeScene(void)
 	block->body = RigidBody_Allocate();
 	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
 	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
+	block->body->rollingResistance = 0.8f;
 
-	block->body->coefficientOfRestitution = 0.3f;
+	block->body->coefficientOfRestitution = 0.1f;
 
 	Vector_Copy(&v, &Vector_ZERO);
 	v.components[0] = 1.0f;
@@ -204,7 +207,7 @@ void InitializeScene(void)
 	GObject_Translate(block, &v);
 	
 	ObjectManager_AddObject(block);
-	
+	*/
 	
 	
 	//Set gravity
