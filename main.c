@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
 
 	//Window creation
 	/*int win = */	//Should be cleaned up automatically upon exiting the main loop
-	glutCreateWindow("NGenVS V3.9");
+	glutCreateWindow("NGenVS V4.0");
 
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK) { return -1; }

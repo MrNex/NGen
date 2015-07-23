@@ -45,11 +45,12 @@ static void PhysicsManager_ResolveCollision(struct Collision* collision);
 //
 //PArameters:
 //      collision: The collision to test
+//	collisionPoints: An array of pointers to vectors containing the collision points of object 1 and 2 respectively (in worldspace)
 //
 //REturns:
 //      0 if no collision resolution is needed
 //      1 if collision resolution is needed
-static unsigned char PhysicsManager_IsResolutionNeeded(struct Collision* collision);
+static unsigned char PhysicsManager_IsResolutionNeeded(struct Collision* collision, Vector** collisionPoints);
 
 ///
 //Takes two intersecting objects and restores them to the moment their surfaces touched
@@ -316,8 +317,14 @@ void PhysicsManager_UpdateBodies(LinkedList* gameObjects)
 			if( gameObject->body->physicsOn)
 			{
 				PhysicsManager_ApplyGlobals(gameObject->body);
-				PhysicsManager_UpdateLinearPhysicsOfBody(gameObject->body, dt);
-				PhysicsManager_UpdateRotationalPhysicsOfBody(gameObject->body, dt);
+				//if(!gameObject->body->freezeTranslation)
+				//{
+					PhysicsManager_UpdateLinearPhysicsOfBody(gameObject->body, dt);
+				//}
+				//if(!gameObject->body->freezeRotation)
+				//{
+					PhysicsManager_UpdateRotationalPhysicsOfBody(gameObject->body, dt);
+				//}
 			}
 		}
 
@@ -545,29 +552,34 @@ void PhysicsManager_ResolveCollisions(LinkedList* collisions)
 //	collisions: The collision which needs to be resolved
 static void PhysicsManager_ResolveCollision(struct Collision* collision)
 {
+	//Step 1: Use the minimum translation vector to pull the intersecting objects apart
+	//If and only if the objects need to be pulled apart
+	PhysicsManager_DecoupleCollision(collision);
+
+	//Step 2: Calculate the point of collision
+	//In the case that one of the objects is an AABB, there will be different collision points. Allocate an array of two vectors to store these points.
+	Vector* pointsOfCollision[2];
+
+	//Allocate and initialize these vectors individually
+	pointsOfCollision[0] = Vector_Allocate();
+	pointsOfCollision[1] = Vector_Allocate();
+
+	Vector_Initialize(pointsOfCollision[0], 3);
+	Vector_Initialize(pointsOfCollision[1], 3);
+
+	PhysicsManager_DetermineCollisionPoints(pointsOfCollision, collision);
+
+	//Vector_PrintTranspose(collision->minimumTranslationVector);
+	//printf("%f\n", collision->overlap);
+
 	//Check if the collision must be resolved
-	if(PhysicsManager_IsResolutionNeeded(collision))
+	if(PhysicsManager_IsResolutionNeeded(collision, pointsOfCollision))
 	{
-		//printf("MTV:\t");
-		//Vector_PrintTranspose(collision->minimumTranslationVector);
-		//printf("Resolving\n");
+		//printf("Resolving\nBefore:\nVelocity:\t");
+		//Vector_PrintTranspose(collision->obj1->body->velocity);
+		//printf("Angular:\t");
+		//Vector_PrintTranspose(collision->obj1->body->angularVelocity);
 
-		//Step 1: Use the minimum translation vector to pull the intersecting objects apart
-		//If and only if the objects need to be pulled apart
-		PhysicsManager_DecoupleCollision(collision);
-
-		//Step 2: Calculate the point of collision
-		//In the case that one of the objects is an AABB, there will be different collision points. Allocate an array of two vectors to store these points.
-		Vector* pointsOfCollision[2];
-
-		//Allocate and initialize these vectors individually
-		pointsOfCollision[0] = Vector_Allocate();
-		pointsOfCollision[1] = Vector_Allocate();
-
-		Vector_Initialize(pointsOfCollision[0], 3);
-		Vector_Initialize(pointsOfCollision[1], 3);
-
-		PhysicsManager_DetermineCollisionPoints(pointsOfCollision, collision);
 
 
 		//Step 3: Calculate and apply impulses due to collision
@@ -585,11 +597,20 @@ static void PhysicsManager_ResolveCollision(struct Collision* collision)
 		float rollingResistance = ((collision->obj1->body != NULL ? collision->obj1->body->rollingResistance : 0.0f) + (collision->obj2->body != NULL ? collision->obj2->body->rollingResistance : 1.0f)) * 0.5f;
 		
 		PhysicsManager_ApplyRollingResistance(collision, pointsOfCollision, rollingResistance);
-
-		//Free the vectors used to hold the collision points
-		Vector_Free(pointsOfCollision[0]);
-		Vector_Free(pointsOfCollision[1]);
 	}
+	else
+	{
+		//printf("Not\n");
+		//Vector_PrintTranspose(collision->obj1Frame->position);
+		//printf("\n");
+		
+	}
+
+
+
+	//Free the vectors used to hold the collision points
+	Vector_Free(pointsOfCollision[0]);
+	Vector_Free(pointsOfCollision[1]);
 
 
 }
@@ -604,16 +625,64 @@ static void PhysicsManager_ResolveCollision(struct Collision* collision)
 //REturns:
 //	0 if no collision resolution is needed
 //	1 if collision resolution is needed
-static unsigned char PhysicsManager_IsResolutionNeeded(struct Collision* collision)
+static unsigned char PhysicsManager_IsResolutionNeeded(struct Collision* collision, Vector** collisionPoints)
 {
 	//If the overlap is 0 (contact case) or negative, this collision does not need resolving
-	if(collision->overlap <= 0.0f)
+	if(fabs(collision->overlap) <= FLT_EPSILON)
 	{
 		return 0;	
 	}
 
+	//Find the relative velocity of the point of collision on obj2 from the point of collision on obj1
+	Vector relativeVelocity;
+	Vector_INIT_ON_STACK(relativeVelocity, 3);
+
+	if(collision->obj2->body != NULL)
+	{
+		Vector totalVelocity2;
+		Vector_INIT_ON_STACK(totalVelocity2, 3);
+
+		Vector radius;
+		Vector_INIT_ON_STACK(radius, 3);
+		Vector_Subtract(&radius, collisionPoints[0], collision->obj2Frame->position);
+
+		//RigidBody_CalculateLocalLinearVelocity(&totalVelocity2, collision->obj2->body, &radius);
+
+		Vector_Increment(&totalVelocity2, collision->obj2->body->velocity);
+		
+		Vector_Increment(&relativeVelocity, &totalVelocity2);
+	}
+
+	if(collision->obj1->body != NULL)
+	{
+		Vector totalVelocity1;
+		Vector_INIT_ON_STACK(totalVelocity1, 3);
+
+		Vector radius;
+		Vector_INIT_ON_STACK(radius, 3);
+		Vector_Subtract(&radius, collisionPoints[0], collision->obj1Frame->position);
+
+		//RigidBody_CalculateLocalLinearVelocity(&totalVelocity1, collision->obj1->body, &radius);
+
+		Vector_Increment(&totalVelocity1, collision->obj1->body->velocity);
+		
+		Vector_Decrement(&relativeVelocity, &totalVelocity1);
+	}
+
+	//If the relative velocity is in the direction of the MTV object, object B is smashing into object A
+	if(Vector_DotProduct(&relativeVelocity, collision->minimumTranslationVector) > 0.0f)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+
+	/*
+
 	//If both of the objects have velocities
-	if(collision->obj1->body && collision->obj2->body)
+	if(collision->obj1Vector_PrintTranspose(collision->obj1->body->velocity);->body && collision->obj2->body)
 	{
 		//Calculate the total linear velocities of the points on objects A and B most in the direction of their relative MTV's
 		Vector totalVelocity1;
@@ -880,6 +949,7 @@ static unsigned char PhysicsManager_IsResolutionNeeded(struct Collision* collisi
 
 	//If both objects are moving away from each other, no collision resolution is needed
 	return 0;
+	*/
 }
 
 ///
@@ -889,6 +959,49 @@ static unsigned char PhysicsManager_IsResolutionNeeded(struct Collision* collisi
 //	collision: The collision to decouple
 static void PhysicsManager_DecoupleCollision(struct Collision* collision)
 {
+	//Step 0: Get the rigidbodies
+	RigidBody* body1 = collision->obj1->body;
+	RigidBody* body2 = collision->obj2->body;
+
+	//Step 1: Determine the magnitude of the velocities in the direction of the MTV
+	float mag1 = 0, mag2 = 0;
+	if(body1 != NULL && !body1->freezeTranslation && body1->inverseMass != 0.0f)
+	{
+		mag1 = fabs(Vector_DotProduct(body1->velocity, collision->minimumTranslationVector));
+	}
+
+	if(body2 != NULL && !body2->freezeTranslation && body2->inverseMass != 0.0f)
+	{
+		mag2 = fabs(Vector_DotProduct(body2->velocity, collision->minimumTranslationVector));
+	}
+
+	//Step 2: Determine the ratio of each to the total
+	float total = mag1 + mag2;
+	if(total == 0.0f) return;
+	float ratio1 = mag1 / total;
+	float ratio2 = mag2 / total;
+
+	float scale1 = ratio1 * collision->overlap;
+	float scale2 = ratio2 * collision->overlap;
+
+	//Step3 translate each object
+	Vector resolutionVector;
+	Vector_INIT_ON_STACK(resolutionVector, 3);
+	if(body1 != NULL && !body1->freezeTranslation && body1->inverseMass != 0.0f)
+	{
+		//MTV always points toward obj1, so move obj1 along mtv
+		Vector_GetScalarProduct(&resolutionVector, collision->minimumTranslationVector, scale1);
+		FrameOfReference_Translate(body1->frame, &resolutionVector);
+	}
+
+	if(body2 != NULL && !body2->freezeTranslation && body2->inverseMass != 0.0f)
+	{
+		//MTV always points toward obj1, so move obj2 opposite mtv
+		Vector_GetScalarProduct(&resolutionVector, collision->minimumTranslationVector, -scale2);
+		FrameOfReference_Translate(body2->frame, &resolutionVector);
+	}
+
+	/*
 	Vector resolutionVector1;	//The tranlation vector to get object 1 out of object 2
 	Vector resolutionVector2;	//The translation vector to get object 2 out of object 1
 
@@ -1072,8 +1185,13 @@ static void PhysicsManager_DecoupleCollision(struct Collision* collision)
 	}
 
 
-	if(collision->overlap > 0.0f)
+	if(fabs(collision->overlap) > FLT_EPSILON)
 	{
+		if(collision->overlap < 0.0f)
+		{
+			printf("Negative\n");
+		}
+
 		//Scale the scales by the magnitude of the MTV overlap
 		scale1 *= collision->overlap;
 		scale2 *= collision->overlap;
@@ -1089,6 +1207,7 @@ static void PhysicsManager_DecoupleCollision(struct Collision* collision)
 		//In the case the collision is being resolved by the objects moving in the same direction...
 		if(Vector_DotProduct(&resolutionVector1, &resolutionVector2) > 0.0f)
 		{
+			printf("Entered\n");
 			Vector displacement;
 			Vector_INIT_ON_STACK(displacement, 3);
 			//Get vector pointing from b to a
@@ -1109,6 +1228,11 @@ static void PhysicsManager_DecoupleCollision(struct Collision* collision)
 		//Translate each object's frame of reference by their resolution vectors (if they have a rigidbody)
 		if(collision->obj1->body != NULL)
 		{
+			printf("MTV:\t\t");
+			Vector_PrintTranspose(collision->minimumTranslationVector);
+			printf("\nResolution:\t");
+			Vector_PrintTranspose(&resolutionVector1);
+			printf("---\n");
 			FrameOfReference_Translate(collision->obj1->body->frame, &resolutionVector1);
 
 		}
@@ -1118,6 +1242,7 @@ static void PhysicsManager_DecoupleCollision(struct Collision* collision)
 
 		}
 	}
+	*/
 }
 
 ///
@@ -1253,6 +1378,7 @@ static void PhysicsManager_DetermineCollisionPoints(Vector** dest, struct Collis
 		Vector_Copy(dest[0], dest[1]);
 		obj1PointFound = 1;
 	}
+
 
 }
 
@@ -1887,7 +2013,7 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 	}
 
 	//Make sure the relative velocity is nonZero
-	if(Vector_GetMag(&relativeVelocity) > 0.0f)
+	if(Vector_GetMag(&relativeVelocity) > FLT_EPSILON)
 	{
 		//If there is relative movement between the objects we must figure out the component of this relative velocity which is tangent to the surface
 		Vector relativeVelocityPerp;
@@ -1904,7 +2030,7 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 	}
 
 	//if the unit tangent vector is still 0
-	if(Vector_GetMag(&unitTangentVector) == 0.0f)
+	if(Vector_GetMag(&unitTangentVector) <= FLT_EPSILON)
 	{
 		//We must use the relative net force, the net force applied to rigidbody 2 relative to rigidbody1
 		Vector relativeNetForce;
@@ -1935,7 +2061,8 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 
 	//Step 2) Compute the static and dynamic frictional force magnitudes based off of the magnitude of the
 	//component of the reaction impulse of the collision in the direction of the contact normal
-	float reactionMag = 0.0f;
+	float reactionMag = collision->resolutionImpulse;
+	/*
 	if(collision->obj1->body != NULL && collision->obj1->body->inverseMass != 0.0f && !collision->obj1->body->freezeTranslation)
 	{
 		reactionMag = fabs(Vector_DotProduct(collision->obj1->body->netImpulse, collision->minimumTranslationVector));
@@ -1943,7 +2070,7 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 	else
 	{
 		reactionMag = fabs(Vector_DotProduct(collision->obj2->body->netImpulse, collision->minimumTranslationVector));
-	}
+	}*/
 
 	float staticMag = staticCoefficient * reactionMag;
 	float dynamicMag = dynamicCoefficient * reactionMag;
@@ -1957,7 +2084,7 @@ static void PhysicsManager_ApplyLinearFrictionalImpulses(struct Collision* colli
 	float relImpulseTangentialMag2;
 	if(collision->obj1->body != NULL && collision->obj1->body->inverseMass != 0.0f && !collision->obj1->body->freezeTranslation)
 	{
-		relImpulseTangentialMag1 = relVelocityTangentialMag / collision->obj1->body->inverseMass;	
+		relImpulseTangentialMag1 = relVelocityTangentialMag / collision->obj1->body->inverseMass;
 		
 		Vector frictionalImpulse;
 		Vector_INIT_ON_STACK(frictionalImpulse, 3);
@@ -2082,6 +2209,7 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 		//Step b: Determine if the magnitude of the angular impulse / momentum overcomes the magnitude of static friction
 		if(Vector_GetMag(&lA) <= staticMag)
 		{
+			//printf("Cancelling1\n");
 			//If it does not, apply an opposing impulse (Note that lA is already in the direction opposing A's angular velocity)
 			RigidBody_ApplyInstantaneousTorque(body1, &lA);
 		}
@@ -2089,8 +2217,8 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 		{
 			//If it does, apply an impulse in the direction opposing intending movement equal to dynamicMag in magnitude
 			float direction = Vector_DotProduct(body1->angularVelocity, &lA);
-			if(direction < 0.0f) direction = 1.0f;
-			else if(direction > 0.0f) direction = -1.0f;
+			if(direction < -FLT_EPSILON) direction = 1.0f;
+			else if(direction > FLT_EPSILON) direction = -1.0f;
 			else direction = 0.0f;
 	
 			Vector_Normalize(&lA);
@@ -2127,8 +2255,8 @@ static void PhysicsManager_ApplyFrictionalTorques(struct Collision* collision, c
 
 			//If it does, apply an impulse in the direction opposing intending movement equal to dynamicMag in magnitude
 			float direction = Vector_DotProduct(body2->angularVelocity, &lB);
-			if(direction < 0.0f) direction = 1.0f;
-			else if(direction > 0.0f) direction = -1.0f;
+			if(direction < -FLT_EPSILON) direction = 1.0f;
+			else if(direction > FLT_EPSILON) direction = -1.0f;
 			else direction = 0.0f;
 
 			Vector_Normalize(&lB);

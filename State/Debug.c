@@ -36,11 +36,11 @@ void State_Debug_Update(GObject* obj, State* state)
 
 	struct State_Debug_Members* members = (struct State_Debug_Members*)state->members;
 	RigidBody* body = obj->body;
-	if(obj->collider->currentCollisions->size >= 1)
-	{
-	printf("%s:\t", members->name);
-	Vector_PrintTranspose(body->netImpulse);
-	}
+//	if(obj->collider->currentCollisions->size > 2)
+//	{
+		printf("%s:\t", members->name);
+		Vector_PrintTranspose(body->angularVelocity);
+//	}
 }
 
 ///

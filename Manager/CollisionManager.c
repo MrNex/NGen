@@ -1,5 +1,6 @@
 #include "CollisionManager.h"
 #include <stdio.h>
+#include <float.h>
 #include <math.h>
 
 ///
@@ -709,7 +710,7 @@ void CollisionManager_TestAABBSphereCollision(struct Collision* dest, GObject* A
 	//X Axis Test
 	//Overlap of right side of AABB with left point on sphere
 	float overlapRight = (AABBFoR->position->components[0] + AABB->centroid->components[0] +  (scaledAABB.width / 2.0f)) - (sphereFoR->position->components[0] - scaledRadius);
-	if(overlapRight < 0.0f)
+	if(overlapRight < FLT_EPSILON)
 	{
 		//No collision, set the collision attributes to null
 		dest->overlap = 0.0f;
@@ -723,7 +724,7 @@ void CollisionManager_TestAABBSphereCollision(struct Collision* dest, GObject* A
 
 	//Overlap right point on sphere with left side of AABB
 	float overlapLeft = (sphereFoR->position->components[0] + scaledRadius) - ((AABBFoR->position->components[0] + AABB->centroid->components[0]) - (scaledAABB.width / 2.0f));
-	if(overlapLeft < 0.0f)
+	if(overlapLeft < FLT_EPSILON)
 	{
 		//No collision, set the collision attributes to null
 		dest->overlap = 0.0f;
@@ -738,7 +739,7 @@ void CollisionManager_TestAABBSphereCollision(struct Collision* dest, GObject* A
 	//Y Axis Test
 	//Overlap of top of AABB with bottom point on sphere
 	float overlapTop = (AABBFoR->position->components[1] + AABB->centroid->components[1] + (scaledAABB.height / 2.0f)) - (sphereFoR->position->components[1] - scaledRadius);
-	if(overlapTop < 0.0f)
+	if(overlapTop < FLT_EPSILON)
 	{
 		//No collision, set the collision attributes to null
 		dest->overlap = 0.0f;
@@ -752,7 +753,7 @@ void CollisionManager_TestAABBSphereCollision(struct Collision* dest, GObject* A
 
 	//Overlap of top point on sphere with bottom of AABB
 	float overlapBottom = (sphereFoR->position->components[1] + scaledRadius) - ((AABBFoR->position->components[1] + AABB->centroid->components[1]) - (scaledAABB.height / 2.0f));
-	if(overlapBottom < 0.0f)
+	if(overlapBottom < FLT_EPSILON)
 	{
 		//No collision, set the collision attributes to null
 		dest->overlap = 0.0f;
@@ -767,7 +768,7 @@ void CollisionManager_TestAABBSphereCollision(struct Collision* dest, GObject* A
 	//Z Axis test
 	//Overlap of front of AABB with back point on sphere
 	float overlapFront = (AABBFoR->position->components[2] + AABB->centroid->components[2] + (scaledAABB.depth / 2.0f)) - (sphereFoR->position->components[2] - scaledRadius);
-	if(overlapFront < 0.0f)
+	if(overlapFront < FLT_EPSILON)
 	{
 		//No collision, set the collision attributes to null
 		dest->overlap = 0.0f;
@@ -781,7 +782,7 @@ void CollisionManager_TestAABBSphereCollision(struct Collision* dest, GObject* A
 
 	//Overlap of back of AABB with front point on shere
 	float overlapBack = (sphereFoR->position->components[2] + scaledRadius) - ((AABBFoR->position->components[2] + AABB->centroid->components[2]) - (scaledAABB.depth / 2.0f));
-	if(overlapBack < 0.0f)
+	if(overlapBack < FLT_EPSILON)
 	{
 		//No collision, set the collision attributes to null
 		dest->overlap = 0.0f;
