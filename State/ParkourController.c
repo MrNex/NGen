@@ -558,7 +558,7 @@ void State_ParkourController_Shoot(GObject* obj, State* state)
 			bullet->body = RigidBody_Allocate();
 			RigidBody_Initialize(bullet->body, bullet->frameOfReference, 1.0f);
 			bullet->body->coefficientOfRestitution = 0.2f;
-			bullet->body->rollingResistance = 0.3f;	
+			bullet->body->rollingResistance = 0.2f;	
 			bullet->body->staticFriction = 0.4f;
 			bullet->body->dynamicFriction = 0.2f;	
 	
@@ -575,6 +575,10 @@ void State_ParkourController_Shoot(GObject* obj, State* state)
 			Vector_Increment(&transform, obj->frameOfReference->position);
 			GObject_Translate(bullet, &transform);
 
+			Vector_Copy(&transform, &Vector_ZERO);
+			transform.components[2] = 1.0f;
+			GObject_Rotate(bullet, &transform, 3.14159f);
+
 			//Scale bullet
 			Vector_Copy(&transform, &Vector_ZERO);
 			transform.components[0] = transform.components[1] = transform.components[2] = 0.5f;
@@ -586,7 +590,7 @@ void State_ParkourController_Shoot(GObject* obj, State* state)
 
 			//Add the remove state
 			State* state = State_Allocate();
-			State_Remove_Initialize(state, 5.0f);
+			State_Remove_Initialize(state, 7.0f);
 			GObject_AddState(bullet, state);
 
 			//Add the bullet to the world

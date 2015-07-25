@@ -693,6 +693,93 @@ void CollisionManager_TestSphereCollision(struct Collision* dest, GObject* obj1,
 //	sphereFoR: Pointer to the frame of reference of the object with the bounding sphere
 void CollisionManager_TestAABBSphereCollision(struct Collision* dest, GObject* AABBObj, FrameOfReference* AABBFoR, GObject* sphereObj, FrameOfReference* sphereFoR)
 {
+	//Grab the collider data from both objects
+	struct ColliderData_AABB* AABB = AABBObj->collider->data->AABBData;
+	struct ColliderData_Sphere* sphere = sphereObj->collider->data->sphereData;
+	
+	//Translate the objects to a system such that the AABB is centered at the origin
+	Vector spherePos;
+	Vector_INIT_ON_STACK(spherePos, 3);
+	Vector_Copy(&spherePos, sphereFoR->position);
+	Vector_Decrement(&spherePos, AABBFoR->position);
+	Vector_Decrement(&spherePos, AABB->centroid);
+
+	//Find the closest point on the box to the sphere
+	//This is done by clamping the sphere's center to the extent of the box in all 3 dimensions
+	float halfWidth = AABB->width * 0.5f;
+	float halfHeight = AABB->height * 0.5f;
+	float halfDepth = AABB->depth * 0.5f;
+	
+	Vector closestPoint;
+	Vector_INIT_ON_STACK(closestPoint, 3);
+
+	closestPoint.components[0] = 
+		spherePos.components[0] < -halfWidth ?	//If Condition
+			-halfWidth 			//If true
+		:					//Else
+			spherePos.components[0] < halfWidth ?	//If Condition
+				spherePos.components[0]		//If true
+			:					//Else
+				halfWidth;
+
+	closestPoint.components[1] = 
+		spherePos.components[1] < -halfHeight ?	//If Condition
+			-halfHeight 			//If true
+		:					//Else
+			spherePos.components[1] < halfHeight ?	//If Condition
+				spherePos.components[1]		//If true
+			:					//Else
+				halfHeight;
+
+	closestPoint.components[2] = 
+		spherePos.components[2] < -halfDepth ?	//If Condition
+			-halfDepth 			//If true
+		:					//Else
+			spherePos.components[2] < halfDepth ?	//If Condition
+				spherePos.components[2]		//If true
+			:					//Else
+				halfDepth;
+
+	//Find the distance between the closest point on the sphere and the box
+	Vector distance;
+	Vector_INIT_ON_STACK(distance, 3);
+
+	Vector_Subtract(&distance, &spherePos, &closestPoint);
+
+	//Get the scaled radius of the sphere
+	float rad = SphereCollider_GetScaledRadius(sphere, sphereFoR);
+
+	//If the magnitude of the distance is smaller than the scaled radius of the sphere, the objects must be colliding
+	float mag = Vector_GetMag(&distance);
+	if(mag > rad)
+	{
+		//No collision
+		dest->overlap = 0.0f;
+		dest->obj1 = NULL;
+		dest->obj2 = NULL;
+		dest->obj1Frame = NULL;
+		dest->obj2Frame = NULL;
+
+		return;
+	}
+
+	//If code reaches this point we know there is a collision
+	//The MTV will be the vector from the closest point on the box to the center of the sphere
+	//Therefore the sphere must be Obj1 because the MTV always points toward OBJ1
+	dest->obj1 = sphereObj;
+	dest->obj2 = AABBObj;
+	dest->obj1Frame = sphereFoR;
+	dest->obj2Frame = AABBFoR;
+	
+	//The distance vector can serve as the MTV
+	Vector_Normalize(&distance);
+	Vector_Copy(dest->minimumTranslationVector, &distance);
+
+	//The overlap will be the magnitude of the scaled radius - the magnitude of the distance from the closest point to the center
+	dest->overlap = rad - mag;
+	
+
+	/*
 	//Grab collider data from both objects
 	struct ColliderData_AABB* AABB = AABBObj->collider->data->AABBData;
 	struct ColliderData_Sphere* sphere = sphereObj->collider->data->sphereData;
@@ -846,6 +933,7 @@ void CollisionManager_TestAABBSphereCollision(struct Collision* dest, GObject* A
 		Vector_Copy(dest->minimumTranslationVector, &Vector_E3);
 		Vector_Scale(dest->minimumTranslationVector, -1.0f);
 	}
+	*/
 }
 
 ///
@@ -1524,6 +1612,8 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 
 	if(detected)
 	{
+		printf("Collision\n");
+
 		//If there is a collision assign collision attributes
 		dest->overlap = minOverlap;
 		dest->obj1 = convexObj;
@@ -1596,10 +1686,10 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 //	0 if the test detects no collision
 //	1 if the test detects a collision
 static unsigned char CollisionManager_PerformSATFaces(struct Collision* dest, 
-													  const Vector** orientedAxes1, unsigned int numAxes1, 
-													  const Vector** orientedPoints1, const unsigned int numPoints1, 
-													  const Vector** orientedAxes2, const unsigned int numAxes2, 
-													  const Vector** orientedPoints2, const unsigned int numPoints2)
+	const Vector** orientedAxes1, unsigned int numAxes1, 
+	const Vector** orientedPoints1, const unsigned int numPoints1, 
+	const Vector** orientedAxes2, const unsigned int numAxes2, 
+	const Vector** orientedPoints2, const unsigned int numPoints2)
 {
 	unsigned char detected = 1;		//Tracks if any axis does not detect a collision
 	float minOverlap = 0.0f;		//Stores the minimum overlap of all axes

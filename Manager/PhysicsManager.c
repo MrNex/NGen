@@ -668,9 +668,19 @@ static unsigned char PhysicsManager_IsResolutionNeeded(struct Collision* collisi
 //	collision: The collision to decouple
 static void PhysicsManager_DecoupleCollision(struct Collision* collision)
 {
+	//If the overlap is 0 do not decouple
+	if(collision->overlap <= FLT_EPSILON) return;
+
 	//Step 0: Get the rigidbodies
 	RigidBody* body1 = collision->obj1->body;
 	RigidBody* body2 = collision->obj2->body;
+
+	if(collision->obj1->collider->type == COLLIDER_SPHERE || collision->obj2->collider->type == COLLIDER_SPHERE)
+	{
+		printf("MTV:\t\t");
+		Vector_PrintTranspose(collision->minimumTranslationVector);
+		printf("Overlap:\t%f\n", collision->overlap);
+	}
 
 	//Step 1: Determine the magnitude of the velocities in the direction of the MTV
 	float mag1 = 0, mag2 = 0;
@@ -1785,12 +1795,12 @@ static void PhysicsManager_ApplyRollingResistance(struct Collision* collision, V
 	Vector_GetProjection(&proj, &angularMomentum2, collision->minimumTranslationVector);
 	Vector_Decrement(&angularMomentum2, &proj);
 
-	//float mag1 = Vector_GetMag(&angularMomentum1);
-	//float mag2 = Vector_GetMag(&angularMomentum2);
+	float mag1 = Vector_GetMag(&angularMomentum1);
+	float mag2 = Vector_GetMag(&angularMomentum2);
 
 	//Step 6: Limit the magnitude of rolling resistance by the magnitude of angular momenum along collision plane
-	//if(angularResistance1 > mag1) angularResistance1 = mag1;
-	//if(angularResistance2 > mag2) angularResistance2 = mag2;
+	if(angularResistance1 > mag1) angularResistance1 = mag1;
+	if(angularResistance2 > mag2) angularResistance2 = mag2;
 
 	//Step 7: Create rolling resistance angular impulses
 	Vector resistance1;
