@@ -704,11 +704,16 @@ void CollisionManager_TestAABBSphereCollision(struct Collision* dest, GObject* A
 	Vector_Decrement(&spherePos, AABBFoR->position);
 	Vector_Decrement(&spherePos, AABB->centroid);
 
+
+	//Get the scaled collider data from both objects
+	struct ColliderData_AABB scaledAABB;
+	AABBCollider_GetScaledDimensions(&scaledAABB, AABB, AABBFoR);
+
 	//Find the closest point on the box to the sphere
 	//This is done by clamping the sphere's center to the extent of the box in all 3 dimensions
-	float halfWidth = AABB->width * 0.5f;
-	float halfHeight = AABB->height * 0.5f;
-	float halfDepth = AABB->depth * 0.5f;
+	float halfWidth = scaledAABB.width * 0.5f;
+	float halfHeight = scaledAABB.height * 0.5f;
+	float halfDepth = scaledAABB.depth * 0.5f;
 	
 	Vector closestPoint;
 	Vector_INIT_ON_STACK(closestPoint, 3);
@@ -762,6 +767,8 @@ void CollisionManager_TestAABBSphereCollision(struct Collision* dest, GObject* A
 
 		return;
 	}
+
+	//printf("Collided\n");
 
 	//If code reaches this point we know there is a collision
 	//The MTV will be the vector from the closest point on the box to the center of the sphere

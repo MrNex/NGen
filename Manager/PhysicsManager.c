@@ -677,9 +677,9 @@ static void PhysicsManager_DecoupleCollision(struct Collision* collision)
 
 	if(collision->obj1->collider->type == COLLIDER_SPHERE || collision->obj2->collider->type == COLLIDER_SPHERE)
 	{
-		printf("MTV:\t\t");
-		Vector_PrintTranspose(collision->minimumTranslationVector);
-		printf("Overlap:\t%f\n", collision->overlap);
+		//printf("MTV:\t\t");
+		//Vector_PrintTranspose(collision->minimumTranslationVector);
+		//printf("Overlap:\t%f\n", collision->overlap);
 	}
 
 	//Step 1: Determine the magnitude of the velocities in the direction of the MTV

@@ -39,7 +39,7 @@ void State_Debug_Update(GObject* obj, State* state)
 //	if(obj->collider->currentCollisions->size > 2)
 //	{
 		printf("%s:\t", members->name);
-		Vector_PrintTranspose(body->angularVelocity);
+		Vector_PrintTranspose(body->frame->position);
 //	}
 }
 
