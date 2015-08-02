@@ -60,7 +60,7 @@ void InitializeScene(void)
 	
 	//Create block
 
-	/*	
+		
 	block = GObject_Allocate();
 	GObject_Initialize(block);
 
@@ -93,14 +93,14 @@ void InitializeScene(void)
 	v.components[2] = -10.0f;
 
 	GObject_Translate(block, &v);
-*/
+
 	/*
 	state = State_Allocate();
 	State_Debug_Initialize(state, "Bottom Block");
 	GObject_AddState(block, state);
 
  	 */
-/*
+
 	ObjectManager_AddObject(block);
 
 	//Create another block
@@ -137,7 +137,7 @@ void InitializeScene(void)
 	GObject_Translate(block, &v);
 	
 	ObjectManager_AddObject(block);
-*/
+
 	//Create sphere
 
 	block = GObject_Allocate();
@@ -169,10 +169,10 @@ void InitializeScene(void)
 	Vector_Copy(&v, &Vector_ZERO);
 	
 	//Apply a small torque
-	v.components[2] = 0.001f;
-	v.components[1] = 50.0f;
+	//v.components[2] = 0.001f;
+	//v.components[1] = 50.0f;
 
-	RigidBody_ApplyInstantaneousTorque(block->body, &v);
+	//RigidBody_ApplyInstantaneousTorque(block->body, &v);
 
 	//Give sphere a little push..
 	Vector_Copy(&v, &Vector_ZERO);

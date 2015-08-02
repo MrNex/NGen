@@ -18,11 +18,15 @@ struct Collider;
 struct ColliderData_AABB;
 
 
+
 struct ColliderData_ConvexHull
 {
-	LinkedList* points;
-	LinkedList* axes;
-	LinkedList* edges;
+	//LinkedList* points;
+	DynamicArray* points;
+	//LinkedList* axes;
+	DynamicArray* axes;
+	//LinkedList* edges;
+	DynamicArray* edges;
 };
 
 ///

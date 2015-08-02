@@ -25,14 +25,20 @@ struct ColliderData_ConvexHull* ConvexHullCollider_AllocateData()
 //	convexData: THe convex Hull Data Set being initialized
 void ConvexHullCollider_InitializeData(struct ColliderData_ConvexHull* convexHullData)
 {
-	convexHullData->points = LinkedList_Allocate();
-	LinkedList_Initialize(convexHullData->points);
+	//convexHullData->points = LinkedList_Allocate();
+	//LinkedList_Initialize(convexHullData->points);
+	convexHullData->points = DynamicArray_Allocate();
+	DynamicArray_Initialize(convexHullData->points, sizeof(Vector*));
 
-	convexHullData->axes = LinkedList_Allocate();
-	LinkedList_Initialize(convexHullData->axes);
+	//convexHullData->axes = LinkedList_Allocate();
+	//LinkedList_Initialize(convexHullData->axes);
+	convexHullData->axes = DynamicArray_Allocate();
+	DynamicArray_Initialize(convexHullData->axes, sizeof(Vector*));
 
-	convexHullData->edges = LinkedList_Allocate();
-	LinkedList_Initialize(convexHullData->edges);
+	//convexHullData->edges = LinkedList_Allocate();
+	//LinkedList_Initialize(convexHullData->edges);
+	convexHullData->edges = DynamicArray_Allocate();
+	DynamicArray_Initialize(convexHullData->edges, sizeof(Vector*));
 }
 
 ///
@@ -61,47 +67,58 @@ void ConvexHullCollider_Initialize(Collider* collider)
 void ConvexHullCollider_FreeData(struct ColliderData_ConvexHull* colliderData)
 {
 	//Free all vectors in points & axes linked lists
-	struct LinkedList_Node* current = colliderData->points->head;
-	struct LinkedList_Node* next = NULL;
+	//struct LinkedList_Node* current = colliderData->points->head;
+	//struct LinkedList_Node* next = NULL;
 
-	while(current != NULL)
+	//while(current != NULL)
+	//{
+	for(unsigned int i = 0; i < colliderData->points->size; i++)
 	{
-		next = current->next;
+		//next = current->next;
 
-		Vector* point = (Vector*)current->data;
+		Vector* point = *(Vector**)DynamicArray_Index(colliderData->points, i); //(Vector*)current->data;
 		Vector_Free(point);
 
-		current = next;
+		//current = next;
 	}
-	LinkedList_Free(colliderData->points);
+	//LinkedList_Free(colliderData->points);
+	DynamicArray_Clear(colliderData->points);
+	DynamicArray_Free(colliderData->points);
 
-	current = colliderData->axes->head;
-	next = NULL;
+	//current = colliderData->axes->head;
+	//next = NULL;
 
-	while(current != NULL)
+	//while(current != NULL)
+	for(unsigned int i = 0; i < colliderData->axes->size; i++)
 	{
-		next = current->next;
+		//next = current->next;
 
-		Vector* axis = (Vector*)current->data;
+		Vector* axis = *(Vector**)DynamicArray_Index(colliderData->axes, i); //(Vector*)current->data;
 		Vector_Free(axis);
 
-		current = next;
+		//current = next;
 	}
-	LinkedList_Free(colliderData->axes);
+	//LinkedList_Free(colliderData->axes);
+	DynamicArray_Clear(colliderData->axes);
+	DynamicArray_Free(colliderData->axes);
+	
 
-	current = colliderData->edges->head;
-	next = NULL;
+	//current = colliderData->edges->head;
+	//next = NULL;
 
-	while(current != NULL)
+	//while(current != NULL)
+	for(unsigned int i = 0; i < colliderData->edges->size; i++)
 	{
-		next = current->next;
+		//next = current->next;
 
-		Vector* axis = (Vector*)current->data;
-		Vector_Free(axis);
+		Vector* edge = *(Vector**)DynamicArray_Index(colliderData->edges, i); //(Vector*)current->data;
+		Vector_Free(edge);
 
-		current = next;
+		//current = next;
 	}
-	LinkedList_Free(colliderData->edges);
+	//LinkedList_Free(colliderData->edges);
+	DynamicArray_Clear(colliderData->edges);
+	DynamicArray_Free(colliderData->edges);
 
 	free(colliderData);
 }
@@ -115,7 +132,8 @@ void ConvexHullCollider_FreeData(struct ColliderData_ConvexHull* colliderData)
 void ConvexHullCollider_AddPoint(struct ColliderData_ConvexHull* collider, const Vector* point)
 {
 	//The linked list will not manipulate the data
-	LinkedList_Append(collider->points, (Vector*)point);
+	//LinkedList_Append(collider->points, (Vector*)point);
+	DynamicArray_Append(collider->points, (Vector**)&point);
 }
 
 ///
@@ -127,7 +145,8 @@ void ConvexHullCollider_AddPoint(struct ColliderData_ConvexHull* collider, const
 void ConvexHullCollider_AddAxis(struct ColliderData_ConvexHull* collider, const Vector* axis)
 {
 	//The linked list will not manipulate the data
-	LinkedList_Append(collider->axes, (Vector*)axis);
+	//LinkedList_Append(collider->axes, (Vector*)axis);
+	DynamicArray_Append(collider->axes, (Vector**)&axis);
 }
 
 ///
@@ -139,7 +158,8 @@ void ConvexHullCollider_AddAxis(struct ColliderData_ConvexHull* collider, const 
 void ConvexHullCollider_AddEdge(struct ColliderData_ConvexHull* collider, const Vector* edgeDirection)
 {
 	//The linked list will never manipulate the data
-	LinkedList_Append(collider->edges, (Vector*)edgeDirection);
+	//LinkedList_Append(collider->edges, (Vector*)edgeDirection);
+	DynamicArray_Append(collider->edges, (Vector**)&edgeDirection);
 }
 
 ///
@@ -447,14 +467,15 @@ void ConvexHullCollider_GetOrientedModelPoints(Vector** dest, const struct Colli
 	Matrix_GetProductMatrix(&trans, frame->rotation, frame->scale);
 
 	//Loop through the colliders points
-	struct LinkedList_Node* currentPoint = collider->points->head;
+	//struct LinkedList_Node* currentPoint = collider->points->head;
 	for(unsigned int i = 0; i < collider->points->size; i++)
 	{
+		Vector* currentPoint = *(Vector**)DynamicArray_Index(collider->points, i);
 		//Rotate and scale each point
-		Matrix_GetProductVector(dest[i], &trans, (Vector*)currentPoint->data);
+		Matrix_GetProductVector(dest[i], &trans, currentPoint);
 
 		//Move to next point
-		currentPoint = currentPoint->next;
+		//currentPoint = currentPoint->next;
 	}
 }
 
@@ -468,14 +489,15 @@ void ConvexHullCollider_GetOrientedModelPoints(Vector** dest, const struct Colli
 void ConvexHullCollider_GetOrientedAxes(Vector** dest, const struct ColliderData_ConvexHull* collider, const FrameOfReference* frame)
 {
 	//Loop through axes
-	struct LinkedList_Node* currentAxis = collider->axes->head;
+	//struct LinkedList_Node* currentAxis = collider->axes->head;
 	for(unsigned int i = 0; i < collider->axes->size; i++)
 	{
+		Vector* currentAxis = *(Vector**)DynamicArray_Index(collider->axes, i);
 		//Rotate each axis 
-		Matrix_GetProductVector(dest[i], frame->rotation, (Vector*)currentAxis->data);
+		Matrix_GetProductVector(dest[i], frame->rotation, currentAxis);
 
 		//Move to next axis
-		currentAxis = currentAxis->next;
+		//currentAxis = currentAxis->next;
 	}
 }
 
@@ -489,14 +511,15 @@ void ConvexHullCollider_GetOrientedAxes(Vector** dest, const struct ColliderData
 void ConvexHullCollider_GetOrientedEdges(Vector** dest, const struct ColliderData_ConvexHull* collider, const FrameOfReference* frame)
 {
 	//Loop through edges
-	struct LinkedList_Node* currentEdge = collider->edges->head;
+	//struct LinkedList_Node* currentEdge = collider->edges->head;
 	for(unsigned int i = 0; i < collider->edges->size; i++)
 	{
+		Vector* currentEdge = *(Vector**)DynamicArray_Index(collider->edges, i);
 		//Rotate each edge 
-		Matrix_GetProductVector(dest[i], frame->rotation, (Vector*)currentEdge->data);
+		Matrix_GetProductVector(dest[i], frame->rotation, currentEdge);
 
 		//Move to next edge
-		currentEdge = currentEdge->next;
+		//currentEdge = currentEdge->next;
 	}
 }
 
@@ -571,15 +594,17 @@ void ConvexHullCollider_GenerateMinimumAABB(struct ColliderData_AABB* dest, cons
 
 
 	//Loop through each point in the collider, and apply the transformation matrix	
-	struct LinkedList_Node* current = collider->points->head;
+	//struct LinkedList_Node* current = collider->points->head;
 	Vector currentPoint;
 	Vector_INIT_ON_STACK(currentPoint, 3);
 
 	unsigned char firstPointAssigned = 0;
 
-	while(current != NULL)
+	//while(current != NULL)
+	for(unsigned int i = 0; i > collider->points->size; i++)
 	{
-		Matrix_GetProductVector(&currentPoint, frame->rotation, (Vector*)current->data);
+		Vector* current = *(Vector**)DynamicArray_Index(collider->points, i);
+		Matrix_GetProductVector(&currentPoint, frame->rotation, current);
 
 		for(int i = 0; i < 3; i++)
 		{
@@ -596,7 +621,7 @@ void ConvexHullCollider_GenerateMinimumAABB(struct ColliderData_AABB* dest, cons
 
 		firstPointAssigned = 1;
 
-		current = current->next;
+		//current = current->next;
 	}
 
 	//Determine the centroid & dimensions of the AABB
