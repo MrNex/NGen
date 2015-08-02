@@ -21,11 +21,8 @@ struct ColliderData_AABB;
 
 struct ColliderData_ConvexHull
 {
-	//LinkedList* points;
 	DynamicArray* points;
-	//LinkedList* axes;
 	DynamicArray* axes;
-	//LinkedList* edges;
 	DynamicArray* edges;
 };
 
