@@ -216,7 +216,7 @@ void AABBCollider_ToConvexHullCollider(struct ColliderData_ConvexHull* dest, con
 	//Add to convex hull
 	ConvexHullCollider_AddPoint(dest, point);
 
-
+	/*
 	//Get axes of AABB
 	//Right/Left side
 	Vector* axis = Vector_Allocate();
@@ -241,4 +241,135 @@ void AABBCollider_ToConvexHullCollider(struct ColliderData_ConvexHull* dest, con
 	Vector_Copy(axis, &Vector_E3);
 	
 	ConvexHullCollider_AddAxis(dest, axis);
+	*/
+
+	struct ConvexHullCollider_Face* face = ConvexHullCollider_AllocateFace();
+	ConvexHullCollider_InitializeFace(face);
+
+	Vector* edge = Vector_Allocate();
+	Vector_Initialize(edge, 3);
+
+
+	face->normal->components[0] = 1.0f;
+	Vector_Copy(edge, face->normal);
+
+	int index = 0;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 1;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 4;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 5;
+	DynamicArray_Append(face->indicesOnFace, &index);
+
+	//ConvexHullCollider_AddAxis(collider, axis);
+	ConvexHullCollider_AddFace(dest, face);
+	ConvexHullCollider_AddEdge(dest, edge);
+
+	face = ConvexHullCollider_AllocateFace();
+	ConvexHullCollider_InitializeFace(face);
+
+	face->normal->components[0] = -1.0f;
+
+	index = 2;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 3;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 6;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 7;
+	DynamicArray_Append(face->indicesOnFace, &index);
+
+	ConvexHullCollider_AddFace(dest, face);
+
+
+	//Top/Bottom face
+	//axis = Vector_Allocate();
+	//Vector_Initialize(axis, 3);
+	face = ConvexHullCollider_AllocateFace();
+	ConvexHullCollider_InitializeFace(face);
+
+	
+	edge = Vector_Allocate();
+	Vector_Initialize(edge, 3);
+
+
+	//axis->components[1] = 1.0f;
+	face->normal->components[1] = 1.0f;
+	//Vector_Copy(edge, axis);
+	Vector_Copy(edge, face->normal);
+
+	index = 4;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 5;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 6;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 7;
+	DynamicArray_Append(face->indicesOnFace, &index);
+
+	//ConvexHullCollider_AddAxis(collider, axis);
+	ConvexHullCollider_AddFace(dest, face);
+	ConvexHullCollider_AddEdge(dest, edge);
+
+	face = ConvexHullCollider_AllocateFace();
+	ConvexHullCollider_InitializeFace(face);
+
+	face->normal->components[1] = -1.0f;
+
+	index = 1;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 2;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 3;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 4;
+	DynamicArray_Append(face->indicesOnFace, &index);
+
+	ConvexHullCollider_AddFace(dest, face);
+
+	//Front/Back face
+	//axis = Vector_Allocate();
+	//Vector_Initialize(axis, 3);
+	face = ConvexHullCollider_AllocateFace();
+	ConvexHullCollider_InitializeFace(face);
+
+
+	edge = Vector_Allocate();
+	Vector_Initialize(edge, 3);
+
+	//axis->components[2] = 1.0f;
+	face->normal->components[2] = 1.0f;
+	//Vector_Copy(edge, axis);
+	Vector_Copy(edge, face->normal);
+
+	index = 0;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 3;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 4;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 7;
+	DynamicArray_Append(face->indicesOnFace, &index);
+
+	//ConvexHullCollider_AddAxis(collider, axis);
+	ConvexHullCollider_AddFace(dest, face);
+	ConvexHullCollider_AddEdge(dest, edge);
+
+	face = ConvexHullCollider_AllocateFace();
+	ConvexHullCollider_InitializeFace(face);
+
+	face->normal->components[2] = -1.0f;
+
+	index = 1;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 2;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 5;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 6;
+	DynamicArray_Append(face->indicesOnFace, &index);
+
+	ConvexHullCollider_AddFace(dest, face);
+
 }

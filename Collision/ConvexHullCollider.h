@@ -17,14 +17,45 @@ struct Collider;
 //this .h file.
 struct ColliderData_AABB;
 
+///
+//Defines data contained in a Face of a convex hull
+struct ConvexHullCollider_Face
+{
+	Vector* normal;			//Face normal
+	DynamicArray* indicesOnFace;	//Indices of vertices contained on this face
+};
 
-
+///
+//Defines data contained in a convex hull collider
 struct ColliderData_ConvexHull
 {
 	DynamicArray* points;
-	DynamicArray* axes;
+	DynamicArray* faces;
+	//DynamicArray* axes;
 	DynamicArray* edges;
 };
+
+
+///
+//Allocates memory for a new Convex Hull face
+//
+//REturns:
+//	A pointer to a newly allocated, uninitialized, convex hull face
+struct ConvexHullCollider_Face* ConvexHullCollider_AllocateFace();
+
+///
+//Initializes a ConvexHull_Face
+//
+//Parameters:
+//	face: A Pointer to the ConvexHull_Face to initialize
+void ConvexHullCollider_InitializeFace(struct ConvexHullCollider_Face* face);
+
+///
+//Frees memory allocated by a ConvexHull_Face
+//
+//Parameters:
+//	face: The convex hull face to free
+void ConvexHullCollider_FreeFace(struct ConvexHullCollider_Face* face);
 
 ///
 //Allocates memory for a new convex hull collider data set
@@ -68,7 +99,15 @@ void ConvexHullCollider_AddPoint(struct ColliderData_ConvexHull* collider, const
 //Parameters:
 //	collider: A pointer to the convex hull collider having an axis added
 //	axis: A pointer to a vector of dimension 3 representing the axis to add
-void ConvexHullCollider_AddAxis(struct ColliderData_ConvexHull* collider, const Vector* axis);
+//void ConvexHullCollider_AddAxis(struct ColliderData_ConvexHull* collider, const Vector* axis);
+
+///
+//Adds a face to a convex hull collider
+//
+//Parameters:
+//	collider: A pointer to the convex hull collider having a face added
+//	face: A pointer to the face being added
+void ConvexHullCollider_AddFace(struct ColliderData_ConvexHull* collider, const struct ConvexHullCollider_Face* face);
 
 ///
 //Adds an edge to a convex hull collider

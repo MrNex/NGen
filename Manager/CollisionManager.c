@@ -984,7 +984,7 @@ void CollisionManager_TestAABBConvexCollision(struct Collision* dest, GObject* A
 	Vector** orientedPointsConvex = (Vector**)malloc(sizeof(Vector*) * convexHull->points->size);
 
 	Vector** orientedAxesAABB = (Vector**)malloc(sizeof(Vector*) * 3);
-	Vector** orientedAxesConvex = (Vector**)malloc(sizeof(Vector*) * convexHull->axes->size);
+	Vector** orientedAxesConvex = (Vector**)malloc(sizeof(Vector*) * convexHull->faces->size);
 
 	Vector** orientedEdgesAABB = (Vector**)malloc(sizeof(Vector*) * 3);
 	Vector** orientedEdgesConvex = (Vector**)malloc(sizeof(Vector*) * convexHull->edges->size);
@@ -1015,14 +1015,14 @@ void CollisionManager_TestAABBConvexCollision(struct Collision* dest, GObject* A
 	}
 
 	//Allocate and initialize individual vectors in array of oriented axes for convex hull
-	for(unsigned int i = 0; i < convexHull->axes->size; i++)
+	for(unsigned int i = 0; i < convexHull->faces->size; i++)
 	{
 		orientedAxesConvex[i] = Vector_Allocate();
 		Vector_Initialize(orientedAxesConvex[i], 3);
 	}
 
 	//Allocate and initialize individual vectors in array of oriented edges for convex hull
-	for(unsigned int i = 0; i < convexHull->axes->size; i++)
+	for(unsigned int i = 0; i < convexHull->edges->size; i++)
 	{
 		orientedEdgesConvex[i] = Vector_Allocate();
 		Vector_Initialize(orientedEdgesConvex[i], 3);
@@ -1124,7 +1124,7 @@ void CollisionManager_TestAABBConvexCollision(struct Collision* dest, GObject* A
 	//Perform SAT Alorithm for face normals
 	unsigned char detected = CollisionManager_PerformSATFaces(dest,
 		(const Vector**)orientedAxesAABB, 3, (const Vector**)orientedPointsAABB, 8,
-		(const Vector**)orientedAxesConvex, convexHull->axes->size, (const Vector**)orientedPointsConvex, convexHull->points->size);
+		(const Vector**)orientedAxesConvex, convexHull->faces->size, (const Vector**)orientedPointsConvex, convexHull->points->size);
 
 	//If a collisionn is detected, check edge normals
 	if(detected)
@@ -1150,7 +1150,7 @@ void CollisionManager_TestAABBConvexCollision(struct Collision* dest, GObject* A
 		Vector_Free(orientedAxesAABB[i]);
 	}
 	free(orientedAxesAABB);
-	for(unsigned int i = 0; i < convexHull->axes->size; i++)
+	for(unsigned int i = 0; i < convexHull->faces->size; i++)
 	{
 		Vector_Free(orientedAxesConvex[i]);
 	}
@@ -1223,8 +1223,8 @@ void CollisionManager_TestConvexCollision(struct Collision* dest, GObject* obj1,
 	Vector** orientedPoints2 = (Vector**)malloc(sizeof(Vector*) * convexHull2->points->size);
 
 	//Create array of pointers to vectors to hold the oriented axes of the colliders of objects in collision
-	Vector** orientedAxes1 = (Vector**)malloc(sizeof(Vector*) * convexHull1->axes->size);
-	Vector** orientedAxes2 = (Vector**)malloc(sizeof(Vector*) * convexHull2->axes->size);
+	Vector** orientedAxes1 = (Vector**)malloc(sizeof(Vector*) * convexHull1->faces->size);
+	Vector** orientedAxes2 = (Vector**)malloc(sizeof(Vector*) * convexHull2->faces->size);
 
 	//Create array of pointers to hold oriented edges of colliders of objects in collision
 	Vector** orientedEdges1 = (Vector**)malloc(sizeof(Vector*) * convexHull1->edges->size);
@@ -1245,14 +1245,14 @@ void CollisionManager_TestConvexCollision(struct Collision* dest, GObject* obj1,
 	}
 
 	//Allocate & initialize individual vectors in array of axes vectors for obj1
-	for(unsigned int i = 0; i < convexHull1->axes->size; i++)
+	for(unsigned int i = 0; i < convexHull1->faces->size; i++)
 	{
 		orientedAxes1[i] = Vector_Allocate();
 		Vector_Initialize(orientedAxes1[i], 3);
 	}
 
 	//Allocate & initialize individual vectors in array in array of axes vectors for obj2
-	for(unsigned int i = 0; i < convexHull2->axes->size; i++)
+	for(unsigned int i = 0; i < convexHull2->faces->size; i++)
 	{
 		orientedAxes2[i] = Vector_Allocate();
 		Vector_Initialize(orientedAxes2[i], 3);
@@ -1286,8 +1286,8 @@ void CollisionManager_TestConvexCollision(struct Collision* dest, GObject* obj1,
 
 	//Perform SAT Algorithm for face normals
 	detected = CollisionManager_PerformSATFaces(dest, 
-		(const Vector**)orientedAxes1, convexHull1->axes->size, (const Vector**)orientedPoints1, convexHull1->points->size,
-		(const Vector**)orientedAxes2, convexHull2->axes->size, (const Vector**)orientedPoints2, convexHull2->points->size);
+		(const Vector**)orientedAxes1, convexHull1->faces->size, (const Vector**)orientedPoints1, convexHull1->points->size,
+		(const Vector**)orientedAxes2, convexHull2->faces->size, (const Vector**)orientedPoints2, convexHull2->points->size);
 
 	//If there is a collision detection, test the edge normals
 	if(detected)
@@ -1310,12 +1310,12 @@ void CollisionManager_TestConvexCollision(struct Collision* dest, GObject* obj1,
 		Vector_Free(orientedPoints2[i]);
 	}
 	free(orientedPoints2);
-	for(unsigned int i = 0; i < convexHull1->axes->size; i++)
+	for(unsigned int i = 0; i < convexHull1->faces->size; i++)
 	{
 		Vector_Free(orientedAxes1[i]);
 	}
 	free(orientedAxes1);
-	for(unsigned int i = 0; i < convexHull2->axes->size; i++)
+	for(unsigned int i = 0; i < convexHull2->faces->size; i++)
 	{
 		Vector_Free(orientedAxes2[i]);
 	}
@@ -1386,7 +1386,7 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 	//Create array of pointers to vectors to hold the oriented points of the collider of convex obj in collision
 	Vector** orientedPoints = (Vector**)malloc(sizeof(Vector*) * convexHull->points->size);
 	//Create array of pointers to vectors to hold the oriented axes of the collider of convex object in collision
-	Vector** orientedAxes = (Vector**)malloc(sizeof(Vector*) * convexHull->axes->size);
+	Vector** orientedAxes = (Vector**)malloc(sizeof(Vector*) * convexHull->faces->size);
 
 	//Allocate & initialize individual vectors in array of point vectors for convex obj
 	for(unsigned int i = 0; i < convexHull->points->size; i++)
@@ -1396,7 +1396,7 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 	}
 
 	//Allocate & initialize individual vectors in array of axes vectors for convex obj
-	for(unsigned int i = 0; i < convexHull->axes->size; i++)
+	for(unsigned int i = 0; i < convexHull->faces->size; i++)
 	{
 		orientedAxes[i] = Vector_Allocate();
 		Vector_Initialize(orientedAxes[i], 3);
@@ -1416,7 +1416,7 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 
 	Vector normalizedAxis;
 	Vector_INIT_ON_STACK(normalizedAxis, 3);
-	for(unsigned int i = 0; i < convexHull->axes->size; i++)
+	for(unsigned int i = 0; i < convexHull->faces->size; i++)
 	{
 		Vector_Copy(&normalizedAxis, orientedAxes[i]);
 		Vector_Normalize(&normalizedAxis);
@@ -1463,7 +1463,7 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 
 	if(detected)
 	{
-		printf("Collision\n");
+		//printf("Collision\n");
 
 		//If there is a collision assign collision attributes
 		dest->overlap = minOverlap;
@@ -1504,7 +1504,7 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 	}
 	free(orientedPoints);
 
-	for(unsigned int i = 0; i < convexHull->axes->size; i++)
+	for(unsigned int i = 0; i < convexHull->faces->size; i++)
 	{
 		Vector_Free(orientedAxes[i]);
 	}
