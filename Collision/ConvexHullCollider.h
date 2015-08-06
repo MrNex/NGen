@@ -31,7 +31,6 @@ struct ColliderData_ConvexHull
 {
 	DynamicArray* points;
 	DynamicArray* faces;
-	//DynamicArray* axes;
 	DynamicArray* edges;
 };
 

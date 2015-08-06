@@ -106,15 +106,6 @@ void ConvexHullCollider_FreeData(struct ColliderData_ConvexHull* colliderData)
 	DynamicArray_Clear(colliderData->points);
 	DynamicArray_Free(colliderData->points);
 
-	/*
-	for(unsigned int i = 0; i < colliderData->axes->size; i++)
-	{
-		Vector* axis = *(Vector**)DynamicArray_Index(colliderData->axes, i);
-		Vector_Free(axis);
-	}
-	DynamicArray_Clear(colliderData->axes);
-	DynamicArray_Free(colliderData->axes);
-	*/
 	for(unsigned int i = 0; i < colliderData->faces->size; i++)
 	{
 		struct ConvexHullCollider_Face* face = *(struct ConvexHullCollider_Face**)DynamicArray_Index(colliderData->faces, i);
@@ -144,17 +135,6 @@ void ConvexHullCollider_AddPoint(struct ColliderData_ConvexHull* collider, const
 {
 	DynamicArray_Append(collider->points, (Vector**)&point);
 }
-
-///
-//Adds an axis to a convex hull collider
-//
-//Parameters:
-//	collider: A pointer to the convex hull collider having an axis added
-//	axis: A pointer to a vector of dimension 3 representing the axis to add
-//void ConvexHullCollider_AddAxis(struct ColliderData_ConvexHull* collider, const Vector* axis)
-//{
-//	DynamicArray_Append(collider->axes, (Vector**)&axis);
-//}
 
 ///
 //Adds a face to a convex hull collider
@@ -268,11 +248,9 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 
 	ConvexHullCollider_AddPoint(collider, point);
 
-	//Second add axes & edges (same things)
+	//Second add faces & edges
 	//Right/Left face
-	//Vector* axis = Vector_Allocate();
-	//Vector_Initialize(axis, 3);
-	
+	//Right
 	struct ConvexHullCollider_Face* face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -292,10 +270,10 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 	index = 5;
 	DynamicArray_Append(face->indicesOnFace, &index);
 
-	//ConvexHullCollider_AddAxis(collider, axis);
 	ConvexHullCollider_AddFace(collider, face);
 	ConvexHullCollider_AddEdge(collider, edge);
 
+	//Left
 	face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -314,8 +292,7 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 
 
 	//Top/Bottom face
-	//axis = Vector_Allocate();
-	//Vector_Initialize(axis, 3);
+	//Top
 	face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -323,10 +300,7 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 	edge = Vector_Allocate();
 	Vector_Initialize(edge, 3);
 
-
-	//axis->components[1] = 1.0f;
 	face->normal->components[1] = 1.0f;
-	//Vector_Copy(edge, axis);
 	Vector_Copy(edge, face->normal);
 
 	index = 4;
@@ -338,10 +312,10 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 	index = 7;
 	DynamicArray_Append(face->indicesOnFace, &index);
 
-	//ConvexHullCollider_AddAxis(collider, axis);
 	ConvexHullCollider_AddFace(collider, face);
 	ConvexHullCollider_AddEdge(collider, edge);
 
+	//Bottom
 	face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -359,8 +333,7 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 	ConvexHullCollider_AddFace(collider, face);
 
 	//Front/Back face
-	//axis = Vector_Allocate();
-	//Vector_Initialize(axis, 3);
+	//Front
 	face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -368,9 +341,7 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 	edge = Vector_Allocate();
 	Vector_Initialize(edge, 3);
 
-	//axis->components[2] = 1.0f;
 	face->normal->components[2] = 1.0f;
-	//Vector_Copy(edge, axis);
 	Vector_Copy(edge, face->normal);
 
 	index = 0;
@@ -382,10 +353,10 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 	index = 7;
 	DynamicArray_Append(face->indicesOnFace, &index);
 
-	//ConvexHullCollider_AddAxis(collider, axis);
 	ConvexHullCollider_AddFace(collider, face);
 	ConvexHullCollider_AddEdge(collider, edge);
 
+	//Back
 	face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -495,56 +466,11 @@ void ConvexHullCollider_MakeRectangularCollider(struct ColliderData_ConvexHull* 
 
 	ConvexHullCollider_AddPoint(collider, point);
 
-	//Second add axes & edges (same things)
-	/*
-	//Right/Left face
-	Vector* axis = Vector_Allocate();
-	Vector_Initialize(axis, 3);
-	Vector* edge = Vector_Allocate();\
-		Vector_Initialize(edge, 3);
-
-
-	axis->components[0] = 1.0f;
-	Vector_Copy(edge, axis);
-
-	ConvexHullCollider_AddAxis(collider, axis);
-	ConvexHullCollider_AddEdge(collider, edge);
-
-
-	//Top/Bottom face
-	axis = Vector_Allocate();
-	Vector_Initialize(axis, 3);
-	edge = Vector_Allocate();
-	Vector_Initialize(edge, 3);
-
-
-	axis->components[1] = 1.0f;
-	Vector_Copy(edge, axis);
-
-
-	ConvexHullCollider_AddAxis(collider, axis);
-	ConvexHullCollider_AddEdge(collider, edge);
-
-
-	//Front/Back face
-	axis = Vector_Allocate();
-	Vector_Initialize(axis, 3);
-	edge = Vector_Allocate();
-	Vector_Initialize(edge, 3);
-
-	axis->components[2] = 1.0f;
-	Vector_Copy(edge, axis);
-
-
-	ConvexHullCollider_AddAxis(collider, axis);
-	ConvexHullCollider_AddEdge(collider, edge);
-	*/
+	//add axes & edges
 
 
 	//Right/Left face
-	//Vector* axis = Vector_Allocate();
-	//Vector_Initialize(axis, 3);
-	
+	//Right
 	struct ConvexHullCollider_Face* face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -564,10 +490,10 @@ void ConvexHullCollider_MakeRectangularCollider(struct ColliderData_ConvexHull* 
 	index = 5;
 	DynamicArray_Append(face->indicesOnFace, &index);
 
-	//ConvexHullCollider_AddAxis(collider, axis);
 	ConvexHullCollider_AddFace(collider, face);
 	ConvexHullCollider_AddEdge(collider, edge);
 
+	//Left
 	face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -586,8 +512,7 @@ void ConvexHullCollider_MakeRectangularCollider(struct ColliderData_ConvexHull* 
 
 
 	//Top/Bottom face
-	//axis = Vector_Allocate();
-	//Vector_Initialize(axis, 3);
+	//Top
 	face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -595,10 +520,7 @@ void ConvexHullCollider_MakeRectangularCollider(struct ColliderData_ConvexHull* 
 	edge = Vector_Allocate();
 	Vector_Initialize(edge, 3);
 
-
-	//axis->components[1] = 1.0f;
 	face->normal->components[1] = 1.0f;
-	//Vector_Copy(edge, axis);
 	Vector_Copy(edge, face->normal);
 
 	index = 4;
@@ -610,10 +532,10 @@ void ConvexHullCollider_MakeRectangularCollider(struct ColliderData_ConvexHull* 
 	index = 7;
 	DynamicArray_Append(face->indicesOnFace, &index);
 
-	//ConvexHullCollider_AddAxis(collider, axis);
 	ConvexHullCollider_AddFace(collider, face);
 	ConvexHullCollider_AddEdge(collider, edge);
 
+	//Bottom
 	face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -631,8 +553,7 @@ void ConvexHullCollider_MakeRectangularCollider(struct ColliderData_ConvexHull* 
 	ConvexHullCollider_AddFace(collider, face);
 
 	//Front/Back face
-	//axis = Vector_Allocate();
-	//Vector_Initialize(axis, 3);
+	//Front
 	face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -640,9 +561,7 @@ void ConvexHullCollider_MakeRectangularCollider(struct ColliderData_ConvexHull* 
 	edge = Vector_Allocate();
 	Vector_Initialize(edge, 3);
 
-	//axis->components[2] = 1.0f;
 	face->normal->components[2] = 1.0f;
-	//Vector_Copy(edge, axis);
 	Vector_Copy(edge, face->normal);
 
 	index = 0;
@@ -654,10 +573,10 @@ void ConvexHullCollider_MakeRectangularCollider(struct ColliderData_ConvexHull* 
 	index = 7;
 	DynamicArray_Append(face->indicesOnFace, &index);
 
-	//ConvexHullCollider_AddAxis(collider, axis);
 	ConvexHullCollider_AddFace(collider, face);
 	ConvexHullCollider_AddEdge(collider, edge);
 
+	//Back
 	face = ConvexHullCollider_AllocateFace();
 	ConvexHullCollider_InitializeFace(face);
 
@@ -728,9 +647,8 @@ void ConvexHullCollider_GetOrientedModelPoints(Vector** dest, const struct Colli
 void ConvexHullCollider_GetOrientedAxes(Vector** dest, const struct ColliderData_ConvexHull* collider, const FrameOfReference* frame)
 {
 	//Loop through axes
-	for(unsigned int i = 0; i < /*collider->axes->size*/ collider->faces->size; i++)
+	for(unsigned int i = 0; i < collider->faces->size; i++)
 	{
-		//Vector* currentAxis = *(Vector**)DynamicArray_Index(collider->axes, i);
 		Vector* currentAxis = (*(struct ConvexHullCollider_Face**)DynamicArray_Index(collider->faces, i))->normal;
 		//Rotate each axis 
 		Matrix_GetProductVector(dest[i], frame->rotation, currentAxis);
