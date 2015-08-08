@@ -265,9 +265,9 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 	DynamicArray_Append(face->indicesOnFace, &index);
 	index = 1;
 	DynamicArray_Append(face->indicesOnFace, &index);
-	index = 4;
-	DynamicArray_Append(face->indicesOnFace, &index);
 	index = 5;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 4;
 	DynamicArray_Append(face->indicesOnFace, &index);
 
 	ConvexHullCollider_AddFace(collider, face);
@@ -283,9 +283,9 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 	DynamicArray_Append(face->indicesOnFace, &index);
 	index = 3;
 	DynamicArray_Append(face->indicesOnFace, &index);
-	index = 6;
-	DynamicArray_Append(face->indicesOnFace, &index);
 	index = 7;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 6;
 	DynamicArray_Append(face->indicesOnFace, &index);
 
 	ConvexHullCollider_AddFace(collider, face);
@@ -321,13 +321,13 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 
 	face->normal->components[1] = -1.0f;
 
+	index = 0;
+	DynamicArray_Append(face->indicesOnFace, &index);
 	index = 1;
 	DynamicArray_Append(face->indicesOnFace, &index);
 	index = 2;
 	DynamicArray_Append(face->indicesOnFace, &index);
 	index = 3;
-	DynamicArray_Append(face->indicesOnFace, &index);
-	index = 4;
 	DynamicArray_Append(face->indicesOnFace, &index);
 
 	ConvexHullCollider_AddFace(collider, face);
@@ -346,11 +346,11 @@ void ConvexHullCollider_MakeCubeCollider(struct ColliderData_ConvexHull* collide
 
 	index = 0;
 	DynamicArray_Append(face->indicesOnFace, &index);
-	index = 3;
-	DynamicArray_Append(face->indicesOnFace, &index);
 	index = 4;
 	DynamicArray_Append(face->indicesOnFace, &index);
 	index = 7;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 3;
 	DynamicArray_Append(face->indicesOnFace, &index);
 
 	ConvexHullCollider_AddFace(collider, face);
@@ -586,9 +586,9 @@ void ConvexHullCollider_MakeRectangularCollider(struct ColliderData_ConvexHull* 
 	DynamicArray_Append(face->indicesOnFace, &index);
 	index = 2;
 	DynamicArray_Append(face->indicesOnFace, &index);
-	index = 5;
-	DynamicArray_Append(face->indicesOnFace, &index);
 	index = 6;
+	DynamicArray_Append(face->indicesOnFace, &index);
+	index = 5;
 	DynamicArray_Append(face->indicesOnFace, &index);
 
 	ConvexHullCollider_AddFace(collider, face);
