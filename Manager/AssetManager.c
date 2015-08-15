@@ -145,6 +145,11 @@ void AssetManager_LoadAssets(void)
 	t = Texture_Allocate();
 	Texture_Initialize(t, i);
 	HashMap_Add(assetBuffer->textureMap, "Table", t, strlen("Table"));
+
+	i = Loader_Load24BitBMPFile("./Assets/Textures/Jacob.bmp");
+	t = Texture_Allocate();
+	Texture_Initialize(t, i);
+	HashMap_Add(assetBuffer->textureMap, "Jacob", t, strlen("Jacob"));
 }
 
 ///

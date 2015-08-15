@@ -550,9 +550,9 @@ void State_ParkourController_Shoot(GObject* obj, State* state)
 			bullet->mesh = AssetManager_LookupMesh("Cube");
 			//bullet->texture = AssetManager_LookupTexture("White");
 			bullet->material = Material_Allocate();
-			Material_Initialize(bullet->material, AssetManager_LookupTexture("White"));
-			*Matrix_Index(bullet->material->colorMatrix, 1, 1) = 0.0f;
-			*Matrix_Index(bullet->material->colorMatrix, 2, 2) = 0.0f;
+			Material_Initialize(bullet->material, AssetManager_LookupTexture("Jacob"));
+			//*Matrix_Index(bullet->material->colorMatrix, 1, 1) = 0.0f;
+			//*Matrix_Index(bullet->material->colorMatrix, 2, 2) = 0.0f;
 
 			//Create ridgid body
 			bullet->body = RigidBody_Allocate();

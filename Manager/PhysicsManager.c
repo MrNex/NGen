@@ -1777,12 +1777,16 @@ static void PhysicsManager_ApplyRollingResistance(struct Collision* collision, V
 	Vector_INIT_ON_STACK(angularMomentum1, 3);
 	Vector_INIT_ON_STACK(angularMomentum2, 3);
 
-	RigidBody_CalculateAngularMomentum(&angularMomentum1, collision->obj1->body);
-	RigidBody_CalculateAngularMomentum(&angularMomentum2, collision->obj2->body);
+	if(collision->obj1->body != NULL)
+		RigidBody_CalculateAngularMomentum(&angularMomentum1, collision->obj1->body);
+	if(collision->obj2->body != NULL)
+		RigidBody_CalculateAngularMomentum(&angularMomentum2, collision->obj2->body);
 
 	//Include the angular impulse which is about to be applied!
-	Vector_Increment(&angularMomentum1, collision->obj1->body->netInstantaneousTorque);
-	Vector_Increment(&angularMomentum2, collision->obj2->body->netInstantaneousTorque);
+	if(collision->obj1->body != NULL)
+		Vector_Increment(&angularMomentum1, collision->obj1->body->netInstantaneousTorque);
+	if(collision->obj2->body != NULL)
+		Vector_Increment(&angularMomentum2, collision->obj2->body->netInstantaneousTorque);
 
 	//Step 5: Get the magnitudes of the momentum along the collision plane
 	Vector proj;
@@ -1815,8 +1819,10 @@ static void PhysicsManager_ApplyRollingResistance(struct Collision* collision, V
 	Vector_GetScalarProduct(&resistance2, &angularMomentum2, -angularResistance2);
 
 	//Step 8: apply the rolling resistance
-	RigidBody_ApplyInstantaneousTorque(collision->obj1->body, &resistance1);
-	RigidBody_ApplyInstantaneousTorque(collision->obj2->body, &resistance2);
+	if(collision->obj1->body != NULL)
+		RigidBody_ApplyInstantaneousTorque(collision->obj1->body, &resistance1);
+	if(collision->obj2->body != NULL)
+		RigidBody_ApplyInstantaneousTorque(collision->obj2->body, &resistance2);
 
 	//RigidBody_ApplyTorque(collision->obj1->body, &resistance1);
 	//RigidBody_ApplyTorque(collision->obj2->body, &resistance2);
