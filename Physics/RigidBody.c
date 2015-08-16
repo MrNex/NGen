@@ -1,6 +1,7 @@
 #include "RigidBody.h"
 
 #include <math.h>
+#include <float.h>
 
 ///
 //Allocates memory for a rigidBody
@@ -113,6 +114,33 @@ void RigidBody_Free(RigidBody* body)
 	Vector_Free(body->angularVelocity);
 	FrameOfReference_Free(body->frame);
 	free(body);
+}
+
+
+///
+//CHecks if a rigidbody has translational freedom
+//
+//Parameters:
+//	body: The rigidbody to check
+//
+//Returns:
+//	1 if the rigidbody has translational freedom, else 0
+unsigned char RigidBody_CanTranslate(RigidBody* body)
+{
+	return body != NULL && body->freezeTranslation != 1 && body->inverseMass > FLT_EPSILON;
+}
+
+///
+//CHecks if a rigidbody has rotational freedom
+//
+//Parameters:
+//	body: The rigidbody to check
+//
+//Returns:
+//	1 if the rigidbody has rotational freedom, else 0
+unsigned char RigidBody_CanRotate(RigidBody* body)
+{
+	return body != NULL && body->freezeRotation != 1 && body->inverseMass > FLT_EPSILON;
 }
 
 ///

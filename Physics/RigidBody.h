@@ -53,6 +53,26 @@ void RigidBody_Initialize(RigidBody* body, const FrameOfReference* startingFrame
 void RigidBody_Free(RigidBody* body);
 
 ///
+//CHecks if a rigidbody has translational freedom
+//
+//Parameters:
+//	body: The rigidbody to check
+//
+//Returns:
+//	1 if the rigidbody has translational freedom, else 0
+unsigned char RigidBody_CanTranslate(RigidBody* body);
+
+///
+//CHecks if a rigidbody has rotational freedom
+//
+//Parameters:
+//	body: The rigidbody to check
+//
+//Returns:
+//	1 if the rigidbody has rotational freedom, else 0
+unsigned char RigidBody_CanRotate(RigidBody* body);
+
+///
 //Uses a rigid bodies frame of reference to determine the rectangular prisms Width Depth and Height,
 //Then uses them to calculate the moment of inertia tensor.
 //This function assumes that before scaling the cube has a space of -1 to 1 in all dimensions.
