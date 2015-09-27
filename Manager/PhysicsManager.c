@@ -1824,7 +1824,4 @@ static void PhysicsManager_ApplyRollingResistance(struct Collision* collision, V
 	if(collision->obj2->body != NULL)
 		RigidBody_ApplyInstantaneousTorque(collision->obj2->body, &resistance2);
 
-	//RigidBody_ApplyTorque(collision->obj1->body, &resistance1);
-	//RigidBody_ApplyTorque(collision->obj2->body, &resistance2);
-	
 }
