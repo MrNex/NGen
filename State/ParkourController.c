@@ -11,6 +11,8 @@
 
 #endif
 
+#include <float.h>
+
 #include "ParkourController.h"
 
 #include "../Manager/CollisionManager.h"
@@ -299,6 +301,8 @@ static void State_ParkourController_Jump(GObject* obj, State* state)
 //	state: The parkourController state updating the object
 static void State_ParkourController_HorizontalWallrun(GObject* obj, State* state)
 {
+	printf("Horizontal\n");
+
 	//Get the members of this state
 	struct State_ParkourController_Members* members = (struct State_ParkourController_Members*)state->members;
 
@@ -345,6 +349,21 @@ static void State_ParkourController_HorizontalWallrun(GObject* obj, State* state
 	}
 
 	//Apply a cohesive force to the wall to make sure you do not fall off
+	float mag = Vector_DotProduct(obj->body->velocity, members->wallNormal);
+
+	Vector cohesive;
+	Vector_INIT_ON_STACK(cohesive, 3);
+
+	if(mag > FLT_EPSILON)
+	{
+		Vector_GetScalarProduct(&cohesive, members->wallNormal, -mag);
+	
+	}
+	else if(mag < FLT_EPSILON)
+	{
+		Vector_GetScalarProduct(&cohesive, members->wallNormal, mag);
+	}
+	RigidBody_ApplyImpulse(obj->body, &cohesive, members->wallNormal);
 	
 
 }

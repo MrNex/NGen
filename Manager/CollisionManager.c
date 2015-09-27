@@ -1375,6 +1375,256 @@ void CollisionManager_TestConvexCollision(struct Collision* dest, GObject* obj1,
 //	sphereFoR: The frame of reference to use to orient the sphere collider
 void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject* convexObj, FrameOfReference* convexFoR, GObject* sphereObj, FrameOfReference* sphereFoR)
 {
+	
+	//Get the collider data
+	struct ColliderData_ConvexHull* convexHull = convexObj->collider->data->convexHullData;
+	struct ColliderData_Sphere* sphere = sphereObj->collider->data->sphereData;
+
+	//Create an array of pointers to vectors to hold the oriented points and axes of the convex hull collider
+	Vector** orientedPoints = (Vector**)malloc(sizeof(Vector*) * convexHull->points->size);
+	Vector** orientedAxes = (Vector**)malloc(sizeof(Vector*) * convexHull->faces->size);
+
+	//Allocate and initialize oriented points and axes
+	for(unsigned int i = 0; i < convexHull->points->size; i++)
+	{
+		orientedPoints[i] = Vector_Allocate();
+		Vector_Initialize(orientedPoints[i], 3);
+	}
+	for(unsigned int i = 0; i < convexHull->faces->size; i++)
+	{
+		orientedAxes[i] = Vector_Allocate();
+		Vector_Initialize(orientedAxes[i], 3);
+	}
+	//Get oriented points and axes
+	ConvexHullCollider_GetOrientedWorldPoints(orientedPoints, convexHull, convexFoR);
+	ConvexHullCollider_GetOrientedAxes(orientedAxes, convexHull, convexFoR);
+
+	//Get the scaled radius of the sphere
+	float scaledRadius = SphereCollider_GetScaledRadius(sphere, sphereFoR);
+
+	//Create a list of candidate faces for the collision
+	DynamicArray* candidates = DynamicArray_Allocate();
+	DynamicArray_Initialize(candidates, sizeof(unsigned int));
+
+	//Find the distance of the sphere from the plane containing each face
+	Vector vertexToCenter;
+	Vector_INIT_ON_STACK(vertexToCenter, 3);
+	struct ConvexHullCollider_Face* face;
+	int vertexIndex;
+	Vector* vertex;
+	float currentDistance;
+	for(unsigned int i = 0; i < convexHull->faces->size; i++)
+	{
+		face = *(struct ConvexHullCollider_Face**)DynamicArray_Index(convexHull->faces, i);
+		vertexIndex = *(int*)DynamicArray_Index(face->indicesOnFace, i);
+		vertex = orientedPoints[vertexIndex];
+
+		Vector_Subtract(&vertexToCenter, sphereFoR->position, vertex);
+
+		currentDistance = fabs(Vector_DotProduct(orientedAxes[i], &vertexToCenter));
+
+		//If the distance is less than the scaled radius, this face is a potential candidate
+		if(currentDistance < scaledRadius)
+		{
+			DynamicArray_Append(candidates, &i);
+		}
+	}
+
+	//Now we must find the closest point On all of the polygons made up by the faces of the convex hull to the sphere
+	Vector sphereProj;			//Projection of sphere onto plane in which face lies
+	Vector_INIT_ON_STACK(sphereProj, 3);
+	Vector edge;				//Edge of face
+	Vector_INIT_ON_STACK(edge, 3);
+	Vector vertexToProj;			//Vector from starting vertex of edge to sphereProj
+	Vector_INIT_ON_STACK(vertexToProj, 3);
+	Vector offset;				//Position along face normal to the plane on which face lies from origin
+	Vector_INIT_ON_STACK(offset, 3);	
+	Vector cross;				//CrossProduct between edge and vertexToProj
+	Vector_INIT_ON_STACK(cross, 3);		
+	Vector closestPointOnPoly;		//Closest point on polyhedra to sphere's center
+	Vector_INIT_ON_STACK(closestPointOnPoly, 3);
+	Vector closestPointOnFace;		//Closest Point on face to sphere's center
+	Vector_INIT_ON_STACK(closestPointOnFace, 3);
+
+	float smallestDist = 0.0f;
+
+	for(unsigned int i = 0; i < candidates->size; i++)
+	{
+		int index = *(int*)DynamicArray_Index(candidates, i);
+		face = *(struct ConvexHullCollider_Face**)DynamicArray_Index(convexHull->faces, index);
+		
+		//Determine if the projection of the sphere's center onto the plane in which the face lies, lies inside the face
+		Vector_GetProjection(&sphereProj, sphereFoR->position, face->normal);
+		Vector_Scale(&sphereProj, -1.0f);
+		Vector_Increment(&sphereProj, sphereFoR->position);
+		//Now we have the projection if the plane went through the origin, but that is not a guarantee. So we must find the offset in the direction
+		//Along the plane normal which the plane lies to find the actual projection.
+
+		vertex = orientedPoints[*(int*)DynamicArray_Index(face->indicesOnFace, 0)];
+		float scaleVal = Vector_DotProduct(vertex, face->normal);
+		Vector_GetScalarProduct(&offset, face->normal, scaleVal);
+
+		Vector_Increment(&sphereProj, &offset);
+
+		//Now we can use cross products between the edges of the face and the vector from the start of the edge to the sphereProj
+		//To determine if the sphereProj lies within the face
+		unsigned char isContainedInFace = 1;
+		for(unsigned int j = 0; j < face->indicesOnFace->size; j++)
+		{
+			int vertexIndexA = *(int*)DynamicArray_Index(face->indicesOnFace, j);
+			int vertexIndexB = j + 1 < face->indicesOnFace->size ? *(int*)DynamicArray_Index(face->indicesOnFace, j + 1) : *(int*)DynamicArray_Index(face->indicesOnFace, 0);
+			
+			Vector_Subtract(&edge, orientedPoints[vertexIndexB], orientedPoints[vertexIndexA]);
+			Vector_Subtract(&vertexToProj, &sphereProj, orientedPoints[vertexIndexA]);
+
+			Vector_CrossProduct(&cross, &edge, &vertexToProj);
+
+			//We can guarantee that the sign of the cross product dotted with the normal of this face must be negative
+			//If the sphere projection is contained within the polygon
+			if(Vector_DotProduct(&cross, face->normal) < 0.0f)
+			{
+				isContainedInFace = 0;
+				break;
+			}	
+		}
+
+		//If the projection of the sphere's center is contained within the polygon then that is the closest point on the face to the sphere's center
+		if(isContainedInFace)
+		{
+			Vector_Copy(&closestPointOnFace, &sphereProj);
+		}
+		//Otherwise, we must find the two vertices closest to the projection
+		else
+		{
+			int closestVertexIndex = *(int*)DynamicArray_Index(face->indicesOnFace, 0);
+			int secondClosestVertexIndex = *(int*)DynamicArray_Index(face->indicesOnFace, 1);
+
+			Vector closestDistance;
+			Vector secondClosestDistance;
+			Vector currentDistance;
+
+			Vector_INIT_ON_STACK(closestDistance, 3);
+			Vector_INIT_ON_STACK(secondClosestDistance, 3);
+			Vector_INIT_ON_STACK(currentDistance, 3);
+
+			Vector_Subtract(&closestDistance, &sphereProj, orientedPoints[closestVertexIndex]);
+			Vector_Subtract(&secondClosestDistance, &sphereProj, orientedPoints[secondClosestVertexIndex]);
+
+			float closestMag = Vector_GetMag(&closestDistance);
+			float secondClosestMag = Vector_GetMag(&secondClosestDistance);
+			float currentMag;
+			for(unsigned int j = 1; j <  face->indicesOnFace->size; j++)
+			{
+				int currentVertexIndex = *(int*)DynamicArray_Index(face->indicesOnFace, j);
+				Vector_Subtract(&currentDistance, &sphereProj, orientedPoints[currentVertexIndex]);
+				currentMag = Vector_GetMag(&currentDistance);
+				if(currentMag < closestMag)
+				{
+					secondClosestVertexIndex = closestVertexIndex;
+					closestVertexIndex = currentVertexIndex;
+
+					Vector_Copy(&secondClosestDistance, &closestDistance);
+					Vector_Copy(&closestDistance, &currentDistance);
+					
+					secondClosestMag = closestMag;
+					closestMag = currentMag;
+				}
+				else if(currentMag < secondClosestMag)
+				{
+					secondClosestVertexIndex = currentVertexIndex;
+
+					Vector_Copy(&secondClosestDistance, &currentDistance);
+
+					secondClosestMag = currentMag;
+				}
+			}
+
+			//We must project (and clamp) the projection of the sphere's center onto the edge formed by the two closest vertices
+			Vector edge;
+			Vector_INIT_ON_STACK(edge, 3);
+
+			Vector_Subtract(&edge, orientedPoints[closestVertexIndex], orientedPoints[secondClosestVertexIndex]);
+
+			float mag = Vector_GetMag(&edge);
+			Vector_Normalize(&edge);
+
+			float scale = Vector_DotProduct(&edge, &sphereProj);
+			if(scale < 0.0f) scale = 0.0f;
+			else if (scale > mag) scale = mag;
+
+			
+			Vector_Scale(&edge, scale);
+			Vector_Add(&closestPointOnFace, &edge, orientedPoints[secondClosestVertexIndex]);
+		}
+
+
+
+		//Determine if the closest point on the face is the new closest point on the polygon
+		Vector distance;
+		Vector_INIT_ON_STACK(distance, 3);
+		//If this is the first point we are checking, it is
+		if(i == 0)
+		{
+			Vector_Copy(&closestPointOnPoly, &closestPointOnFace);
+			Vector_Subtract(&distance, sphereFoR->position, &closestPointOnPoly);
+			smallestDist = Vector_GetMag(&distance);
+		}
+		else
+		{
+
+			Vector_Subtract(&distance, sphereFoR->position, &closestPointOnFace);
+			float dist = Vector_GetMag(&distance);
+			if(dist < smallestDist)
+			{
+				smallestDist = dist;
+				Vector_Copy(&closestPointOnPoly, &closestPointOnFace);
+			}
+		}
+	}
+	
+	//Cleanup anything allocated on the heap
+	for(unsigned int i = 0; i < convexHull->points->size; i++)
+	{
+		Vector_Free(orientedPoints[i]);
+	}
+	free(orientedPoints);
+
+	for(unsigned int i = 0; i < convexHull->faces->size; i++)
+	{
+		Vector_Free(orientedAxes[i]);
+	}
+	free(orientedAxes);
+
+	DynamicArray_Free(candidates);
+
+	//Determine if the closest point we found on the convex hull is contained within the sphere
+	if(smallestDist > scaledRadius)
+	{
+		//If the distance from the closest point to the sphere's center is greater than the scaled radius there must not be a collision
+		//If there is no collision set the collision attributes to 0.
+		dest->overlap = 0.0f;
+		dest->obj1 = NULL;
+		dest->obj1Frame = NULL;
+		dest->obj2 = NULL;
+		dest->obj2Frame = NULL;
+
+		return;
+	}
+
+	//If the code reaches this point we can assume there was a collision
+	dest->overlap = scaledRadius - smallestDist;
+	dest->obj1 = convexObj;
+	dest->obj1Frame = convexFoR;
+	dest->obj2 = sphereObj;
+	dest->obj2Frame = sphereFoR;
+
+	Vector_Subtract(dest->minimumTranslationVector, &closestPointOnPoly, sphereFoR->position);
+	Vector_Normalize(dest->minimumTranslationVector);
+
+
+
+
+	/*
 	float minOverlap = 0.0f;
 	unsigned char detected = 1;
 
@@ -1515,7 +1765,7 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 		Vector_Free(sphereSurfacePoints[i]);
 	}
 	free(sphereSurfacePoints);
-
+	*/
 
 }
 

@@ -1,7 +1,7 @@
 #include "Implementation.h"
 
-#include "../State/FirstPersonCamera.h"
-#include "../State/Debug.h"
+#include "../State/ParkourController.h"
+
 
 ///
 //Initializes the scene within the engine.
@@ -15,17 +15,17 @@ void InitializeScene(void)
 
 	State* state = State_Allocate();
 
-	State_FirstPersonCamera_Initialize(state, 7.0f, 100.0f, 0.1f);
+	cam->body = RigidBody_Allocate();
+	RigidBody_Initialize(cam->body, cam->frameOfReference, 1.0f);
+	cam->body->coefficientOfRestitution = 0.1f;
+
+
+	cam->collider = Collider_Allocate();
+	AABBCollider_Initialize(cam->collider, 2.5f, 3.0f, 2.5f, &Vector_ZERO);
+
+	State_ParkourController_Initialize(state, 7.0f, 10.0f, 0.05f, 50.0f, 0.1f);
 
 	GObject_AddState(cam,state);
-
-	Vector trans;
-	Vector_INIT_ON_STACK(trans, 3);
-	trans.components[0] = -3.0f;
-	trans.components[1] = -8.0f;
-	trans.components[2] = 5.0f;
-	//Move the camera to floor
-	Camera_Translate(RenderingManager_GetRenderingBuffer()->camera, &trans);
 
 	ObjectManager_AddObject(cam);
 
@@ -41,8 +41,8 @@ void InitializeScene(void)
 	block->body = RigidBody_Allocate();
 	RigidBody_Initialize(block->body, block->frameOfReference, 0.0f);
 	block->body->freezeTranslation = block->body->freezeRotation = 1;
-	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
-	block->body->rollingResistance = 0.2f;
+	block->body->dynamicFriction = block->body->staticFriction = 0.1f;
+	block->body->rollingResistance = 0.25f;
 
 	Vector v;
 	Vector_INIT_ON_STACK(v, 3);
@@ -58,86 +58,6 @@ void InitializeScene(void)
 
 	ObjectManager_AddObject(block);
 	
-	//Create block
-
-		
-	block = GObject_Allocate();
-	GObject_Initialize(block);
-
-	block->mesh = AssetManager_LookupMesh("Cube");
-	block->material = Material_Allocate();
-	Material_Initialize(block->material, AssetManager_LookupTexture("White"));
-
-	*Matrix_Index(block->material->colorMatrix, 0, 0) = 0.0f; 
-
-	block->collider = Collider_Allocate();
-	ConvexHullCollider_Initialize(block->collider);
-	ConvexHullCollider_MakeCubeCollider(block->collider->data->convexHullData, 2.0f);
-
-	block->body = RigidBody_Allocate();
-	RigidBody_Initialize(block->body, block->frameOfReference, 0.1f);
-	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
-	
-	block->body->rollingResistance = 0.5f;
-
-	block->body->coefficientOfRestitution = 0.0f;
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[1] = 10.0f;
-
-	//RigidBody_ApplyInstantaneousTorque(block->body, &v); 
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 3.0f;
-	v.components[1] = -5.0f;
-	v.components[2] = -10.0f;
-
-	GObject_Translate(block, &v);
-
-	/*
-	state = State_Allocate();
-	State_Debug_Initialize(state, "Bottom Block");
-	GObject_AddState(block, state);
-
- 	 */
-
-	ObjectManager_AddObject(block);
-
-	//Create another block
-	block = GObject_Allocate();
-	GObject_Initialize(block);
-
-	block->mesh = AssetManager_LookupMesh("Cube");
-	block->material = Material_Allocate();
-	Material_Initialize(block->material, AssetManager_LookupTexture("White"));
-
-	*Matrix_Index(block->material->colorMatrix, 2, 2) = 0.0f;
-
-	block->collider = Collider_Allocate();
-	ConvexHullCollider_Initialize(block->collider);
-	ConvexHullCollider_MakeCubeCollider(block->collider->data->convexHullData, 2.0f);
-
-	block->body = RigidBody_Allocate();
-	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
-	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
-
-	block->body->rollingResistance = 0.5f;
-
-	block->body->coefficientOfRestitution = 0.5f;
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[1] = 10.0f;
-
-	//RigidBody_ApplyInstantaneousTorque(block->body, &v); 
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 3.0f;
-	v.components[2] = -10.0f;
-
-	GObject_Translate(block, &v);
-	
-	ObjectManager_AddObject(block);
-
 	//Create sphere
 
 	block = GObject_Allocate();
@@ -155,90 +75,31 @@ void InitializeScene(void)
 	SphereCollider_Initialize(block->collider, 1.0f);
 
 	block->body = RigidBody_Allocate();
-	RigidBody_Initialize(block->body, block->frameOfReference, 2.0f);
+	RigidBody_Initialize(block->body, block->frameOfReference, 0.0f);
 	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
-	block->body->rollingResistance = 0.001f;
 
-	block->body->coefficientOfRestitution = 0.25f;
-
-	//state = State_Allocate();
-	//State_Debug_Initialize(state, "Sphere");
-	//GObject_AddState(block, state);
-	
+	block->body->coefficientOfRestitution = 0.9f;
 
 	Vector_Copy(&v, &Vector_ZERO);
-	
-	//Apply a small torque
-	//v.components[2] = 0.001f;
-	//v.components[1] = 50.0f;
-
-	//RigidBody_ApplyInstantaneousTorque(block->body, &v);
-
-	//Give sphere a little push..
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = -20.0f;
-	v.components[2] = 0.0f; 
-	RigidBody_ApplyImpulse(block->body, &v, &Vector_ZERO);
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 10.0f;
-	v.components[1] = -6.0f;
+	v.components[0] = -3.0f;
+	v.components[1] = 5.0f;
 	v.components[2] = -10.0f;
 
 	GObject_Translate(block, &v);
-	
-	ObjectManager_AddObject(block);
-
-	//Create rolling block
-	/*	
-	block = GObject_Allocate();
-	GObject_Initialize(block);
-
-	block->mesh = AssetManager_LookupMesh("Cube");
-	block->material = Material_Allocate();
-	Material_Initialize(block->material, AssetManager_LookupTexture("White"));
-
-	*Matrix_Index(block->material->colorMatrix, 2, 2) = 0.0f;
-	*Matrix_Index(block->material->colorMatrix, 1, 1) = 0.0f;
-
-
-	block->collider = Collider_Allocate();
-	ConvexHullCollider_Initialize(block->collider);
-	ConvexHullCollider_MakeCubeCollider(block->collider->data->convexHullData, 2.0f);
-
-	block->body = RigidBody_Allocate();
-	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
-	block->body->dynamicFriction = block->body->staticFriction = 1.0f;
-	block->body->rollingResistance = 0.8f;
-
-	block->body->coefficientOfRestitution = 0.1f;
 
 	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 1.0f;
-
-	//RigidBody_ApplyInstantaneousTorque(block->body, &v);
-
-	//Give sphere a little push..
-	v.components[0] = 0.0f;
-	v.components[2] = -5.0f; 
-	RigidBody_ApplyImpulse(block->body, &v, &Vector_ZERO);
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 6.0f;
-	v.components[1] = -5.0f;
-	v.components[2] = -10.0f;
-
-	GObject_Translate(block, &v);
+	v.components[0] = v.components[1] = v.components[2] = 10.0f;
+	GObject_Scale(block, &v);
 	
 	ObjectManager_AddObject(block);
-	*/
+	
 	
 	
 	//Set gravity
+	
 	Vector* gravity = Vector_Allocate();
 	Vector_Initialize(gravity, 3);
 	gravity->components[1] = -9.81f;
 	
-	PhysicsManager_AddGlobalAcceleration(gravity);
-
+	PhysicsManager_AddGlobalAcceleration(gravity);	
 }
