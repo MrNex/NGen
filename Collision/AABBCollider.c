@@ -20,7 +20,7 @@ struct ColliderData_AABB* AABBCollider_AllocateData()
 ///
 //Initializes an AABB collider's data set
 //
-//PArameters:
+//Parameters:
 //	AABB: The axis aligned bounding box data set being initialized
 //	width: The width of the AABB
 //	height: The height of the AABB
