@@ -17,7 +17,7 @@ RigidBody* RigidBody_Allocate(void)
 ///
 //Initializes a RigidBody
 //
-//PArameters:
+//Parameters:
 //	body: THe rigid body to initialize
 //	startingFrame: The frame the rigidbody should use to initialize itself in world space
 //	mass: The mass of the rigidbody
