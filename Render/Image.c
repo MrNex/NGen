@@ -16,7 +16,7 @@ struct Image* Image_Allocate(void)
 ///
 //Initializes an image
 //
-//PArameters:
+//Parameters:
 //	img: The image to initialize
 //	width: The width of the image
 //	height: The height of the image
