@@ -41,7 +41,7 @@ void AABBCollider_InitializeData(struct ColliderData_AABB* AABB, const float wid
 ///
 //Initializes an axis aligned bounding box collider
 //
-//parameters:
+//Parameters:
 //	collider: The collider to initialize
 //	width: The width of the bounding box
 //	height: The height of the bounding box
