@@ -21,7 +21,7 @@ Camera* Camera_Allocate()
 //Initializes a camera
 //
 //Parameters:
-//	cam: The cmera to initialize
+//	cam: The camera to initialize
 void Camera_Initialize(Camera* cam)
 {
 	cam->aspectX = 1.0f;
