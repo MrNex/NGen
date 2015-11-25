@@ -10,7 +10,7 @@
 ///
 //Allocates memory for a new Convex Hull face
 //
-//REturns:
+//Returns:
 //	A pointer to a newly allocated, uninitialized, convex hull face
 struct ConvexHullCollider_Face* ConvexHullCollider_AllocateFace()
 {

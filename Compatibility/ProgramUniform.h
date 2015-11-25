@@ -15,7 +15,7 @@
 //		matrices.
 //	transpose: Specifies whether to transpose the matrix as the values
 //		 are loaded into the uniform variable.
-//	value: Specifies a pointer to an array of count? values that will
+//	value: Specifies a pointer to an array of count values that will
 //		be used to update the specified uniform variable.
 
 void ProgramUniform3fv(GLuint program, GLint location, GLsizei count

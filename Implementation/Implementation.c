@@ -67,10 +67,6 @@ void InitializeScene(void)
 	block->material = Material_Allocate();
 	Material_Initialize(block->material, AssetManager_LookupTexture("Earth"));
 
-	//*Matrix_Index(block->material->colorMatrix, 2, 2) = 0.0f;
-	//*Matrix_Index(block->material->colorMatrix, 1, 1) = 0.0f;
-
-
 	block->collider = Collider_Allocate();
 	SphereCollider_Initialize(block->collider, 1.0f);
 

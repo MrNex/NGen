@@ -69,7 +69,7 @@ Mesh* Loader_LoadOBJFile(const char* fPath)
 	//Open file in read mode
 	FILE* fp = fopen(fPath, "r");
 
-	//MAke sure file is open
+	//Make sure file is open
 	if (fp == NULL)
 	{
 		printf("Error opening file %s.\n", fPath);
