@@ -58,7 +58,7 @@ OBJ= \
 all: NGen
 
 NGen: $(OBJ) $(STATES_O)
-	gcc $(CFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 ##
 #Math
