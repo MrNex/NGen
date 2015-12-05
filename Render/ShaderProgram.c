@@ -27,22 +27,32 @@ void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char
 {
 
 	//Shader cmopilation
-	prog->vertexShaderID = LoadShader(vPath, GL_VERTEX_SHADER);
-	prog->fragmentShaderID = LoadShader(fPath, GL_FRAGMENT_SHADER);
+	GLuint vsShaderID = LoadShader(vPath, GL_VERTEX_SHADER);
+	GLuint fsShaderID = LoadShader(fPath, GL_FRAGMENT_SHADER);
 
 	//Check for comiler errors
-	if (prog->vertexShaderID == 0 || prog->fragmentShaderID == 0)
+	if (vsShaderID == 0 || fsShaderID == 0)
 	{
+		printf("Shader failed to complete. Shader program not created.\n");
 		return;
 	}
-
+	
 	//Shader linking
 	prog->shaderProgramID = glCreateProgram();
 
-	glAttachShader(prog->shaderProgramID, prog->vertexShaderID);
-	glAttachShader(prog->shaderProgramID, prog->fragmentShaderID);
+	glAttachShader(prog->shaderProgramID, vsShaderID);
+	glAttachShader(prog->shaderProgramID, fsShaderID);
 
 	glLinkProgram(prog->shaderProgramID);
+
+	glDetachShader(prog->shaderProgramID, vsShaderID);
+	glDetachShader(prog->shaderProgramID, fsShaderID);
+
+	glDeleteShader(vsShaderID);
+	glDeleteShader(fsShaderID);
+
+	//Set uniforms to NULL to avoid errors if somebody improperly initializes a shader program.
+	prog->uniforms = NULL;
 
 	//Program complete, checking for errors
 	//
@@ -52,7 +62,9 @@ void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char
 	//Valid shaders are returned here
 	if (status == GL_TRUE)
 	{
+
 		//Get uniforms
+		/*
 		prog->modelMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "modelMatrix");
 		prog->viewMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "viewMatrix");
 		prog->projectionMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "projectionMatrix");
@@ -64,7 +76,7 @@ void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char
 		prog->directionalLightVectorLocation = glGetUniformLocation(prog->shaderProgramID, "directionalLightVector");
 
 		prog->textureLocation = glGetUniformLocation(prog->shaderProgramID, "textureDiffuse");
-
+*/
 		return;
 	}
 
@@ -100,7 +112,9 @@ void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char
 //	prog: The shader program to free
 void ShaderProgram_Free(ShaderProgram* prog)
 {
-	//TODO: Call the correct gl Delete functions for the vertex shader, fragment shader, and shader program.
+	glDeleteProgram(prog->shaderProgramID);
+	if(prog->uniforms != NULL)
+		free(prog->uniforms);
 	free(prog);
 }
 

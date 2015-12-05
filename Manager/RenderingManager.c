@@ -6,6 +6,8 @@
 
 #include "AssetManager.h"
 
+#include "../Render/ForwardShaderProgram.h"
+
 ///
 //Internals
 RenderingBuffer* renderingBuffer;
@@ -49,16 +51,14 @@ void RenderingManager_Initialize(void)
 	renderingBuffer = RenderingManager_AllocateBuffer();
 	RenderingManager_InitializeBuffer(renderingBuffer);
 
-	if (renderingBuffer->shaderPrograms[0]->shaderProgramID != 0)
+	if (renderingBuffer->shaderPrograms[RenderingManager_ShaderType_FORWARD]->shaderProgramID != 0)
 	{
 
-		glUseProgram(renderingBuffer->shaderPrograms[0]->shaderProgramID);
+		glUseProgram(renderingBuffer->shaderPrograms[RenderingManager_ShaderType_FORWARD]->shaderProgramID);
 	}
 	else
 	{
-		printf("\nError Creating Shader Program!\nShader Results:\nV: %d\tF: %d\tP: %d\n",
-				renderingBuffer->shaderPrograms[0]->vertexShaderID,
-				renderingBuffer->shaderPrograms[0]->fragmentShaderID,
+		printf("\nError Creating Shader Program!\nShader Results:\nProgram index: %d\n",
 				renderingBuffer->shaderPrograms[0]->shaderProgramID);
 	}
 
@@ -86,6 +86,25 @@ RenderingBuffer* RenderingManager_GetRenderingBuffer()
 
 
 ///
+//Renders a list of gameobjects using the Deferred Rendering pipeline
+//as their individual meshes. Skips any gameobject which does not have
+//a mesh.
+//
+//Parameters:
+//	gameObjects: A pointer to a linked list containing the gameobjects to render.
+void RenderingManager_RenderDeferred(LinkedList* gameObjects)
+{
+	//Update the camera's view matrix
+	Camera_UpdateViewMatrix(renderingBuffer->camera);
+
+	//Set camera uniform variables
+	
+
+	//First perform the geometry pass
+	
+}
+
+///
 //Renders a gameobject as it's mesh.
 //
 //Parameters:
@@ -95,6 +114,16 @@ void RenderingManager_Render(LinkedList* gameObjects)
 	//Clear buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	//Update the camera's view matrix
+	Camera_UpdateViewMatrix(renderingBuffer->camera);
+
+	renderingBuffer->shaderPrograms[RenderingManager_ShaderType_FORWARD]->Render
+	(
+		renderingBuffer->shaderPrograms[RenderingManager_ShaderType_FORWARD],
+		renderingBuffer,
+		gameObjects
+	);
+	/*
 	GLuint shaderProgramID = renderingBuffer->shaderPrograms[0]->shaderProgramID;
 	GLint dirLightVectorLoc = renderingBuffer->shaderPrograms[0]->directionalLightVectorLocation;
 	float* components = renderingBuffer->directionalLightVector->components;
@@ -286,6 +315,7 @@ void RenderingManager_Render(LinkedList* gameObjects)
 	}
 	//Start drawing threads on gpu
 	glFlush();
+	*/
 }
 
 ///
@@ -353,22 +383,25 @@ static RenderingBuffer* RenderingManager_AllocateBuffer(void)
 static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 {
 	//Shaders
-	buffer->shaderPrograms = (ShaderProgram**)malloc(sizeof(ShaderProgram*));
+	//buffer->shaderPrograms = (ShaderProgram**)malloc(sizeof(ShaderProgram*));
 
-	buffer->shaderPrograms[0] = ShaderProgram_Allocate();
-	ShaderProgram_Initialize(buffer->shaderPrograms[0], "./Shader/VertexShader.glsl", "./Shader/FragmentShader.glsl");
+	buffer->shaderPrograms[RenderingManager_ShaderType_FORWARD] = ShaderProgram_Allocate();
+	ForwardShaderProgram_Initialize(buffer->shaderPrograms[RenderingManager_ShaderType_FORWARD]);
 
 
 	//Checking shaders
 	if (buffer->shaderPrograms[0]->shaderProgramID == 0)
 	{
-		printf("\nError Creating Shader Program!\nShader Results:\nV: %d\tF: %d\tP: %d\n",
-				buffer->shaderPrograms[0]->vertexShaderID,
-				buffer->shaderPrograms[0]->fragmentShaderID,
+		printf("\nError Creating Shader Program!\nShader Results:\nProgramIndex: %d\n",
 				buffer->shaderPrograms[0]->shaderProgramID);
 
 	}
 
+	//Geometry Buffer
+	int width = glutGet(GLUT_WINDOW_WIDTH);
+	int height = glutGet(GLUT_WINDOW_HEIGHT);
+	buffer->gBuffer = GeometryBuffer_Allocate();
+	GeometryBuffer_Initialize(buffer->gBuffer,width, height); 
 
 	//Camera
 	buffer->camera = Camera_Allocate();
@@ -393,7 +426,8 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 static void RenderingManager_FreeBuffer(RenderingBuffer* buffer)
 {
 	ShaderProgram_Free(buffer->shaderPrograms[0]);
-	free(buffer->shaderPrograms);
+	//free(buffer->shaderPrograms);
+	GeometryBuffer_Free(buffer->gBuffer);
 	Camera_Free(buffer->camera);
 	Vector_Free(buffer->directionalLightVector);
 }

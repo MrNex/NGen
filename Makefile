@@ -37,7 +37,9 @@ OBJ= \
 	Bin/Texture.o \
 	Bin/Material.o \
 	Bin/ShaderProgram.o \
+	Bin/ForwardShaderProgram.o \
 	Bin/Camera.o \
+	Bin/GeometryBuffer.o \
 	Bin/RigidBody.o \
 	Bin/SphereCollider.o \
 	Bin/AABBCollider.o \
@@ -45,6 +47,7 @@ OBJ= \
 	Bin/Collider.o \
 	Bin/GObject.o \
 	Bin/Loader.o \
+	Bin/ProgramUniform.o \
 	Bin/ObjectManager.o \
 	Bin/RenderingManager.o \
 	Bin/AssetManager.o \
@@ -108,6 +111,12 @@ Bin/Texture.o: Render/Texture.c Render/Texture.h Bin/Image.o
 Bin/Material.o: Render/Material.c Render/Material.h Bin/Texture.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
+Bin/GeometryBuffer.o: Render/GeometryBuffer.c Render/GeometryBuffer.h
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/ForwardShaderProgram.o: Render/ForwardShaderProgram.c Render/ForwardShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
 ##
 #State
 Bin/State/%.o: State/%.c State/%.h $(MANAGERS_O)
@@ -143,6 +152,11 @@ Bin/Loader.o: Load/Loader.c Load/Loader.h Bin/Mesh.o Bin/Image.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##
+#Compatibility
+Bin/ProgramUniform.o: Compatibility/ProgramUniform.c Compatibility/ProgramUniform.h
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+##
 #Managers
 Bin/InputManager.o: Manager/InputManager.c Manager/InputManager.h Bin/Vector.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
@@ -150,7 +164,7 @@ Bin/InputManager.o: Manager/InputManager.c Manager/InputManager.h Bin/Vector.o
 Bin/ObjectManager.o: Manager/ObjectManager.c Manager/ObjectManager.h Bin/LinkedList.o Bin/GObject.o Bin/OctTree.o Bin/HashMap.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
-Bin/RenderingManager.o: Manager/RenderingManager.c Manager/RenderingManager.h Bin/ObjectManager.o Bin/ShaderProgram.o Bin/Camera.o Bin/GObject.o Bin/LinkedList.o
+Bin/RenderingManager.o: Manager/RenderingManager.c Manager/RenderingManager.h Bin/ObjectManager.o Bin/ForwardShaderProgram.o Bin/Camera.o Bin/GObject.o Bin/LinkedList.o Bin/GeometryBuffer.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/AssetManager.o: Manager/AssetManager.c Manager/AssetManager.h Bin/HashMap.o Bin/Mesh.o Bin/Texture.o Bin/Loader.o
@@ -177,8 +191,6 @@ Bin/Implementation.o: Implementation/Implementation.c Implementation/Implementat
 #Main
 Bin/main.o: main.c Bin/Mesh.o Bin/Implementation.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
-
-
 
 ##
 #Clean

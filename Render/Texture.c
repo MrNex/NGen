@@ -28,12 +28,12 @@ void Texture_Initialize(Texture* t, struct Image* i)
 
 	glTexImage2D(
 		GL_TEXTURE_2D,		//What kind of texture
-		0,					//Mipmaping level (Increases detail)
-		GL_RGBA8,			//Internal format of image data (RGBA each taking 8 bits)
+		0,			//Mipmaping level (Increases detail)
+		GL_RGBA8,		//Internal format of image data (RGBA each taking 8 bits)
 		t->image->width,	//Width of image
 		t->image->height,	//Height of image
-		0,					//Border
-		GL_RGBA,			//Format of data to output into texture
+		0,			//Border
+		GL_RGBA,		//Format of data to output into texture
 		GL_UNSIGNED_BYTE,	//What isthe type of each element in array
 		t->image->bitmap	//Image data 
 		);

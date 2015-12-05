@@ -1,3 +1,6 @@
+#ifndef PROGRAMUNIFORM_H
+#define PROGRAMUNIFORM_H
+
 #include<GL/glew.h>
 
 ///
@@ -17,56 +20,11 @@
 //		 are loaded into the uniform variable.
 //	value: Specifies a pointer to an array of count values that will
 //		be used to update the specified uniform variable.
+void ProgramUniform3fv(GLuint program, GLint location, GLsizei count, const GLfloat* components);
 
-void ProgramUniform3fv(GLuint program, GLint location, GLsizei count
-		      , const GLfloat* components)
-{
-	if(GLEW_VERSION_4_3)
-	{
-		glProgramUniform3fv(program, location, count, components);
-	}
-	else
-	{
-		glUniform3fv(location, count, components);
-	}	
-}
+void ProgramUniformMatrix4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat* components);
 
-void ProgramUniformMatrix4fv(GLuint program, GLint location, GLsizei count
-		,GLboolean transpose, const GLfloat* components)
-{
-	if(GLEW_VERSION_4_3)
-	{
-		glProgramUniformMatrix4fv(program, location,  count, transpose 
-				, components);
-	}
-	else
-	{
-		glUniformMatrix4fv(location, count, transpose, components);
-	}	
-}
+void ProgramUniform2fv(GLuint program, GLint location, GLsizei count, const GLfloat* components);
 
-void ProgramUniform2fv(GLuint program, GLint location, GLsizei count
-		      , const GLfloat* components)
-{
-	if(GLEW_VERSION_4_3)
-	{
-		glProgramUniform2fv(program, location, count, components);
-	}
-	else
-	{
-		glUniform2fv(location, count, components);
-	}	
-}
-
-void ProgramUniform1i(GLuint program, GLint location, GLsizei count)
-{
-	if(GLEW_VERSION_4_3)
-	{
-		glProgramUniform1i(program, location, count);
-	}
-	else
-	{
-		glUniform1i(location, count);
-	}
-}				
-
+void ProgramUniform1i(GLuint program, GLint location, GLsizei count);
+#endif

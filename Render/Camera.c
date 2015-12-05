@@ -44,14 +44,15 @@ void Camera_Initialize(Camera* cam)
 	cam->rotationMatrix = Matrix_Allocate();
 	Matrix_Initialize(cam->rotationMatrix, 4, 4);
 
+	cam->viewMatrix = Matrix_Allocate();
+	Matrix_Initialize(cam->viewMatrix, 4, 4);
+
 	cam->projectionMatrix = Matrix_Allocate();
 	Matrix_Initialize(cam->projectionMatrix, 4, 4);
 
-	//*Matrix_Index(cam->projectionMatrix, 0, 0) = (2.0f * cam->aspectX * cam->nearPlane) / (cam->rightPlane - cam->leftPlane);
 	*Matrix_Index(cam->projectionMatrix, 0, 0) = (2.0f * cam->nearPlane) / (cam->rightPlane - cam->leftPlane);
 	*Matrix_Index(cam->projectionMatrix, 0, 2) = (cam->rightPlane + cam->leftPlane) / (cam->rightPlane - cam->leftPlane);
 
-	//*Matrix_Index(cam->projectionMatrix, 1, 1) = (2.0f * cam->aspectY * cam->nearPlane) / (cam->topPlane - cam->bottomPlane);
 	*Matrix_Index(cam->projectionMatrix, 1, 1) = (2.0f  * cam->nearPlane) / (cam->topPlane - cam->bottomPlane);
 	*Matrix_Index(cam->projectionMatrix, 1, 2) = (cam->topPlane + cam->bottomPlane) / (cam->topPlane - cam->bottomPlane);
 
@@ -75,16 +76,17 @@ void Camera_Free(Camera* cam)
 {
 	Matrix_Free(cam->translationMatrix);
 	Matrix_Free(cam->rotationMatrix);
+	Matrix_Free(cam->viewMatrix);
 	Matrix_Free(cam->projectionMatrix);
 	free(cam);
 }
 
 void Camera_RefreshPerspectiveMatrix(Camera* cam)
 {
-	*Matrix_Index(cam->projectionMatrix, 0, 0) = (16.0f * 2.0f * cam->aspectX * cam->nearPlane) / (cam->rightPlane - cam->leftPlane);
+	*Matrix_Index(cam->projectionMatrix, 0, 0) = (2.0f * cam->nearPlane) / (cam->rightPlane - cam->leftPlane);
 	*Matrix_Index(cam->projectionMatrix, 0, 2) = (cam->rightPlane + cam->leftPlane) / (cam->rightPlane - cam->leftPlane);
 
-	*Matrix_Index(cam->projectionMatrix, 1, 1) = (9.0f * 2.0f * cam->aspectY * cam->nearPlane) / (cam->topPlane - cam->bottomPlane);
+	*Matrix_Index(cam->projectionMatrix, 1, 1) = (2.0f * cam->nearPlane) / (cam->topPlane - cam->bottomPlane);
 	*Matrix_Index(cam->projectionMatrix, 1, 2) = (cam->topPlane + cam->bottomPlane) / (cam->topPlane - cam->bottomPlane);
 
 	*Matrix_Index(cam->projectionMatrix, 2, 2) = -(cam->farPlane * cam->nearPlane) / (cam->farPlane - cam->nearPlane);
@@ -101,7 +103,7 @@ void Camera_Translate(Camera* cam, Vector* translation)
 {
 	for (int i = 0; i < 3; i++)
 	{
-		*Matrix_Index(cam->translationMatrix, i, 3) += -1.0f * translation->components[i];
+		*Matrix_Index(cam->translationMatrix, i, 3) -= translation->components[i];
 	}
 }
 
@@ -203,6 +205,16 @@ void Camera_ChangeYaw(Camera* cam, const float radians)
 
 	//Post multiply the camera's current rotation matrix with the yaw rotation matrix
 	Matrix_GetProductMatrix(cam->rotationMatrix, &rotation, &yaw);
+}
+
+///
+//Updates the view matrix of a given camera
+//
+//Parameters:
+//	cam: A pointer to the camera to update the view matrix of
+void Camera_UpdateViewMatrix(Camera* cam)
+{
+	Camera_ToMatrix4(cam, cam->viewMatrix);
 }
 
 ///

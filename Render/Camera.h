@@ -7,6 +7,7 @@ typedef struct Camera
 {
 	Matrix* translationMatrix;
 	Matrix* rotationMatrix;
+	Matrix* viewMatrix;
 	Matrix* projectionMatrix;
 
 	float aspectX, aspectY;
@@ -83,6 +84,13 @@ void Camera_ChangePitch(Camera* cam, const float radians);
 //	cam: A pointer to the camera having it's yaw changed
 //	radians: The radians to alter the yaw by
 void Camera_ChangeYaw(Camera* cam, const float radians);
+
+///
+//Updates the view matrix of a given camera
+//
+//Parameters:
+//	cam: A pointer to the camera to update the view matrix of
+void Camera_UpdateViewMatrix(Camera* cam);
 
 ///
 //Compiles the camera into a 4x4 view matrix containing a translation to camera view

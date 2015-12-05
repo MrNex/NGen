@@ -1,3 +1,6 @@
+#ifndef RENDERINGMANAGER_H
+#define RENDERINGMANAGER_H
+
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
@@ -5,14 +8,25 @@
 
 #include "../Render/ShaderProgram.h"
 #include "../Render/Camera.h"
+#include "../Render/GeometryBuffer.h"
 
 #include "../GObject/GObject.h"
 
 #include "../Data/LinkedList.h"
 
+enum RenderingManager_ShaderType
+{
+	RenderingManager_ShaderType_FORWARD,
+	RenderingManager_ShaderType_DEFERREDGEOMETRY,
+	RenderingManager_ShaderType_DEFERREDPOINTLIGHT,
+	RenderingManager_ShaderType_DEFERREDDIRLIGHT,
+	RenderingManager_ShaderType_NUMSHADERS
+};
+
 typedef struct RenderingBuffer
 {
-	ShaderProgram** shaderPrograms;
+	ShaderProgram* shaderPrograms[RenderingManager_ShaderType_NUMSHADERS];
+	GeometryBuffer* gBuffer;
 	Camera* camera;
 	Vector* directionalLightVector;
 	unsigned char debugOctTree;
@@ -32,11 +46,25 @@ void RenderingManager_Initialize(void);
 void RenderingManager_Free(void);
 
 ///
-//Renders a gameobject as it's mesh.
+//Assigns the attributes of the active camera to the necessary shader program uniforms
+void RenderingManager_SetCameraUniforms(void);
+
+///
+//Renders a list of gameobjects using the forward rendering pipeline as their individual meshs.
+//Skips a gameobject if it does not have a mesh
 //
 //Parameters:
-//	GO: Game object to render
-void RenderingManager_Render(LinkedList* GameObjects);
+//	gameObjectsO: Game object to render
+void RenderingManager_Render(LinkedList* gameObjects);
+
+///
+//Renders a list of gameobjects using the Deferred Rendering pipeline
+//as their individual meshes. Skips any gameobject which does not have
+//a mesh.
+//
+//Parameters:
+//	gameObjects: A pointer to a linked list containing the gameobjects to render.
+void RenderingManager_RenderDeferred(LinkedList* gameObjects);
 
 ///
 //Renders the OctTree
@@ -56,4 +84,4 @@ void RenderingManager_RenderOctTree(struct OctTree_Node* nodeToRender, Matrix* m
 //Returns:
 //	RenderingManager's internal Rendering Buffer
 RenderingBuffer* RenderingManager_GetRenderingBuffer();
-
+#endif

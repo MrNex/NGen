@@ -1,14 +1,26 @@
+#ifndef SHADERPROGRAM_H
+#define SHADERPROGRAM_H
+
 #include <GL/glew.h>
 #include <GL/freeglut.h>
+
+#include "../Data/LinkedList.h"
+
+///
+//Forward declaration of RenderingBuffer struct
+struct RenderingBuffer;
+
+///
+//Defines the set of uniforms needed by this shader program
+typedef void* UniformSet;
 
 typedef struct ShaderProgram
 {
 	//Base members
 	GLuint shaderProgramID;
-	GLuint vertexShaderID;
-	GLuint fragmentShaderID;
 
 	//Program uniforms
+	UniformSet uniforms;
 	GLint modelMatrixLocation;
 	GLint viewMatrixLocation;
 	GLint projectionMatrixLocation;
@@ -22,6 +34,9 @@ typedef struct ShaderProgram
 
 	GLint textureLocation;
 
+	//Function to begin rendering
+	void (*Render)(struct ShaderProgram* prog, struct RenderingBuffer* buffer, LinkedList* listToRender);
+	
 } ShaderProgram;
 
 ///
@@ -46,3 +61,4 @@ void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char
 //Parameters:
 //	prog: The shader program to free
 void ShaderProgram_Free(ShaderProgram* prog);
+#endif
