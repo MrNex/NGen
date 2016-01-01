@@ -52,7 +52,7 @@ void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char
 	glDeleteShader(fsShaderID);
 
 	//Set uniforms to NULL to avoid errors if somebody improperly initializes a shader program.
-	prog->uniforms = NULL;
+	prog->members = NULL;
 
 	//Program complete, checking for errors
 	//
@@ -62,21 +62,6 @@ void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char
 	//Valid shaders are returned here
 	if (status == GL_TRUE)
 	{
-
-		//Get uniforms
-		/*
-		prog->modelMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "modelMatrix");
-		prog->viewMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "viewMatrix");
-		prog->projectionMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "projectionMatrix");
-		prog->modelViewProjectionMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "modelViewProjectionMatrix");
-
-		prog->colorMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "colorMatrix" );
-		prog->tileLocation = glGetUniformLocation(prog->shaderProgramID, "tileVector");
-
-		prog->directionalLightVectorLocation = glGetUniformLocation(prog->shaderProgramID, "directionalLightVector");
-
-		prog->textureLocation = glGetUniformLocation(prog->shaderProgramID, "textureDiffuse");
-*/
 		return;
 	}
 
@@ -113,8 +98,7 @@ void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char
 void ShaderProgram_Free(ShaderProgram* prog)
 {
 	glDeleteProgram(prog->shaderProgramID);
-	if(prog->uniforms != NULL)
-		free(prog->uniforms);
+	prog->FreeMembers(prog);
 	free(prog);
 }
 

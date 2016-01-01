@@ -11,8 +11,8 @@
 struct RenderingBuffer;
 
 ///
-//Defines the set of uniforms needed by this shader program
-typedef void* UniformSet;
+//Defines the set of uniforms/members needed by this shader program
+typedef void* ShaderProgram_Members;
 
 typedef struct ShaderProgram
 {
@@ -20,7 +20,7 @@ typedef struct ShaderProgram
 	GLuint shaderProgramID;
 
 	//Program uniforms
-	UniformSet uniforms;
+	ShaderProgram_Members members;
 	GLint modelMatrixLocation;
 	GLint viewMatrixLocation;
 	GLint projectionMatrixLocation;
@@ -36,6 +36,9 @@ typedef struct ShaderProgram
 
 	//Function to begin rendering
 	void (*Render)(struct ShaderProgram* prog, struct RenderingBuffer* buffer, LinkedList* listToRender);
+
+	//Function to free shader members
+	void (*FreeMembers)(struct ShaderProgram* prog);
 	
 } ShaderProgram;
 

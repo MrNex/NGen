@@ -4,7 +4,7 @@
 #include "../Manager/AssetManager.h"
 #include "../Compatibility/ProgramUniform.h"
 
-typedef struct ForwardShaderProgram_UniformSet
+typedef struct ForwardShaderProgram_Members
 {
 	GLint modelMatrixLocation;
 	GLint viewMatrixLocation;
@@ -16,24 +16,31 @@ typedef struct ForwardShaderProgram_UniformSet
 	GLint colorMatrixLocation;
 	GLint textureLocation;
 	GLint tileLocation;
-} ForwardShaderProgram_UniformSet;
+} ForwardShaderProgram_Members;
 
 ///
 //Static function declarataions
 
 ///
-//Allocates a set of uniform variables needed by this shader program
+//Allocates a set of uniform variables and members needed by this shader program
 //
 //Returns:
-//	A (void) pointer to a struct containing the set of uniforms this shader program needs
-static UniformSet ForwardShaderProgram_AllocateUniformSet(void);
+//	A (void) pointer to a struct containing the set of uniforms/members this shader program needs
+static ShaderProgram_Members ForwardShaderProgram_AllocateMembers(void);
 
 ///
-//Initializes the set of uniforms needed by a ForwardShaderProgram
+//Initializes the set of uniforms/members needed by a ForwardShaderProgram
 //
 //Parameters:
-//	prog: A to the uniform set to initialize
-static void ForwardShaderProgram_InitializeUniformSet(ShaderProgram* prog);
+//	prog: A shader program to initialize the uniforms/members of
+static void ForwardShaderProgram_InitializeMembers(ShaderProgram* prog);
+
+///
+//Frees the set of uniforms/members used by this shader program
+//
+//Parameters:
+//	prog: A pointer to the shader program to free the uniforms/members of
+static void ForwardShaderProgram_FreeMembers(ShaderProgram* prog);
 
 ///
 //Sets the uniform varaibles needed by this shader program 
@@ -77,9 +84,10 @@ void ForwardShaderProgram_Initialize(ShaderProgram* prog)
 {
 	ShaderProgram_Initialize(prog, "Shader/ForwardVertexShader.glsl", "Shader/ForwardFragmentShader.glsl");
 
-	prog->uniforms = ForwardShaderProgram_AllocateUniformSet();
-	ForwardShaderProgram_InitializeUniformSet(prog);
+	prog->members = ForwardShaderProgram_AllocateMembers();
+	ForwardShaderProgram_InitializeMembers(prog);
 	prog->Render = ForwardShaderProgram_Render;
+	prog->FreeMembers = ForwardShaderProgram_FreeMembers;
 }
 
 ///
@@ -90,9 +98,9 @@ void ForwardShaderProgram_Initialize(ShaderProgram* prog)
 //
 //Returns:
 //	A (void) pointer to a struct containing the set of uniforms this shader program needs
-static UniformSet ForwardShaderProgram_AllocateUniformSet(void)
+static ShaderProgram_Members ForwardShaderProgram_AllocateMembers(void)
 {
-	ForwardShaderProgram_UniformSet* uniforms = malloc(sizeof(ForwardShaderProgram_UniformSet));
+	ForwardShaderProgram_Members* uniforms = malloc(sizeof(ForwardShaderProgram_Members));
 	return uniforms;
 }
 
@@ -101,20 +109,32 @@ static UniformSet ForwardShaderProgram_AllocateUniformSet(void)
 //
 //Parameters:
 //	prog: A pointer to the program with the uniform set to initialize
-static void ForwardShaderProgram_InitializeUniformSet(ShaderProgram* prog)
+static void ForwardShaderProgram_InitializeMembers(ShaderProgram* prog)
 {
-	ForwardShaderProgram_UniformSet* uniforms = prog->uniforms;
-	uniforms->modelMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "modelMatrix");
-	uniforms->viewMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "viewMatrix");
-	uniforms->projectionMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "projectionMatrix");
-	uniforms->modelViewProjectionMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "modelViewProjectionMatrix");
+	ForwardShaderProgram_Members* members = prog->members;
+	members->modelMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "modelMatrix");
+	//TODO: I don't believe the view matrix is needed in this shader program, remove.
+	members->viewMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "viewMatrix");
+	members->projectionMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "projectionMatrix");
+	members->modelViewProjectionMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "modelViewProjectionMatrix");
 
 
-	uniforms->directionalLightVectorLocation = glGetUniformLocation(prog->shaderProgramID, "directionalLightVector");
+	members->directionalLightVectorLocation = glGetUniformLocation(prog->shaderProgramID, "directionalLightVector");
 
-	uniforms->colorMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "colorMatrix" );
-	uniforms->textureLocation = glGetUniformLocation(prog->shaderProgramID, "textureDiffuse");
-	uniforms->tileLocation = glGetUniformLocation(prog->shaderProgramID, "tileVector");
+	members->colorMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "colorMatrix" );
+	members->textureLocation = glGetUniformLocation(prog->shaderProgramID, "textureDiffuse");
+	members->tileLocation = glGetUniformLocation(prog->shaderProgramID, "tileVector");
+}
+
+///
+//Frees the set of uniforms/members used by this shader program
+//
+//Parameters:
+//	prog: A pointer to the shader program to free the uniforms/members of
+void ForwardShaderProgram_FreeMembers(ShaderProgram* prog)
+{
+	//No special instructions for this shader
+	free(prog->members);
 }
 
 ///
@@ -128,13 +148,13 @@ static void ForwardShaderProgram_InitializeUniformSet(ShaderProgram* prog)
 //	buffer: A pointer to the active Rendering Buffer containing the information needed for the uniforms
 static void ForwardShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct RenderingBuffer* buffer)
 {
-	ForwardShaderProgram_UniformSet* uniforms = prog->uniforms;
+	ForwardShaderProgram_Members* members = prog->members;
 	
 	//Directional light
 	ProgramUniform3fv
 	(
 		prog->shaderProgramID, 
-		uniforms->directionalLightVectorLocation, 
+		members->directionalLightVectorLocation, 
 		1,
 		buffer->directionalLightVector->components
 	);
@@ -143,7 +163,7 @@ static void ForwardShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct
 	ProgramUniformMatrix4fv
 	(
 		prog->shaderProgramID,
-		uniforms->viewMatrixLocation,
+		members->viewMatrixLocation,
 		1,
 		GL_TRUE,
 		buffer->camera->viewMatrix->components
@@ -153,13 +173,15 @@ static void ForwardShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct
 	ProgramUniformMatrix4fv
 	(
 	 	prog->shaderProgramID,
-		uniforms->projectionMatrixLocation,
+		members->projectionMatrixLocation,
 		1,
 		GL_TRUE,
 		buffer->camera->projectionMatrix->components
 	);
 	
 }
+
+
 
 ///
 //Sets the uniform variables needed by this shader program
@@ -174,7 +196,7 @@ static void ForwardShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct
 static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera* cam, GObject* gameObj)
 {
   
-	ForwardShaderProgram_UniformSet* uniforms = prog->uniforms;
+	ForwardShaderProgram_Members* members = prog->members;
 
 	Matrix model;
 	Matrix modelViewProjection;
@@ -191,7 +213,7 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 	ProgramUniformMatrix4fv
 	(
 		prog->shaderProgramID,
-		uniforms->modelMatrixLocation,
+		members->modelMatrixLocation,
 		1,
 		GL_TRUE,
 		model.components
@@ -201,7 +223,7 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 	ProgramUniformMatrix4fv
 	(
 		prog->shaderProgramID,
-		uniforms->modelViewProjectionMatrixLocation,
+		members->modelViewProjectionMatrixLocation,
 		1,
 		GL_TRUE,
 		modelViewProjection.components
@@ -215,7 +237,7 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 		ProgramUniformMatrix4fv
 		(
 			prog->shaderProgramID,
-			uniforms->colorMatrixLocation,
+			members->colorMatrixLocation,
 			1,
 			GL_TRUE,
 			material->colorMatrix->components
@@ -225,7 +247,7 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 		ProgramUniform2fv
 		(
 			prog->shaderProgramID,
-			uniforms->tileLocation,
+			members->tileLocation,
 			1,
 			material->tile->components
 		);
@@ -233,7 +255,7 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 		//Texture
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, material->texture->textureID);
-		ProgramUniform1i(prog->shaderProgramID, uniforms->textureLocation, 0);
+		ProgramUniform1i(prog->shaderProgramID, members->textureLocation, 0);
 	}
 	else
 	{
@@ -250,7 +272,7 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 		ProgramUniformMatrix4fv
 		(
 			prog->shaderProgramID,
-			uniforms->colorMatrixLocation,
+			members->colorMatrixLocation,
 			1,
 			GL_TRUE,
 			defaultColorMatrix
@@ -260,7 +282,7 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 		ProgramUniform2fv
 		(
 			prog->shaderProgramID,
-			uniforms->tileLocation,
+			members->tileLocation,
 			1,
 			defaultTile
 		);
@@ -268,7 +290,7 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 		//Texture
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, AssetManager_LookupTexture("Test")->textureID);
-		ProgramUniform1i(prog->shaderProgramID, uniforms->textureLocation, 0);
+		ProgramUniform1i(prog->shaderProgramID, members->textureLocation, 0);
 
 
 	}

@@ -6,27 +6,23 @@
 
 #include "ObjectManager.h"
 
-#include "../Render/ShaderProgram.h"
+#include "../Render/RenderPipeline.h"
 #include "../Render/Camera.h"
-#include "../Render/GeometryBuffer.h"
 
 #include "../GObject/GObject.h"
 
 #include "../Data/LinkedList.h"
 
-enum RenderingManager_ShaderType
+enum RenderingManager_Pipeline
 {
-	RenderingManager_ShaderType_FORWARD,
-	RenderingManager_ShaderType_DEFERREDGEOMETRY,
-	RenderingManager_ShaderType_DEFERREDPOINTLIGHT,
-	RenderingManager_ShaderType_DEFERREDDIRLIGHT,
-	RenderingManager_ShaderType_NUMSHADERS
+	RenderingManager_Pipeline_FORWARD,
+	RenderingManager_Pipeline_DEFERRED,
+	RenderingManager_Pipeline_NUMSHADERS
 };
 
 typedef struct RenderingBuffer
 {
-	ShaderProgram* shaderPrograms[RenderingManager_ShaderType_NUMSHADERS];
-	GeometryBuffer* gBuffer;
+	RenderPipeline* renderPipelines[RenderingManager_Pipeline_NUMSHADERS];
 	Camera* camera;
 	Vector* directionalLightVector;
 	unsigned char debugOctTree;

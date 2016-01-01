@@ -6,7 +6,7 @@
 
 #include "AssetManager.h"
 
-#include "../Render/ForwardShaderProgram.h"
+#include "../Render/ForwardRenderPipeline.h"
 
 ///
 //Internals
@@ -51,7 +51,9 @@ void RenderingManager_Initialize(void)
 	renderingBuffer = RenderingManager_AllocateBuffer();
 	RenderingManager_InitializeBuffer(renderingBuffer);
 
-	if (renderingBuffer->shaderPrograms[RenderingManager_ShaderType_FORWARD]->shaderProgramID != 0)
+	//TODO: DO the following checks inside of the render pipelines
+	/*
+	if (renderingBuffer->renderPipelines[RenderingManager_Pipeline_FORWARD]->shaderProgramID != 0)
 	{
 
 		glUseProgram(renderingBuffer->shaderPrograms[RenderingManager_ShaderType_FORWARD]->shaderProgramID);
@@ -61,6 +63,7 @@ void RenderingManager_Initialize(void)
 		printf("\nError Creating Shader Program!\nShader Results:\nProgram index: %d\n",
 				renderingBuffer->shaderPrograms[0]->shaderProgramID);
 	}
+	*/
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glPointSize(2.0f);
@@ -92,17 +95,17 @@ RenderingBuffer* RenderingManager_GetRenderingBuffer()
 //
 //Parameters:
 //	gameObjects: A pointer to a linked list containing the gameobjects to render.
-void RenderingManager_RenderDeferred(LinkedList* gameObjects)
-{
+//void RenderingManager_RenderDeferred(LinkedList* gameObjects)
+//{
 	//Update the camera's view matrix
-	Camera_UpdateViewMatrix(renderingBuffer->camera);
+//	Camera_UpdateViewMatrix(renderingBuffer->camera);
 
 	//Set camera uniform variables
 	
 
 	//First perform the geometry pass
 	
-}
+//}
 
 ///
 //Renders a gameobject as it's mesh.
@@ -117,108 +120,18 @@ void RenderingManager_Render(LinkedList* gameObjects)
 	//Update the camera's view matrix
 	Camera_UpdateViewMatrix(renderingBuffer->camera);
 
-	renderingBuffer->shaderPrograms[RenderingManager_ShaderType_FORWARD]->Render
+	renderingBuffer->renderPipelines[RenderingManager_Pipeline_FORWARD]->Render
 	(
-		renderingBuffer->shaderPrograms[RenderingManager_ShaderType_FORWARD],
+		renderingBuffer->renderPipelines[RenderingManager_Pipeline_FORWARD],
 		renderingBuffer,
 		gameObjects
 	);
-	/*
-	GLuint shaderProgramID = renderingBuffer->shaderPrograms[0]->shaderProgramID;
-	GLint dirLightVectorLoc = renderingBuffer->shaderPrograms[0]->directionalLightVectorLocation;
-	float* components = renderingBuffer->directionalLightVector->components;
-	GLint viewMatrixLocation = renderingBuffer->shaderPrograms[0]->viewMatrixLocation;
-	GLint projectionMatrixLocation = renderingBuffer->shaderPrograms[0]->projectionMatrixLocation;
-	GLint modelMatrixLocation = renderingBuffer->shaderPrograms[0]->modelMatrixLocation;
-	GLint modelViewProjectionMatrixLocation = renderingBuffer->shaderPrograms[0]->modelViewProjectionMatrixLocation;
-	GLint colorMatrixLocation = renderingBuffer->shaderPrograms[0]->colorMatrixLocation;
-	GLint tileLocation = renderingBuffer->shaderPrograms[0]->tileLocation;
-	GLint textureLocation = renderingBuffer->shaderPrograms[0]->textureLocation;
-
-	//Set directional Light
-	ProgramUniform3fv(shaderProgramID, dirLightVectorLoc,  1, components);
-
-
-	Matrix modelMatrix;
-	Matrix_INIT_ON_STACK(modelMatrix, 4, 4);
-	Matrix viewMatrix;
-	Matrix_INIT_ON_STACK(viewMatrix, 4, 4);
-	Matrix modelViewProjectionMatrix;
-	Matrix_INIT_ON_STACK(modelViewProjectionMatrix, 4, 4);
-
-	//Turn camera's frame of reference into view matrix
-	Camera_ToMatrix4(renderingBuffer->camera, &viewMatrix);
-
-	//Set viewMatrix uniform
-	ProgramUniformMatrix4fv(shaderProgramID, viewMatrixLocation,  1, GL_TRUE, viewMatrix.components);
-
-	//Set projectionMatrix Uniform
-	ProgramUniformMatrix4fv(shaderProgramID, projectionMatrixLocation,  1, GL_TRUE, renderingBuffer->camera->projectionMatrix->components);
-
-
+	/*	
 	struct LinkedList_Node* current = gameObjects->head;
 
 	while (current != NULL)
 	{
 		GObject* gameObj = (GObject*)(current->data);
-		//Render gameobject's mesh if it exists
-		if (gameObj->mesh != NULL)
-		{
-			//Set modelMatrix uniform
-			FrameOfReference_ToMatrix4(gameObj->frameOfReference, &modelMatrix);
-
-			ProgramUniformMatrix4fv(shaderProgramID, modelMatrixLocation,  1, GL_TRUE, modelMatrix.components);
-
-			//Construct modelViewProjectionMatrix
-			Matrix_Copy(&modelViewProjectionMatrix, &modelMatrix);
-			Matrix_TransformMatrix(&viewMatrix, &modelViewProjectionMatrix);
-			Matrix_TransformMatrix(renderingBuffer->camera->projectionMatrix, &modelViewProjectionMatrix);
-			//Set modelViewProjectionMatrix uniform
-
-			ProgramUniformMatrix4fv(shaderProgramID, modelViewProjectionMatrixLocation,  1, GL_TRUE, modelViewProjectionMatrix.components);
-
-			if (gameObj->material != NULL)
-			{
-				//Set color matrix
-				ProgramUniformMatrix4fv(shaderProgramID, colorMatrixLocation,  1, GL_TRUE, gameObj->material->colorMatrix->components);
-
-				ProgramUniform2fv(shaderProgramID, tileLocation,  1, gameObj->material->tile->components);
-
-
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, gameObj->material->texture->textureID);
-
-				//Send texture to uniform
-				ProgramUniform1i(shaderProgramID, textureLocation, 0);
-			}
-			else
-			{
-				float tile[2] = {1.0f, 1.0f};
-				float colorMatrix[16] = {
-					1.0f, 0.0f, 0.0f, 0.0f,
-					0.0f, 1.0f, 0.0f, 0.0f,
-					0.0f, 0.0f, 1.0f, 0.0f,
-					0.0f, 0.0f, 0.0f, 1.0f
-				};
-
-				//Set color matrix
-				ProgramUniformMatrix4fv(shaderProgramID, colorMatrixLocation,  1, GL_TRUE, colorMatrix);
-
-				//Set the tileVector
-				ProgramUniform2fv(shaderProgramID, tileLocation,  1, tile);
-
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, AssetManager_LookupTexture("Test")->textureID);
-
-				//Send texture to uniform
-				ProgramUniform1i(shaderProgramID, textureLocation, 0);
-			}
-
-
-			//Setup GPU program to draw this mesh
-			Mesh_Render(gameObj->mesh, gameObj->mesh->primitive);
-		}
-
 		//Render gameObject's collider if it exists & in debug mode
 		if(gameObj->collider != NULL && gameObj->collider->debug)
 		{
@@ -327,6 +240,7 @@ void RenderingManager_Render(LinkedList* gameObjects)
 //	viewMatrix: THe view matrix of the camera
 //	projectionMatrix: The projection matrix of the camera
 //	mesh: The mesh to draw as a representation of the oct tree
+/*
 void RenderingManager_RenderOctTree(struct OctTree_Node* nodeToRender, Matrix* modelViewProjectionMatrix, Matrix* viewMatrix, Matrix* projectionMatrix, Mesh* mesh)
 {
 	//Only render trees which contain objects?
@@ -363,6 +277,7 @@ void RenderingManager_RenderOctTree(struct OctTree_Node* nodeToRender, Matrix* m
 		Mesh_Render(mesh, GL_LINES);
 	}
 }
+*/
 
 ///
 //Allocates memory for a rendering buffer
@@ -385,23 +300,26 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 	//Shaders
 	//buffer->shaderPrograms = (ShaderProgram**)malloc(sizeof(ShaderProgram*));
 
-	buffer->shaderPrograms[RenderingManager_ShaderType_FORWARD] = ShaderProgram_Allocate();
-	ForwardShaderProgram_Initialize(buffer->shaderPrograms[RenderingManager_ShaderType_FORWARD]);
+	buffer->renderPipelines[RenderingManager_Pipeline_FORWARD] = RenderPipeline_Allocate();
+	ForwardRenderPipeline_Initialize(buffer->renderPipelines[RenderingManager_Pipeline_FORWARD]);
 
 
+	//
+	//TODO: Perform these error checks in the render pipeline initialization
+	//TODO: Perform the g buffer initialization in DeferredRenderPipeline
 	//Checking shaders
-	if (buffer->shaderPrograms[0]->shaderProgramID == 0)
-	{
-		printf("\nError Creating Shader Program!\nShader Results:\nProgramIndex: %d\n",
-				buffer->shaderPrograms[0]->shaderProgramID);
-
-	}
+	//if (buffer->shaderPrograms[0]->shaderProgramID == 0)
+	//{
+	//	printf("\nError Creating Shader Program!\nShader Results:\nProgramIndex: %d\n",
+	//			buffer->shaderPrograms[0]->shaderProgramID);
+	//
+	//}
 
 	//Geometry Buffer
-	int width = glutGet(GLUT_WINDOW_WIDTH);
-	int height = glutGet(GLUT_WINDOW_HEIGHT);
-	buffer->gBuffer = GeometryBuffer_Allocate();
-	GeometryBuffer_Initialize(buffer->gBuffer,width, height); 
+	//int width = glutGet(GLUT_WINDOW_WIDTH);
+	//int height = glutGet(GLUT_WINDOW_HEIGHT);
+	//buffer->gBuffer = GeometryBuffer_Allocate();
+	//GeometryBuffer_Initialize(buffer->gBuffer,width, height); 
 
 	//Camera
 	buffer->camera = Camera_Allocate();
@@ -425,9 +343,9 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 //      buffer: The buffer to free
 static void RenderingManager_FreeBuffer(RenderingBuffer* buffer)
 {
-	ShaderProgram_Free(buffer->shaderPrograms[0]);
+	RenderPipeline_Free(buffer->renderPipelines[0]);
 	//free(buffer->shaderPrograms);
-	GeometryBuffer_Free(buffer->gBuffer);
+	//GeometryBuffer_Free(buffer->gBuffer);
 	Camera_Free(buffer->camera);
 	Vector_Free(buffer->directionalLightVector);
 }

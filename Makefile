@@ -40,6 +40,8 @@ OBJ= \
 	Bin/ForwardShaderProgram.o \
 	Bin/Camera.o \
 	Bin/GeometryBuffer.o \
+	Bin/RenderPipeline.o \
+	Bin/ForwardRenderPipeline.o \
 	Bin/RigidBody.o \
 	Bin/SphereCollider.o \
 	Bin/AABBCollider.o \
@@ -115,6 +117,12 @@ Bin/GeometryBuffer.o: Render/GeometryBuffer.c Render/GeometryBuffer.h
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/ForwardShaderProgram.o: Render/ForwardShaderProgram.c Render/ForwardShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/RenderPipeline.o: Render/RenderPipeline.c Render/RenderPipeline.h Bin/ShaderProgram.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/ForwardRenderPipeline.o: Render/ForwardRenderPipeline.c Render/ForwardRenderPipeline.h Bin/RenderPipeline.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##
