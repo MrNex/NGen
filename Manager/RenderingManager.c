@@ -7,6 +7,7 @@
 #include "AssetManager.h"
 
 #include "../Render/ForwardRenderPipeline.h"
+#include "../Render/DeferredRenderPipeline.h"
 
 ///
 //Internals
@@ -303,10 +304,11 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 	buffer->renderPipelines[RenderingManager_Pipeline_FORWARD] = RenderPipeline_Allocate();
 	ForwardRenderPipeline_Initialize(buffer->renderPipelines[RenderingManager_Pipeline_FORWARD]);
 
-
+	buffer->renderPipelines[RenderingManager_Pipeline_DEFERRED] = RenderPipeline_Allocate();
+	DeferredRenderPipeline_Initialize(buffer->renderPipelines[RenderingManager_Pipeline_DEFERRED]);
+	
 	//
 	//TODO: Perform these error checks in the render pipeline initialization
-	//TODO: Perform the g buffer initialization in DeferredRenderPipeline
 	//Checking shaders
 	//if (buffer->shaderPrograms[0]->shaderProgramID == 0)
 	//{
@@ -315,11 +317,6 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 	//
 	//}
 
-	//Geometry Buffer
-	//int width = glutGet(GLUT_WINDOW_WIDTH);
-	//int height = glutGet(GLUT_WINDOW_HEIGHT);
-	//buffer->gBuffer = GeometryBuffer_Allocate();
-	//GeometryBuffer_Initialize(buffer->gBuffer,width, height); 
 
 	//Camera
 	buffer->camera = Camera_Allocate();
@@ -344,6 +341,7 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 static void RenderingManager_FreeBuffer(RenderingBuffer* buffer)
 {
 	RenderPipeline_Free(buffer->renderPipelines[0]);
+	RenderPipeline_Free(buffer->renderPipelines[1]);
 	//free(buffer->shaderPrograms);
 	//GeometryBuffer_Free(buffer->gBuffer);
 	Camera_Free(buffer->camera);

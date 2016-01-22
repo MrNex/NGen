@@ -299,6 +299,7 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 
 ///
 //Renders a list of gameObjects using a ForwardShaderProgram
+//Note: Sets the active shader program to this
 //
 //Parameters:
 //	prog: A pointer to The shader program to use to render

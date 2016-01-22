@@ -24,6 +24,9 @@ GeometryBuffer* GeometryBuffer_Allocate(void)
 //	textureHeight: The height of the GeometryBuffer's textures
 void GeometryBuffer_Initialize(GeometryBuffer* gBuffer, unsigned int textureWidth, unsigned int textureHeight)
 {
+	gBuffer->textureWidth = textureWidth;
+	gBuffer->textureHeight = textureHeight;
+
 	//Create a new frame buffer object
 	glGenFramebuffers(1, &gBuffer->fbo);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBuffer->fbo);
@@ -67,11 +70,11 @@ void GeometryBuffer_Initialize(GeometryBuffer* gBuffer, unsigned int textureWidt
 	(
 		GL_TEXTURE_2D,		//Type
 		0,			//Mipmapping level
-		GL_RGB8,		//Internal format of image data (3 components each a 8 bits)
+		GL_RGBA8,		//Internal format of image data (4 components each a 8 bits)
 		textureWidth,		//Width of texture
 		textureHeight,		//Height of texture
 		0,			//Border
-		GL_RGB,			//Format of data to output into texture
+		GL_RGBA,			//Format of data to output into texture
 		GL_UNSIGNED_BYTE,	//Data type of each element in texture
 		NULL			//Texture data (We will be generating the texture
 	);

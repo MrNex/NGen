@@ -20,6 +20,7 @@ typedef struct GeometryBuffer
 {
 	GLuint fbo;						//Frame buffer object
 	GLuint textures[GeometryBuffer_TextureType_NUMTEXTURES];
+	int textureWidth, textureHeight;
 } GeometryBuffer;
 
 ///

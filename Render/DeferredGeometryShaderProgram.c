@@ -8,8 +8,6 @@
 
 typedef struct DeferredGeometryShaderProgram_Members
 {
-	GeometryBuffer* geomBuffer;
-
 	//Uniforms
 	GLint modelMatrixLocation;
 	GLint modelViewProjectionMatrixLocation;
@@ -84,7 +82,12 @@ static void DeferredGeometryShaderProgram_Render(ShaderProgram* prog, RenderingB
 void DeferredGeometryShaderProgram_Initialize(ShaderProgram* prog)
 {
 	ShaderProgram_Initialize(prog, "Shader/DeferredGeometryVertexShader.glsl", "Shader/DeferredGeometryFragmentShader.glsl");
+	
+	prog->members = DeferredGeometryShaderProgram_AllocateMembers();
+	DeferredGeometryShaderProgram_InitializeMembers(prog);
 
+	prog->FreeMembers = DeferredGeometryShaderProgram_FreeMembers;
+	prog->Render = DeferredGeometryShaderProgram_Render;	
 	
 }
 
@@ -109,11 +112,6 @@ static void DeferredGeometryShaderProgram_InitializeMembers(ShaderProgram* prog)
 
 	glUseProgram(prog->shaderProgramID);
 
-	members->geomBuffer = GeometryBuffer_Allocate();
-
-	//TODO: Initialize geometry buffer
-
-
 	members->modelMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "modelMatrix");
 	members->modelViewProjectionMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "modelViewProjectionMatrix");
 
@@ -129,7 +127,10 @@ static void DeferredGeometryShaderProgram_InitializeMembers(ShaderProgram* prog)
 //
 //Parameters:
 //	prog: A pointer to the shader program to free the members of
-static void DeferredGeometryShaderProgram_FreeMembers(ShaderProgram* prog);
+static void DeferredGeometryShaderProgram_FreeMembers(ShaderProgram* prog)
+{
+	free(prog->members);
+}
 
 ///
 //Sets the uniform variables needed by this shader program
@@ -138,7 +139,12 @@ static void DeferredGeometryShaderProgram_FreeMembers(ShaderProgram* prog);
 //Parameters: 
 //	prog: A pointer to the deferred geometry shader program to set the constant uniforms of
 //	buffer: A pointer to the rendering buffer to get the uniform values from
-static void DeferredGeometryShaderProgram_SetConstantUniforms(ShaderProgram* prog, RenderingBuffer* buffer);
+static void DeferredGeometryShaderProgram_SetConstantUniforms(ShaderProgram* prog, RenderingBuffer* buffer)
+{
+	//None
+	(void)prog;
+	(void)buffer;
+}
 
 ///
 //Sets the uniform variables needed by this shader program
@@ -148,14 +154,136 @@ static void DeferredGeometryShaderProgram_SetConstantUniforms(ShaderProgram* pro
 //	prog: A pointer to the deferred geometry shader program to set the variable uniforms of
 //	cam: A pointer to the active camera containing information needed to calculate the uniforms
 //	gameObj: A pointer to the GObject containing the information needed for the uniforms
-static void DeferredGeometryShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera* cam, GObject* gameObj);
+static void DeferredGeometryShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera* cam, GObject* gameObj)
+{
+	DeferredGeometryShaderProgram_Members* members = prog->members;
+	
+	Matrix model;
+	Matrix modelViewProjection;
+	
+	Matrix_INIT_ON_STACK(model, 4, 4);
+	Matrix_INIT_ON_STACK(modelViewProjection, 4, 4);
+
+	FrameOfReference_ToMatrix4(gameObj->frameOfReference, &model);
+	Matrix_Copy(&modelViewProjection, &model);
+	Matrix_TransformMatrix(cam->viewMatrix, &modelViewProjection);
+	Matrix_TransformMatrix(cam->projectionMatrix, &modelViewProjection);
+
+	//Model Matrix
+	ProgramUniformMatrix4fv
+	(
+		prog->shaderProgramID,
+		members->modelMatrixLocation,
+		1,
+		GL_TRUE,
+		model.components
+	);
+
+	//Model view projection matrix
+	ProgramUniformMatrix4fv
+	(
+		prog->shaderProgramID,
+		members->modelViewProjectionMatrixLocation,
+		1,
+		GL_TRUE,
+		modelViewProjection.components
+	);
+
+	if(gameObj->material != NULL)
+	{
+		Material* material = gameObj->material;
+
+		//Color matrix
+		ProgramUniformMatrix4fv
+		(
+			prog->shaderProgramID,
+			members->colorMatrixLocation,
+			1,
+			GL_TRUE,
+			material->colorMatrix->components
+		);
+
+		//Tile vector
+		ProgramUniform2fv
+		(
+			prog->shaderProgramID,
+			members->tileLocation,
+			1,
+			material->tile->components
+		);
+
+		//Texture
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, material->texture->textureID);
+		ProgramUniform1i(prog->shaderProgramID, members->textureLocation, 0);
+	}
+	else
+	{
+		static float defaultTile[2] = {1.0f, 1.0f};
+		static float defaultColorMatrix[16] = 
+		{
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f
+		};
+		
+		//Color matrix
+		ProgramUniformMatrix4fv
+		(
+			prog->shaderProgramID,
+			members->colorMatrixLocation,
+			1,
+			GL_TRUE,
+			defaultColorMatrix
+		);
+
+		//Tile vector
+		ProgramUniform2fv
+		(
+			prog->shaderProgramID,
+			members->tileLocation,
+			1,
+			defaultTile
+		);
+
+		//Texture
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, AssetManager_LookupTexture("Test")->textureID);
+		ProgramUniform1i(prog->shaderProgramID, members->textureLocation, 0);
+
+
+	}
+}
 
 
 ///
 //Renders a list of GObjects to the active frame buffer object using a deferred geometry shader program
+//Note: Sets the active shader program to this
 //
 //Parameters:
 //	prog: A pointer to the DeferredGeometryShaderProgram which will be rendering the objects
 //	buffer: A pointer to the rendering buffer to render with
 //	gameObjects: A pointer to a linked list containing GObjects to be rendered
-static void DeferredGeometryShaderProgram_Render(ShaderProgram* prog, RenderingBuffer* buffer, LinkedList* gameObjects);
+static void DeferredGeometryShaderProgram_Render(ShaderProgram* prog, RenderingBuffer* buffer, LinkedList* gameObjects)
+{
+	glUseProgram(prog->shaderProgramID);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	DeferredGeometryShaderProgram_SetConstantUniforms(prog, buffer);
+
+	struct LinkedList_Node* current = gameObjects->head;
+	GObject* gameObj = NULL;
+	while(current != NULL)
+	{
+		gameObj = (GObject*)current->data;
+		if(gameObj->mesh != NULL)
+		{
+			DeferredGeometryShaderProgram_SetVariableUniforms(prog,  buffer->camera, gameObj);
+			Mesh_Render(gameObj->mesh, gameObj->mesh->primitive);
+		}
+		current = current->next;
+	}
+
+}

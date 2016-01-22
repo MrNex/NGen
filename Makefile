@@ -13,6 +13,7 @@ STATES_H=$(wildcard State/*.h)
 STATES_O=$(addprefix Bin/State/,$(notdir $(STATES_C:.c=.o)))
 
 MANAGERS_O= \
+	Bin/EnvironmentManager.o \
 	Bin/ObjectManager.o \
 	Bin/AssetManager.o \
 	Bin/CollisionManager.o \
@@ -38,10 +39,12 @@ OBJ= \
 	Bin/Material.o \
 	Bin/ShaderProgram.o \
 	Bin/ForwardShaderProgram.o \
+	Bin/DeferredGeometryShaderProgram.o \
 	Bin/Camera.o \
 	Bin/GeometryBuffer.o \
 	Bin/RenderPipeline.o \
 	Bin/ForwardRenderPipeline.o \
+	Bin/DeferredRenderPipeline.o \
 	Bin/RigidBody.o \
 	Bin/SphereCollider.o \
 	Bin/AABBCollider.o \
@@ -50,6 +53,7 @@ OBJ= \
 	Bin/GObject.o \
 	Bin/Loader.o \
 	Bin/ProgramUniform.o \
+	Bin/EnvironmentManager.o \
 	Bin/ObjectManager.o \
 	Bin/RenderingManager.o \
 	Bin/AssetManager.o \
@@ -119,10 +123,16 @@ Bin/GeometryBuffer.o: Render/GeometryBuffer.c Render/GeometryBuffer.h
 Bin/ForwardShaderProgram.o: Render/ForwardShaderProgram.c Render/ForwardShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
+Bin/DeferredGeometryShaderProgram.o: Render/DeferredGeometryShaderProgram.c Render/DeferredGeometryShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
 Bin/RenderPipeline.o: Render/RenderPipeline.c Render/RenderPipeline.h Bin/ShaderProgram.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
-Bin/ForwardRenderPipeline.o: Render/ForwardRenderPipeline.c Render/ForwardRenderPipeline.h Bin/RenderPipeline.o
+Bin/ForwardRenderPipeline.o: Render/ForwardRenderPipeline.c Render/ForwardRenderPipeline.h Bin/RenderPipeline.o Bin/LinkedList.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/DeferredRenderPipeline.o: Render/DeferredRenderPipeline.c Render/DeferredRenderPipeline.h Bin/RenderPipeline.o Bin/GeometryBuffer.o Bin/LinkedList.o Bin/EnvironmentManager.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##
@@ -188,6 +198,9 @@ Bin/PhysicsManager.o: Manager/PhysicsManager.c Manager/PhysicsManager.h Bin/Coll
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/SystemManager.o: Manager/SystemManager.c Manager/SystemManager.h
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/EnvironmentManager.o: Manager/EnvironmentManager.c Manager/EnvironmentManager.h
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##

@@ -21,19 +21,7 @@ typedef struct ShaderProgram
 
 	//Program uniforms
 	ShaderProgram_Members members;
-	GLint modelMatrixLocation;
-	GLint viewMatrixLocation;
-	GLint projectionMatrixLocation;
-	GLint modelViewProjectionMatrixLocation;
 	
-
-	GLint colorMatrixLocation;
-	GLint tileLocation;
-
-	GLint directionalLightVectorLocation;
-
-	GLint textureLocation;
-
 	//Function to begin rendering
 	void (*Render)(struct ShaderProgram* prog, struct RenderingBuffer* buffer, LinkedList* listToRender);
 

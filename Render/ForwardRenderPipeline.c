@@ -17,7 +17,7 @@ static void ForwardRenderPipeline_Render(RenderPipeline* pipeline,struct Renderi
 
 
 ///
-//Function Declarations
+//Function Definitions
 ///
 
 ///

@@ -171,22 +171,23 @@ void DrawLoop(int val)
 //	char* argv[] - Array of C strings of arguments passed from cmd line
 int main(int argc, char* argv[])
 {
-	//Initialize glut
-	glutInit(&argc, argv);
-	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-	glutInitDisplayMode(GLUT_RGBA);
-	glutInitWindowSize(800, 600);
-	glutInitWindowPosition(600, 0);
-	glutInitContextVersion(4, 3);
-	glutInitContextProfile(GLUT_CORE_PROFILE);
+	//Initialize glut & engine environment
+	//glutInit(&argc, argv);
+	//glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+	//glutInitDisplayMode(GLUT_RGBA);
+	//glutInitWindowSize(800, 600);
+	//glutInitWindowPosition(600, 0);
+	//glutInitContextVersion(4, 3);
+	//glutInitContextProfile(GLUT_CORE_PROFILE);
 
 	//Window creation
 	/*int win = */	//Should be cleaned up automatically upon exiting the main loop
-	glutCreateWindow("NGenVS V4.0");
+	//glutCreateWindow("NGenVS V4.0");
 
-	glewExperimental = GL_TRUE;
-	if (glewInit() != GLEW_OK) { return -1; }
+	//glewExperimental = GL_TRUE;
+	//if (glewInit() != GLEW_OK) { return -1; }
 
+	EnvironmentManager_Initialize(&argc, argv);
 
 	//Check for errors
 	CheckGLErrors();
@@ -197,6 +198,8 @@ int main(int argc, char* argv[])
 	glutIdleFunc(Update);
 	glutDisplayFunc(Draw);
 
+	//Calback registration for window manipulation
+	glutReshapeFunc(EnvironmentManager_OnWindowReshape);
 
 	//Callback registration for Input
 	glutPassiveMotionFunc(InputManager_OnMouseMove);
@@ -215,6 +218,8 @@ int main(int argc, char* argv[])
 	//Start the main loop
 	glutMainLoop();
 
+	EnvironmentManager_Free();
+	printf("Environment Done\n");
 	InputManager_Free();
 	printf("Input done\n");
 	RenderingManager_Free();

@@ -12,6 +12,7 @@
 
 #endif
 
+#include "../Manager/EnvironmentManager.h"
 #include "../Manager/InputManager.h"
 #include "../Manager/ObjectManager.h"
 #include "../Manager/RenderingManager.h"

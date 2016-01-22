@@ -13,8 +13,8 @@ out vec3 f_normal;
 
 void main()
 {
-	gl_position = modelViewProjectionMatrix * vec4(v_position, 1.0f);
-	f_worldPosition = modelMatrix * vec4(v_position, 1.0f);
+	gl_Position = modelViewProjectionMatrix * vec4(v_position, 1.0f);
+	f_worldPosition = vec3(modelMatrix * vec4(v_position, 1.0f));
 	f_textureCoordinates = v_textureCoordinates;
-	f_normal = modelMatrix * vec4(v_normal, 0.0f);
+	f_normal = vec3(modelMatrix * vec4(v_normal, 0.0f));
 }
