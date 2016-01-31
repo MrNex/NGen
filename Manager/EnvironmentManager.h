@@ -58,4 +58,25 @@ EnvironmentBuffer* EnvironmentManager_GetEnvironmentBuffer(void);
 //	height: The updated height in pixels of the window
 void EnvironmentManager_OnWindowReshape(int width, int height);
 
+///
+//Generates a random integer within the bounds
+//
+//Parameters:
+//	min: The minimum bound
+//	max: The maximum bound
+//
+//Returns:
+//	An integer between min and max
+int EnvironmentManager_Rand(int min, int max);
+
+///
+//Generates a random float within the bounds
+//
+//Parameters:
+//	min: The minimum bound
+//	max: The maximum bound
+//
+//Returns:
+//	Float between min and max
+float EnvironmentManager_Randf(float min, float max);
 #endif

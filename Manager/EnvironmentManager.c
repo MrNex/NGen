@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 ///
 //Internal Declarations
@@ -69,6 +70,9 @@ void EnvironmentManager_Initialize(int* argc, char** argv)
 		printf("Glew initialization has failed! Aborting program.\n");
 		_Exit(-1);
 	}
+
+	//Seed random generator
+	srand(time(NULL));
 }
 
 ///
@@ -100,6 +104,36 @@ void EnvironmentManager_OnWindowReshape(int width, int height)
 	environmentBuffer->windowWidth = width;
 	environmentBuffer->windowHeight = height;
 	//printf("New window dimensions:\t(%d, %d)\n", width, height);
+}
+
+///
+//Generates a random integer within the bounds
+//
+//Parameters:
+//	min: The minimum bound
+//	max: The maximum bound
+//
+//Returns:
+//	An integer between min and max
+int EnvironmentManager_Rand(int min, int max)
+{
+	return (rand() % (max - min)) + min;
+}
+
+///
+//Generates a random float within the bounds
+//
+//Parameters:
+//	min: The minimum bound
+//	max: The maximum bound
+//
+//Returns:
+//	Float between min and max
+float EnvironmentManager_Randf(float min, float max)
+{
+	float r = (((float)rand()) / ((float)RAND_MAX)) * (max - min) + min;
+	printf("r:\t%f", r);
+	return r;
 }
 
 ///

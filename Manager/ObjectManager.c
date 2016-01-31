@@ -182,7 +182,7 @@ static void ObjectManager_InitializeBuffer(ObjectBuffer* buffer)
 	LinkedList_Initialize(buffer->gameObjects);
 
 	buffer->octTree = OctTree_Allocate();
-	OctTree_Initialize(buffer->octTree, -500.0f, 500.0f, -500.0f, 500.0f, -500.0f, 500.0f);
+	OctTree_Initialize(buffer->octTree, -5000.0f, 5000.0f, -5000.0f, 5000.0f, -5000.0f, 5000.0f);
 }
 
 ///

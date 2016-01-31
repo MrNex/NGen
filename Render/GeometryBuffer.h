@@ -46,4 +46,18 @@ void GeometryBuffer_Initialize(GeometryBuffer* gBuffer, unsigned int textureWidt
 //	gBuffer: A pointer to the geometry buffer being freed
 void GeometryBuffer_Free(GeometryBuffer* gBuffer);
 
+///
+//Binds the Frame Buffer Object of the geometry buffer to bind it's textures to be read from the shaders
+//
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer being bound for reading
+void GeometryBuffer_BindForReading(GeometryBuffer* gBuffer);
+
+///
+//Binds the Frame Buffer Object of the Geometry Buffer to bind it's textures to be written to from the shaders.
+//
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer being bound for writing
+void GeometryBuffer_BindForWriting(GeometryBuffer* gBuffer);
+
 #endif

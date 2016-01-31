@@ -8,6 +8,7 @@
 
 #include "../Render/RenderPipeline.h"
 #include "../Render/Camera.h"
+#include "../Render/DirectionalLight.h"
 
 #include "../GObject/GObject.h"
 
@@ -25,6 +26,7 @@ typedef struct RenderingBuffer
 	RenderPipeline* renderPipelines[RenderingManager_Pipeline_NUMSHADERS];
 	Camera* camera;
 	Vector* directionalLightVector;
+	DirectionalLight* directionalLight;
 	unsigned char debugOctTree;
 } RenderingBuffer;
 

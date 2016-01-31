@@ -3,6 +3,8 @@
 #include "../Manager/EnvironmentManager.h"
 
 #include "DeferredGeometryShaderProgram.h"
+#include "DeferredDirectionalShaderProgram.h"
+
 #include "../Data/LinkedList.h"
 
 #include "GeometryBuffer.h"
@@ -57,7 +59,7 @@ static void DeferredRenderPipeline_Render(RenderPipeline* pipeline, struct Rende
 //	pipeline: A pointer to the RenderPipeline to initialize as a DeferredRenderPipeline
 void DeferredRenderPipeline_Initialize(RenderPipeline* pipeline)
 {
-	RenderPipeline_Initialize(pipeline, 1);
+	RenderPipeline_Initialize(pipeline, 2);
 
 	pipeline->members = DeferredRenderPipeline_AllocateMembers();
 	DeferredRenderPipeline_InitializeMembers(pipeline->members);
@@ -65,7 +67,10 @@ void DeferredRenderPipeline_Initialize(RenderPipeline* pipeline)
 	pipeline->programs[0] = ShaderProgram_Allocate();
 	DeferredGeometryShaderProgram_Initialize(pipeline->programs[0]);
 
-	pipeline->Render = DeferredRenderPipeline_Render;
+	pipeline->programs[1] = ShaderProgram_Allocate();
+	DeferredDirectionalShaderProgram_Initialize(pipeline->programs[1]);
+
+	pipeline->Render = (RenderPipeline_RenderFunc)DeferredRenderPipeline_Render;
 	pipeline->FreeMembers = DeferredRenderPipeline_FreeMembers;
 }
 
@@ -116,49 +121,39 @@ static void DeferredRenderPipeline_Render(RenderPipeline* pipeline, struct Rende
 	DeferredRenderPipeline_Members* members = (DeferredRenderPipeline_Members*)pipeline->members;
 
 	//Bind gBuffer's frame buffer object for writing
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, members->gBuffer->fbo);
-	//Render
-	pipeline->programs[0]->Render(pipeline->programs[0], buffer, gameObjs);
+	GeometryBuffer_BindForWriting(members->gBuffer);
 
+	//The geometry pass must update the depth buffer
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
 
-	//Temp{ 
-	
-	EnvironmentBuffer* envBuffer = EnvironmentManager_GetEnvironmentBuffer();
-	int halfWidth = envBuffer->windowWidth / 2;
-	int halfHeight = envBuffer->windowHeight / 2;
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//Bind gBuffers fbo forreading
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, members->gBuffer->fbo);
+	//Perform geometry pass
+	pipeline->programs[0]->Render(pipeline->programs[0], buffer, gameObjs);
+
+	//Now we should not update the depth buffer to perform the lightning pass.
+	glDepthMask(GL_FALSE);
+	glDisable(GL_DEPTH_TEST);
+
+	//The lighting pass will need to blend the effects of the lighting with that of the geometry pass.
+	//glEnable(GL_BLEND);
+	//glBlendEquation(GL_FUNC_ADD);	//Will add the two resulting colors for each pixel
+	//glBlendFunc(GL_ONE, GL_ONE);	//Scales each by a factor of 1 when adding the geometry and lightning passes.
+
+	//Bind gBuffer FBO to be read from
+	//Note: this binds the default FBO for writing and activates/binds textures
+	GeometryBuffer_BindForReading(members->gBuffer);
+
+	glClear(GL_COLOR_BUFFER_BIT);
 	
-	//Blit gbuffer textures to screen
-	//Position texture
-	glReadBuffer(GL_COLOR_ATTACHMENT0 + GeometryBuffer_TextureType_POSITION);
-	glBlitFramebuffer(0, 0, members->gBuffer->textureWidth, members->gBuffer->textureHeight,
-			0, 0, halfWidth, halfHeight, 
-			GL_COLOR_BUFFER_BIT, GL_LINEAR);
+	//Perform directional light rendering
+	pipeline->programs[1]->Render(pipeline->programs[1], buffer, members->gBuffer);
+
+	//glDisable(GL_BLEND);
 	
-	//Diffuse texture
-	glReadBuffer(GL_COLOR_ATTACHMENT0 + GeometryBuffer_TextureType_DIFFUSE);
-	glBlitFramebuffer(0, 0, members->gBuffer->textureWidth, members->gBuffer->textureHeight,
-			0, halfHeight, halfWidth, envBuffer->windowHeight, 
-			GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-	//Normal texture
-	glReadBuffer(GL_COLOR_ATTACHMENT0 + GeometryBuffer_TextureType_NORMAL);
-	glBlitFramebuffer(0, 0, members->gBuffer->textureWidth, members->gBuffer->textureHeight,
-			halfWidth, halfHeight, envBuffer->windowWidth, envBuffer->windowHeight,
-			GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-
-	//TextureCoordinate texture
-	glReadBuffer(GL_COLOR_ATTACHMENT0 + GeometryBuffer_TextureType_TEXTURECOORDINATE);
-	glBlitFramebuffer(0, 0, members->gBuffer->textureWidth, members->gBuffer->textureHeight,
-			halfWidth, 0, envBuffer->windowWidth, halfHeight,
-			GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-
 	glFlush();
+
+	//Disable the blending we enabled for the lighting pass.
+	//glDisable(GL_BLEND);
 }

@@ -50,6 +50,15 @@ struct ConvexHullCollider_Face* ConvexHullCollider_AllocateFace();
 void ConvexHullCollider_InitializeFace(struct ConvexHullCollider_Face* face);
 
 ///
+//Initializes a deep copy of a ConvexHullFace
+//This means any pointers will point to a Newly Allocated instance of identical memory unless otherwise noted
+//
+//Parameters:
+//	copy: A pointer to an uninitialized ConvexHullFace to initialize as a deep copy
+//	original: A pointer to a ConvexHullFace to deep copy
+void ConvexHullCollider_InitializeFaceDeepCopy(struct ConvexHullCollider_Face* copy, struct ConvexHullCollider_Face* original);
+
+///
 //Frees memory allocated by a ConvexHull_Face
 //
 //Parameters:
@@ -76,6 +85,15 @@ void ConvexHullCollider_InitializeData(struct ColliderData_ConvexHull* convexDat
 //Parameters:
 //	collider: The colider being initialized
 void ConvexHullCollider_Initialize(struct Collider* collider);
+
+///
+//Initializes a deep copy of a ConvexHullCollider
+//This means any pointers will point to Newly Allocated instances of identical memory unless otherwise noted
+//
+//Parameters:
+//	copy: A pointer to an uninitialized ConvexHullCollider to initialize as a deep copy
+//	original: A pointer to a ConvexHullCollider to deep copy
+void ConvexHullCollider_InitializeDeepCopy(struct Collider* copy, struct Collider* original);
 
 ///
 //Frees a convex hull collider data set

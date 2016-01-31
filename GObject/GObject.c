@@ -28,7 +28,68 @@ void GObject_Initialize(GObject* GO)
 	GO->material = NULL;
 	GO->body = NULL;
 	GO->collider = NULL;
+}
 
+///
+//Initializes a deep copy of a GObject
+//This means any pointers will point to a NEWLY ALLOCATED instance of identical memory
+//NOTE: Does not copy Mesh, Texture, or States!
+//
+//Parameters:
+//	copy: A pointer to an uninitialized GObject to initialize as a deep copy
+//	original: A pointer to a GObject to deep copy
+void GObject_InitializeDeepCopy(GObject* copy, GObject* original)
+{
+	copy->frameOfReference = FrameOfReference_Allocate();
+	FrameOfReference_InitializeDeepCopy(copy->frameOfReference, original->frameOfReference);
+
+	copy->states = LinkedList_Allocate();
+	LinkedList_Initialize(copy->states);
+
+	copy->mesh = original->mesh;
+
+	if(original->material != NULL)
+	{
+		copy->material = Material_Allocate();
+		Material_InitializeDeepCopy(copy->material, original->material);
+	}
+	else
+	{
+		copy->material = NULL;
+	}
+
+	if(original->collider != NULL)
+	{
+		copy->collider = Collider_Allocate();
+		if(original->collider->type == COLLIDER_SPHERE)
+		{
+			SphereCollider_InitializeDeepCopy(copy->collider, original->collider);
+		}
+		else if(original->collider->type == COLLIDER_AABB)
+		{
+			AABBCollider_InitializeDeepCopy(copy->collider, original->collider);
+		}
+		else if(original->collider->type == COLLIDER_CONVEXHULL)
+		{
+			ConvexHullCollider_InitializeDeepCopy(copy->collider, original->collider);
+		}
+		else
+		{
+			printf("Error collider type unknown! Not Copied!\n");
+			free(copy->collider);
+			copy->collider = NULL;
+		}
+	}
+	else
+	{
+		copy->collider = NULL;
+	}
+
+	if(original->body != NULL)
+	{
+		copy->body = RigidBody_Allocate();
+		RigidBody_InitializeDeepCopy(copy->body, original->body);
+	}
 
 }
 

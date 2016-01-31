@@ -86,7 +86,7 @@ void ForwardShaderProgram_Initialize(ShaderProgram* prog)
 
 	prog->members = ForwardShaderProgram_AllocateMembers();
 	ForwardShaderProgram_InitializeMembers(prog);
-	prog->Render = ForwardShaderProgram_Render;
+	prog->Render = (ShaderProgram_RenderFunc)ForwardShaderProgram_Render;
 	prog->FreeMembers = ForwardShaderProgram_FreeMembers;
 }
 

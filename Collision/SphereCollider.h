@@ -35,6 +35,14 @@ struct ColliderData_Sphere* SphereCollider_AllocateData();
 void SphereCollider_Initialize(struct Collider* collider, const float rad);
 
 ///
+//Initializes a sphere collider as a deep copy of another
+//This means any pointers will point to a Newly Allocated instance of identical memory
+//Parameters:
+//	copy: A pointer to an uninitialized collider to initialize as a deep copy
+//	original: A pointer to a sphere collider to deep copy
+void SphereCollider_InitializeDeepCopy(struct Collider* copy, struct Collider* original);
+
+///
 //Frees a sphere collider data set
 //
 //Parameters:

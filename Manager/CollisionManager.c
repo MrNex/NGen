@@ -490,7 +490,7 @@ void CollisionManager_TestCollision(struct Collision* dest, GObject* obj1, Frame
 		switch(obj2->collider->type)
 		{
 		case COLLIDER_SPHERE:						//Sphere on Sphere case
-			CollisionManager_TestConvexCollision(
+			CollisionManager_TestSphereCollision(
 				dest,
 				obj1, 
 				obj1FoR,

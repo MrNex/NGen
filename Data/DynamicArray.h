@@ -34,6 +34,18 @@ void DynamicArray_Free(DynamicArray* arr);
 //Functions
 
 ///
+//Copies the contents and attributes of another dynamicArray to this one
+//Will resize the dynamic array if it is not big enough
+//If the array is larger than the one being copied, then the memory will be copied over to the start of the new
+//location but the new array will not be shrunk to match the size. Any memory which is not overwritten will
+//remain unchanged.
+//
+//Parameters:
+//	arr: A pointer to the dynamic array which is the destination of the copy
+//	toCopy: A pointer to the dynamic array being copied
+void DynamicArray_Copy(DynamicArray* arr, DynamicArray* toCopy);
+
+///
 //Increases a dynamic array in size by a factor of it's growth rate
 //
 //Parameters:

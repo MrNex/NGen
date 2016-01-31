@@ -5,6 +5,9 @@
 #include "../GObject/GObject.h"
 
 static const float spinningRate = 3.14159f * 5.0f;
+static const float rollRate = 3.14159f * 2.0f * 4.0f;
+static const float skewRate = 0.2f;
+static const float restoreRate = 2.0f;
 
 ///
 //Initializes a ParkourController state

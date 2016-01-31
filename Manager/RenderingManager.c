@@ -66,7 +66,7 @@ void RenderingManager_Initialize(void)
 	}
 	*/
 
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.5f, 1.0f, 1.0f);
 	glPointSize(2.0f);
 	glLineWidth(2.0f);
 }
@@ -116,14 +116,14 @@ RenderingBuffer* RenderingManager_GetRenderingBuffer()
 void RenderingManager_Render(LinkedList* gameObjects)
 {
 	//Clear buffers
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//Update the camera's view matrix
 	Camera_UpdateViewMatrix(renderingBuffer->camera);
 
-	renderingBuffer->renderPipelines[RenderingManager_Pipeline_FORWARD]->Render
+	renderingBuffer->renderPipelines[RenderingManager_Pipeline_DEFERRED]->Render
 	(
-		renderingBuffer->renderPipelines[RenderingManager_Pipeline_FORWARD],
+		renderingBuffer->renderPipelines[RenderingManager_Pipeline_DEFERRED],
 		renderingBuffer,
 		gameObjects
 	);
@@ -325,9 +325,23 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 	//Lighting
 	buffer->directionalLightVector = Vector_Allocate();
 	Vector_Initialize(buffer->directionalLightVector, 3);
-	buffer->directionalLightVector->components[0] = -1.0f;
+	//buffer->directionalLightVector->components[0] = -1.0f;
 	//buffer->directionalLightVector->components[2] = -0.77f;
-	//buffer->directionalLightVector->components[2] = -1.0f;
+	buffer->directionalLightVector->components[2] = -1.0f;
+	buffer->directionalLightVector->components[1] = -0.25;
+
+	Vector_Normalize(buffer->directionalLightVector);
+	
+	Vector lightColor;
+	Vector_INIT_ON_STACK(lightColor, 3);
+
+	lightColor.components[0] = lightColor.components[1] = lightColor.components[2] = 1.0f;
+	
+	buffer->directionalLight = DirectionalLight_Allocate();
+	DirectionalLight_Initialize(buffer->directionalLight, &lightColor, buffer->directionalLightVector, 0.2f, 1.0f);
+
+
+
 
 	//Debug
 	buffer->debugOctTree = 0;
@@ -346,4 +360,6 @@ static void RenderingManager_FreeBuffer(RenderingBuffer* buffer)
 	//GeometryBuffer_Free(buffer->gBuffer);
 	Camera_Free(buffer->camera);
 	Vector_Free(buffer->directionalLightVector);
+	DirectionalLight_Free(buffer->directionalLight);
+	//TODO: Actually free buffer??
 }

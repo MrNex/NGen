@@ -33,6 +33,22 @@ void ConvexHullCollider_InitializeFace(struct ConvexHullCollider_Face* face)
 }
 
 ///
+//Initializes a deep copy of a ConvexHullFace
+//This means any pointers will point to a Newly Allocated instance of identical memory unless otherwise noted
+//
+//Parameters:
+//	copy: A pointer to an uninitialized ConvexHullFace to initialize as a deep copy
+//	original: A pointer to a ConvexHullFace to deep copy
+void ConvexHullCollider_InitializeFaceDeepCopy(struct ConvexHullCollider_Face* copy, struct ConvexHullCollider_Face* original)
+{
+	ConvexHullCollider_InitializeFace(copy);
+	Vector_Copy(copy->normal, original->normal);
+
+	DynamicArray_Copy(copy->indicesOnFace, original->indicesOnFace);
+}
+
+
+///
 //Frees memory allocated by a ConvexHull_Face
 //
 //Parameters:
@@ -88,6 +104,50 @@ void ConvexHullCollider_Initialize(Collider* collider)
 
 	//Initialize the collider data
 	ConvexHullCollider_InitializeData(collider->data->convexHullData);
+}
+
+///
+//Initializes a deep copy of a ConvexHullCollider
+//This means any pointers will point to Newly Allocated instances of identical memory unless otherwise noted
+//
+//Parameters:
+//	copy: A pointer to an uninitialized ConvexHullCollider to initialize as a deep copy
+//	original: A pointer to a ConvexHullCollider to deep copy
+void ConvexHullCollider_InitializeDeepCopy(struct Collider* copy, struct Collider* original)
+{
+	ConvexHullCollider_Initialize(copy);
+
+	struct ColliderData_ConvexHull* copyData = copy->data->convexHullData;
+	struct ColliderData_ConvexHull* originalData = original->data->convexHullData;
+
+	//Copy points
+	for(unsigned int i = 0; i < originalData->points->size; i++)
+	{
+		Vector* vOriginal = *(Vector**)DynamicArray_Index(originalData->points, i);
+		Vector* vCopy = Vector_Allocate();
+		Vector_Initialize(vCopy, vOriginal->dimension);
+		Vector_Copy(vCopy, vOriginal);
+		ConvexHullCollider_AddPoint(copyData, vCopy);
+	}
+
+	//Copy Edges 
+	for(unsigned int i = 0; i < originalData->edges->size; i++)
+	{
+		Vector* vOriginal = *(Vector**)DynamicArray_Index(originalData->edges, i);
+		Vector* vCopy = Vector_Allocate();
+		Vector_Initialize(vCopy, vOriginal->dimension);
+		Vector_Copy(vCopy, vOriginal);
+		ConvexHullCollider_AddEdge(copyData, vCopy);
+	}
+
+	//Copy faces
+	for(unsigned int i = 0; i < originalData->faces->size; i++)
+	{
+		struct ConvexHullCollider_Face* fOriginal = *(struct ConvexHullCollider_Face**)DynamicArray_Index(originalData->edges, i);
+		struct ConvexHullCollider_Face* fCopy = ConvexHullCollider_AllocateFace();
+		ConvexHullCollider_InitializeFaceDeepCopy(fCopy, fOriginal);
+		ConvexHullCollider_AddFace(copyData, fCopy);
+	}
 }
 
 ///

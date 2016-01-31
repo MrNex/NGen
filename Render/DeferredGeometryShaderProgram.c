@@ -87,7 +87,7 @@ void DeferredGeometryShaderProgram_Initialize(ShaderProgram* prog)
 	DeferredGeometryShaderProgram_InitializeMembers(prog);
 
 	prog->FreeMembers = DeferredGeometryShaderProgram_FreeMembers;
-	prog->Render = DeferredGeometryShaderProgram_Render;	
+	prog->Render = (ShaderProgram_RenderFunc)DeferredGeometryShaderProgram_Render;	
 	
 }
 

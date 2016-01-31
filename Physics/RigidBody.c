@@ -77,11 +77,11 @@ void RigidBody_Initialize(RigidBody* body, const FrameOfReference* startingFrame
 	Vector_Initialize(body->angularVelocity, 3);
 
 	body->frame = FrameOfReference_Allocate();
-	FrameOfReference_Initialize(body->frame);
+	FrameOfReference_InitializeDeepCopy(body->frame, startingFrame);
 
-	Vector_Copy(body->frame->position, startingFrame->position);
-	Matrix_Copy(body->frame->rotation, startingFrame->rotation);
-	Matrix_Copy(body->frame->scale, startingFrame->scale);
+	//Vector_Copy(body->frame->position, startingFrame->position);
+	//Matrix_Copy(body->frame->rotation, startingFrame->rotation);
+	//Matrix_Copy(body->frame->scale, startingFrame->scale);
 
 	//Set the moment of inertia
 	RigidBody_SetInertiaOfCuboid(body);
@@ -91,6 +91,42 @@ void RigidBody_Initialize(RigidBody* body, const FrameOfReference* startingFrame
 	body->freezeRotation = 0;
 
 	
+}
+
+///
+//Initializes a deep copy ofn a RigidBody
+//This means any pointers will point to a NEWLY ALLOCATED instance of identical memory unless otherwise noted
+//
+//Parameters:
+//	copy: A pointer to an uninitialized rigidbody to initialize as a deep copy
+//	original: A pointer to a rigidbody to deep copy
+void RigidBody_InitializeDeepCopy(RigidBody* copy, RigidBody* original)
+{
+	RigidBody_Initialize(copy, original->frame, 0.0f);
+
+	copy->coefficientOfRestitution = original->coefficientOfRestitution;
+	copy->staticFriction = original->staticFriction;
+	copy->dynamicFriction = original->dynamicFriction;
+	copy->rollingResistance = original->rollingResistance;
+	copy->inverseMass = original->inverseMass;
+
+	Matrix_Copy(copy->inverseInertia, original->inverseInertia);
+	Matrix_Copy(copy->inertia, original->inertia);
+
+	Vector_Copy(copy->netForce, original->netForce);
+	Vector_Copy(copy->previousNetForce, original->previousNetForce);
+	Vector_Copy(copy->netImpulse, original->netImpulse);
+	Vector_Copy(copy->netTorque, original->netTorque);
+	Vector_Copy(copy->previousNetTorque, original->previousNetTorque);
+	Vector_Copy(copy->netInstantaneousTorque, original->netInstantaneousTorque);
+	Vector_Copy(copy->acceleration, original->acceleration);
+	Vector_Copy(copy->angularAcceleration, original->angularAcceleration);
+	Vector_Copy(copy->velocity, original->velocity);
+	Vector_Copy(copy->angularVelocity, original->angularVelocity);
+
+	copy->freezeRotation = original->freezeRotation;
+	copy->freezeTranslation = original->freezeTranslation;
+	copy->physicsOn = original->physicsOn;
 }
 
 ///

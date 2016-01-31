@@ -1,7 +1,7 @@
 #ifndef PROGRAMUNIFORM_H
 #define PROGRAMUNIFORM_H
 
-#include<GL/glew.h>
+#include <GL/glew.h>
 
 ///
 // glUnfirormProgram & glUniform wrappers for backwards compatibility
@@ -18,8 +18,8 @@
 //		matrices.
 //	transpose: Specifies whether to transpose the matrix as the values
 //		 are loaded into the uniform variable.
-//	value: Specifies a pointer to an array of count values that will
-//		be used to update the specified uniform variable.
+//	value: Specifies a pointer to an array of count values or a sequence of values 
+//		that will be used to update the specified uniform variable.
 void ProgramUniform3fv(GLuint program, GLint location, GLsizei count, const GLfloat* components);
 
 void ProgramUniformMatrix4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat* components);
@@ -27,4 +27,6 @@ void ProgramUniformMatrix4fv(GLuint program, GLint location, GLsizei count, GLbo
 void ProgramUniform2fv(GLuint program, GLint location, GLsizei count, const GLfloat* components);
 
 void ProgramUniform1i(GLuint program, GLint location, GLsizei count);
+
+void ProgramUniform1f(GLuint program, GLint location, const float value); 
 #endif

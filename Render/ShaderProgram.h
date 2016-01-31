@@ -23,12 +23,14 @@ typedef struct ShaderProgram
 	ShaderProgram_Members members;
 	
 	//Function to begin rendering
-	void (*Render)(struct ShaderProgram* prog, struct RenderingBuffer* buffer, LinkedList* listToRender);
+	void (*Render)(struct ShaderProgram* prog, struct RenderingBuffer* buffer, void* collectionToRender);
 
 	//Function to free shader members
 	void (*FreeMembers)(struct ShaderProgram* prog);
 	
 } ShaderProgram;
+
+typedef void (*ShaderProgram_RenderFunc)(struct ShaderProgram* prog, struct RenderingBuffer* buffer, void* collectionToRender);
 
 ///
 //Allocates a new shader program returning a pointer to it in memory

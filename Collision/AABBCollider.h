@@ -59,6 +59,15 @@ void AABBCollider_Initialize(struct Collider* collider, float width, float heigh
 void AABBCollider_InitializeFromMesh(struct Collider* collider, const Mesh* mesh);
 
 ///
+//Initializes a AABB collider as a deep copy of another
+//This means any pointers will point to a Newly Allocated instance of identical memory
+//Parameters:
+//	copy: A pointer to an uninitialized collider to initialize as a deep copy
+//	original: A pointer to an AABB collider to deep copy
+void AABBCollider_InitializeDeepCopy(struct Collider* copy, struct Collider* original);
+
+
+///
 //Frees an axis aligned collider data set
 //
 //Parameters:

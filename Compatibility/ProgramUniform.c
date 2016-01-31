@@ -65,3 +65,16 @@ void ProgramUniform1i(GLuint program, GLint location, GLsizei count)
 		glUniform1i(location, count);
 	}
 }
+
+
+void ProgramUniform1f(GLuint program, GLint location, const float value)
+{
+	if(GLEW_VERSION_4_3)
+	{
+		glProgramUniform1f(program, location, value);
+	}
+	else
+	{
+		glUniform1f(location, value);
+	}
+}	

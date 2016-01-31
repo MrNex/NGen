@@ -31,7 +31,7 @@ void ForwardRenderPipeline_Initialize(RenderPipeline* pipeline)
 	pipeline->programs[0] = ShaderProgram_Allocate();
 	ForwardShaderProgram_Initialize(pipeline->programs[0]);
 
-	pipeline->Render = ForwardRenderPipeline_Render;
+	pipeline->Render = (RenderPipeline_RenderFunc)ForwardRenderPipeline_Render;
 }
 
 ///

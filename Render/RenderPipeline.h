@@ -13,8 +13,10 @@ typedef struct RenderPipeline
 	int numShaderPrograms;
 
 	void (*FreeMembers)(RenderPipeline_Members*);
-	void (*Render)(struct RenderPipeline*, struct RenderingBuffer*, LinkedList*);
+	void (*Render)(struct RenderPipeline*, struct RenderingBuffer*, void*);
 } RenderPipeline;
+
+typedef void(*RenderPipeline_RenderFunc)(struct RenderPipeline*, struct RenderingBuffer*, void*);
 
 ///
 //Allocates a new RenderPipeline

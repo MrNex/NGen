@@ -46,6 +46,15 @@ RigidBody* RigidBody_Allocate(void);
 void RigidBody_Initialize(RigidBody* body, const FrameOfReference* startingFrame, const float mass);
 
 ///
+//Initializes a deep copy ofn a RigidBody
+//This means any pointers will point to a NEWLY ALLOCATED instance of identical memory unless otherwise noted
+//
+//Parameters:
+//	copy: A pointer to an uninitialized rigidbody to initialize as a deep copy
+//	original: A pointer to a rigidbody to deep copy
+void RigidBody_InitializeDeepCopy(RigidBody* copy, RigidBody* original);
+
+///
 //Frees resources allocated by a rigidbody
 //
 //Parameters:

@@ -26,6 +26,15 @@ FrameOfReference* FrameOfReference_Allocate(void);
 void FrameOfReference_Initialize(FrameOfReference* FoRef);
 
 ///
+//Initializes a deep copy of a frame of reference
+//This means any pointers will point to a Newly Allocated instance of identical memory
+//
+//Parameters:
+//	copy: A pointer to an uninitialized FrameOfreference to initialize as a deep copy
+//	original: A pointer to a FrameOfreference to deep copy
+void FrameOfReference_InitializeDeepCopy(FrameOfReference* copy, const FrameOfReference* original);
+
+///
 //Frees resources allocated for a Frame of Reference
 //
 //Parameters:

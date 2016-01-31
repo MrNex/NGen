@@ -51,6 +51,13 @@ void GeometryBuffer_Initialize(GeometryBuffer* gBuffer, unsigned int textureWidt
 		GL_FLOAT,	//Data type of each element in texture
 		NULL		//Texture data (We will be generating the texture
 	);
+
+	//Because the textures will be a 1-1 mapping with the pixels in the window
+	//we want to make sure openGL does not attempt an unnecessary interpolation 
+	//when shading. 	
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 	//Attach position texture to frame buffer
 	glFramebufferTexture2D
 	(
@@ -78,6 +85,13 @@ void GeometryBuffer_Initialize(GeometryBuffer* gBuffer, unsigned int textureWidt
 		GL_UNSIGNED_BYTE,	//Data type of each element in texture
 		NULL			//Texture data (We will be generating the texture
 	);
+
+	//Because the textures will be a 1-1 mapping with the pixels in the window
+	//we want to make sure openGL does not attempt an unnecessary interpolation 
+	//when shading. 	
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 	//Attach diffuse texture to frame buffer
 	glFramebufferTexture2D
 	(
@@ -105,6 +119,14 @@ void GeometryBuffer_Initialize(GeometryBuffer* gBuffer, unsigned int textureWidt
 		GL_FLOAT,	//Data type of each element in texture
 		NULL		//Texture data (We will be generating the texture
 	);
+
+
+	//Because the textures will be a 1-1 mapping with the pixels in the window
+	//we want to make sure openGL does not attempt an unnecessary interpolation 
+	//when shading. 	
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 	//Attach Normal texture to frame buffer
 	glFramebufferTexture2D
 	(
@@ -132,6 +154,13 @@ void GeometryBuffer_Initialize(GeometryBuffer* gBuffer, unsigned int textureWidt
 		GL_FLOAT,	//Data type of each element in texture
 		NULL		//Texture data (We will be generating the texture
 	);
+
+	//Because the textures will be a 1-1 mapping with the pixels in the window
+	//we want to make sure openGL does not attempt an unnecessary interpolation 
+	//when shading. 	
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 	//Attach Texture Coordinate texture to frame buffer
 	glFramebufferTexture2D
 	(
@@ -199,4 +228,32 @@ void GeometryBuffer_Free(GeometryBuffer* gBuffer)
 	glDeleteTextures(GeometryBuffer_TextureType_NUMTEXTURES, gBuffer->textures);
 	glDeleteFramebuffers(1, &gBuffer->fbo);
 	free(gBuffer);
+}
+
+///
+//Binds the Frame Buffer Object of the geometry buffer to bind it's textures to be read from the shaders
+//
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer being bound for reading
+void GeometryBuffer_BindForReading(GeometryBuffer* gBuffer)
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+	//Never bind the depth texture
+	for(unsigned int i = 0; i < GeometryBuffer_TextureType_DEPTH; i++)
+	{
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, gBuffer->textures[i]);
+	}
+	
+}
+
+///
+//Binds the Frame Buffer Object of the Geometry Buffer to bind it's textures to be written to from the shaders.
+//
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer being bound for writing
+void GeometryBuffer_BindForWriting(GeometryBuffer* gBuffer)
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBuffer->fbo);
 }

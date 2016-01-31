@@ -12,6 +12,7 @@
 #endif
 
 #include <float.h>
+#include <math.h>
 
 #include "ParkourController.h"
 
@@ -20,6 +21,7 @@
 #include "../Manager/RenderingManager.h"
 #include "../Manager/TimeManager.h"
 #include "../Manager/AssetManager.h"
+#include "../Manager/EnvironmentManager.h"
 
 #include "../Data/LinkedList.h"
 
@@ -41,6 +43,23 @@ struct State_ParkourController_Members
 
 	float shootCooldown;
 	float shootTimer;
+
+	float reactionTime;
+	float reactionTimer;
+	unsigned char reactionLock;
+
+	unsigned char charging;
+	unsigned char chargeAvailable;
+
+	unsigned char wasOnGround;
+
+	float rollTime;
+	float rollTimer;
+
+	float skewTime;
+	float skewTimer;
+	float restoreTime;
+	float restoreTimer;
 
 	Vector* wallNormal;
 };
@@ -73,8 +92,26 @@ void State_ParkourController_Initialize(State* s, const float acceleration, cons
 	members->spinningTime = 3.14159f / spinningRate;
 	members->spinningTimer = members->spinningTime;
 
+	members->rollTime = 2.0f * 3.14159 / rollRate;
+	members->rollTimer = members->rollTime;
+
+	members->skewTime = 2.0f;
+	members->skewTimer = members->skewTime;
+
+	members->restoreTime = 0.2f;
+	members->restoreTimer = members->restoreTime;
+
 	members->shootTimer = 0.0f;
 	members->shootCooldown = shootSpeed;	
+
+	members->reactionTime = 0.2f;
+	members->reactionTimer = 0.0f;
+	members->reactionLock = 0;
+
+	members->charging = 0;
+	members->chargeAvailable = 1;
+
+	members->wasOnGround = 0;
 
 	members->wallNormal = Vector_Allocate();
 	Vector_Initialize(members->wallNormal, 3);
@@ -301,7 +338,7 @@ static void State_ParkourController_Jump(GObject* obj, State* state)
 //	state: The parkourController state updating the object
 static void State_ParkourController_HorizontalWallrun(GObject* obj, State* state)
 {
-	printf("Horizontal\n");
+	//printf("Horizontal\n");
 
 	//Get the members of this state
 	struct State_ParkourController_Members* members = (struct State_ParkourController_Members*)state->members;
@@ -311,7 +348,7 @@ static void State_ParkourController_HorizontalWallrun(GObject* obj, State* state
 	{
 		Vector impulse;
 		Vector_INIT_ON_STACK(impulse, 3);
-		impulse.components[1] = -obj->body->velocity->components[1];
+		impulse.components[1] = -obj->body->velocity->components[1] / obj->body->inverseMass;
 		RigidBody_ApplyImpulse(obj->body, &impulse, &Vector_ZERO);
 	}
 	
@@ -345,7 +382,15 @@ static void State_ParkourController_HorizontalWallrun(GObject* obj, State* state
 
 	if(magVelAlongWall < members->maxVelocity)
 	{
+		Vector_Scale(&forward, members->maxVelocity);
+
 		RigidBody_ApplyImpulse(obj->body, &forward, &Vector_ZERO);
+
+	}
+	else
+	{
+		Vector_Normalize(&forward);
+		Vector_GetScalarProduct(obj->body->velocity, &forward, members->maxVelocity);
 	}
 
 	//Apply a cohesive force to the wall to make sure you do not fall off
@@ -395,12 +440,15 @@ static void State_ParkourController_VerticalWallrun(GObject* obj, State* state)
 	{
 		Vector_Copy(&impulse, &Vector_ZERO);
 
-		impulse.components[0] -= obj->body->velocity->components[0];
-		impulse.components[2] -= obj->body->velocity->components[2];
+		//impulse.components[0] -= obj->body->velocity->components[0];
+		//impulse.components[2] -= obj->body->velocity->components[2];
+		impulse.components[0] -= members->maxVelocity * members->wallNormal->components[0];
+		impulse.components[2] -= members->maxVelocity * members->wallNormal->components[2];
 
 		RigidBody_ApplyImpulse(obj->body, &impulse, &Vector_ZERO);
 	}
 }
+
 ///
 //Allows the parkour controller to run up a wall
 //
@@ -467,6 +515,18 @@ static void State_ParkourController_Wallrun(GObject* obj, State* state)
 					members->horizontalRunning = 0;
 					//SEt the wall normal of state
 					Vector_Copy(members->wallNormal, &currentNormal);
+					members->reactionTimer = 0.0f;
+					members->chargeAvailable = 1;
+					
+					DirectionalLight* d = RenderingManager_GetRenderingBuffer()->directionalLight;
+
+					float yaw = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
+					float pitch = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
+		
+					d->color->components[0] = cosf(yaw) * sinf(yaw) + .9f;
+					d->color->components[1] = cosf(yaw) * sinf(pitch) + .9f;
+					d->color->components[2] = cosf(pitch) + .9;
+
 					break;
 				}
 				else if(dotProduct > 0.0f)
@@ -474,6 +534,19 @@ static void State_ParkourController_Wallrun(GObject* obj, State* state)
 					members->horizontalRunning = 1;
 					//Set the wall normal of state
 					Vector_Copy(members->wallNormal, &currentNormal);
+					members->reactionTimer = 0.0f;
+					members->chargeAvailable = 1;
+
+					DirectionalLight* d = RenderingManager_GetRenderingBuffer()->directionalLight;
+
+					float yaw = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
+					float pitch = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
+		
+					d->color->components[0] = cosf(yaw) * sinf(yaw) + .9f;
+					d->color->components[1] = cosf(yaw) * sinf(pitch) + .9f;
+					d->color->components[2] = cosf(pitch) + .9;
+
+
 				}
 			}
 			currentNode = currentNode->next;
@@ -507,10 +580,16 @@ void State_ParkourController_WallJump(GObject* obj, State* state)
 	Vector impulse;
 	Vector_INIT_ON_STACK(impulse, 3);
 	Vector_Copy(&impulse, members->wallNormal);
-	Vector_Scale(&impulse, members->jumpMag);
+	Vector_Scale(&impulse, members->maxVelocity / obj->body->inverseMass);
+
+	if(members->horizontalRunning)
+		Vector_Scale(&impulse, 0.5f);
+
+	impulse.components[1] = -obj->body->velocity->components[1] /obj->body->inverseMass + members->jumpMag;
+
 
 	RigidBody_ApplyImpulse(obj->body, &impulse, &Vector_ZERO);
-
+	
 	if(members->horizontalRunning)
 	{
 		Vector_Copy(&impulse, &Vector_E2);
@@ -535,9 +614,15 @@ void State_ParkourController_WallVault(GObject* obj, State* state)
 	Vector_INIT_ON_STACK(impulse, 3);
 
 	Vector_Copy(&impulse, members->wallNormal);
-	Vector_Scale(&impulse, -members->maxVelocity);
+	Vector_Scale(&impulse, -members->maxVelocity / obj->body->inverseMass);
+	impulse.components[1] = -obj->body->velocity->components[1]/obj->body->inverseMass + members->jumpMag;
 	
 	RigidBody_ApplyImpulse(obj->body, &impulse, &Vector_ZERO);
+
+	//Provide time for player to let go of 'r'
+	members->reactionTimer = 0.0f;
+	members->reactionLock = 1;
+
 }	
 
 void State_ParkourController_Shoot(GObject* obj, State* state)
@@ -620,6 +705,66 @@ void State_ParkourController_Shoot(GObject* obj, State* state)
 		}
 	}	
 }
+
+void State_ParkourController_Charge(GObject* obj, struct State_ParkourController_Members* members)
+{
+	Vector_Copy(obj->body->velocity, &Vector_ZERO);
+
+	if(!InputManager_IsMouseButtonPressed(2))
+	{
+		Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
+
+		//Get the forward vector of the camera
+		Vector direction;
+		Vector_INIT_ON_STACK(direction, 3);
+
+		Matrix_SliceRow(&direction, cam->rotationMatrix, 2, 0, 3);
+		Vector_Scale(&direction, -1.0f);
+		
+		Vector_Scale(&direction, members->maxVelocity / obj->body->inverseMass);
+
+		RigidBody_ApplyImpulse(obj->body, &direction, &Vector_ZERO);
+
+		members->charging = 0;
+		members->rollTimer = 0.0f;
+		members->skewTimer = members->skewTime;
+		members->restoreTimer = 0.0f;
+	}
+}
+
+void State_ParkourController_Roll(GObject* obj, struct State_ParkourController_Members* members)
+{
+	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
+
+	Vector direction;
+	Vector_INIT_ON_STACK(direction, 3);
+
+	//Get forward vector of camera
+	Matrix_SliceRow(&direction, cam->rotationMatrix, 2, 0, 3);
+	//Project onto XY Plane
+	Vector perp;
+	Vector_INIT_ON_STACK(perp, 3);
+
+	Vector_GetProjection(&perp, &direction, &Vector_E2);
+	Vector_Decrement(&direction, &perp);
+
+	Vector_Normalize(&direction);
+	Vector_Scale(&direction, -members->maxVelocity / obj->body->inverseMass);
+
+	RigidBody_ApplyImpulse(obj->body, &direction, &Vector_ZERO);
+
+	DirectionalLight* d = RenderingManager_GetRenderingBuffer()->directionalLight;
+
+	float yaw = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
+	float pitch = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
+		
+	d->color->components[0] = cosf(yaw) * sinf(yaw) + .8f;
+	d->color->components[1] = cosf(yaw) * sinf(pitch) + .8f;
+	d->color->components[2] = cosf(pitch) + .8;
+
+
+}
+
 ///
 //Updates a GObject using a Template state
 //
@@ -639,20 +784,63 @@ void State_ParkourController_Update(GObject* obj, State* state)
 		members->shootTimer += dt;
 	}	
 	//If the left mouse button is down, shoot
+	/*
+	   //For now left mouse button performs wallruns instead
 	if(InputManager_IsMouseButtonPressed(0))
 	{
 		State_ParkourController_Shoot(obj, state);
 	}
+	*/
 
 	//Get a reference to the camera
 	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
 
-	//Determine if the object is colliding with anything
-	if(obj->collider->currentCollisions->size > 0)
+	//If a wall vault was performed, r must be released before
+	//the reaction timer will start again
+	if(members->reactionLock && !InputManager_IsMouseButtonPressed(0))
 	{
+		members->reactionLock = 0;
+	}
+
+	//As soon as r is pressed, begin counting and do not stop until
+	//A successful wallrun or the ground is touched
+	char reacted = 0;
+	if((InputManager_IsMouseButtonPressed(0) || members->reactionTimer > 0.0f) && ! members->reactionLock)
+	{
+		reacted = 1;
+
+		//If not yet running, reduce reaction timer	
+		if(!members->verticalRunning && ! members->horizontalRunning)
+		{
+			members->reactionTimer += TimeManager_GetDeltaSec();	
+		}
+	}
+
+
+	if(members->charging)
+	{
+		State_ParkourController_Charge(obj, members);		
+	}
+	//Determine if the object is colliding with anything
+	else if(obj->collider->currentCollisions->size > 0)
+	{
+
 		//Determine if the object is on the ground
 		if(State_ParkourController_IsOnGround(obj))
 		{
+			if(reacted && !members->wasOnGround)
+			{
+				if(members->reactionTimer <= members->reactionTime && reacted)
+				{
+					State_ParkourController_Roll(obj, members);
+				}
+			}
+
+			members->wasOnGround = 1;
+			members->chargeAvailable = 1;
+
+			members->reactionTimer = 0.0f;
+
 			//Allow the object to accelerate
 			State_ParkourController_Accelerate(obj, state);	
 			if(InputManager_IsKeyDown(' '))
@@ -660,12 +848,21 @@ void State_ParkourController_Update(GObject* obj, State* state)
 				State_ParkourController_Jump(obj, state);
 			}
 		}
-
-		//If the spacebar is being pressed even if the object is not on the floor
-		if(InputManager_IsKeyDown(' '))
+		else
 		{
-			//Attempt to wallrun!
-			State_ParkourController_Wallrun(obj, state);
+			members->wasOnGround = 0;
+		}
+
+		//If we have already reacted even if the object is not on the floor
+		if(reacted)
+		{
+			if(members->reactionTimer <= members->reactionTime || members->verticalRunning || members->horizontalRunning)
+			{
+				printf("Reaction timer:\t%f\n", members->reactionTimer);
+
+				//Attempt to wallrun!
+				State_ParkourController_Wallrun(obj, state);
+			}
 		}
 		else if(members->verticalRunning || members->horizontalRunning)
 		{
@@ -677,6 +874,10 @@ void State_ParkourController_Update(GObject* obj, State* state)
 	
 			//The object was wallrunning but now (s)he stopped before the wall ended
 			members->verticalRunning = members->horizontalRunning = 0;
+			//Do not start the reaction timer again until
+			//User lets go of r
+			members->reactionTimer = 0.0f;
+			members->reactionLock = 1;
 		}
 	}
 	else if(members->verticalRunning || members->horizontalRunning)
@@ -685,19 +886,96 @@ void State_ParkourController_Update(GObject* obj, State* state)
 		{
 			State_ParkourController_WallVault(obj, state);
 		}
+		
+		members->reactionLock = 1;
+		members->reactionTimer = 0.0f;
 
 		//The character was wallrunning but now there is no wall
 		members->verticalRunning = members->horizontalRunning = 0;
 	}
-	
-	//If the parkour controller currently spinning off a wall, let it continue, else let the player rotate the controller
+	else if(members->chargeAvailable)		//Not touching anything
+	{
+		if(InputManager_IsMouseButtonPressed(2))
+		{
+			members->charging = 1;
+			members->chargeAvailable = 0;
+			members->skewTimer = 0.0f;
+		}
+	}
+
+	if(members->skewTimer < members->skewTime)
+	{
+		float dt = TimeManager_GetDeltaSec();
+		members->skewTimer += dt;
+		cam->nearPlane -= skewRate * dt;
+
+
+		DirectionalLight* d = RenderingManager_GetRenderingBuffer()->directionalLight;
+
+		static float toggle = -1.0f;
+
+		static int index = 0;
+		d->color->components[index] += dt * toggle;
+		if(d->color->components[index] > 1.0f)
+		{	
+			d->color->components[index] = 1.0f;
+			toggle *= -1.0f;
+
+			index = EnvironmentManager_Rand(0, 3);
+		}
+		else if(d->color->components[index] < 0.0f)
+		{
+			d->color->components[index] = 0.0f;
+			toggle *= -1.0f;
+			index = EnvironmentManager_Rand(0, 3);
+		}
+
+
+		Camera_RefreshPerspectiveMatrix(cam);
+	}
+	if(members->restoreTimer < members->restoreTime)
+	{
+		float dt = TimeManager_GetDeltaSec();
+		members->restoreTimer += dt;
+		cam->nearPlane += restoreRate * dt;
+		if(cam->nearPlane >= 1.0f)
+		{
+			cam->nearPlane = 1.0f;
+			members->restoreTimer = members->restoreTime;
+		}
+
+		Camera_RefreshPerspectiveMatrix(cam);
+	}
+
+	//If the parkour controller currently spinning off a wall or rolling from a charge, let it continue, else let the player rotate the controller
+	unsigned char busy = 0;
+	if(members->rollTimer < members->rollTime)
+	{
+		float dt = TimeManager_GetDeltaSec();
+		members->rollTimer += dt;
+		
+		//Get camera's forward vector
+		Vector forward;
+		Vector_INIT_ON_STACK(forward, 3);
+		Matrix_SliceRow(&forward, cam->rotationMatrix, 2, 0, 3);
+		Vector_Scale(&forward, -1.0f);
+
+		Vector_Copy(&forward, &Vector_E3);
+
+		Camera_Rotate(cam, &forward, rollRate * dt);
+		
+		busy = 1;
+
+	}
 	if(members->spinningTimer < members->spinningTime)
 	{
 		float dt = TimeManager_GetDeltaSec();
 		members->spinningTimer += dt;
 		Camera_ChangeYaw(cam, spinningRate * dt);
+
+		busy = 1;
 	}
-	else
+	if(!busy)
 	{
 		//Allow the user to rotate the parkour controller
 		State_ParkourController_Rotate(state);

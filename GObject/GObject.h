@@ -36,6 +36,16 @@ GObject* GObject_Allocate(void);
 void GObject_Initialize(GObject* GO);
 
 ///
+//Initializes a deep copy of a GObject
+//This means any pointers will point to a NEWLY ALLOCATED instance of identical memory unless otherwise noted
+//NOTE: Does not copy Mesh, Texture, or States!
+//
+//Parameters:
+//	copy: A pointer to an uninitialized GObject to initialize as a deep copy
+//	original: A pointer to a GObject to deep copy
+void GObject_InitializeDeepCopy(GObject* copy, GObject* original);
+
+///
 //Frees all components of a GObject
 //
 //Parameters:
