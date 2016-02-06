@@ -28,6 +28,7 @@ void GObject_Initialize(GObject* GO)
 	GO->material = NULL;
 	GO->body = NULL;
 	GO->collider = NULL;
+	GO->light = NULL;
 }
 
 ///
@@ -90,6 +91,20 @@ void GObject_InitializeDeepCopy(GObject* copy, GObject* original)
 		copy->body = RigidBody_Allocate();
 		RigidBody_InitializeDeepCopy(copy->body, original->body);
 	}
+	else
+	{
+		copy->body = NULL;
+	}
+
+	if(original->light != NULL)
+	{
+		//TODO: Write deepcopy for light and replace
+		copy->light = NULL;
+	}
+	else
+	{
+		copy->light = NULL;
+	}
 
 }
 
@@ -140,6 +155,10 @@ void GObject_Free(GObject* GO)
 	if(GO->collider != NULL)
 	{
 		Collider_Free(GO->collider);
+	}
+	if(GO->light != NULL)
+	{
+		PointLight_Free(GO->light);
 	}
 
 	memset(GO, 0, sizeof(GObject));

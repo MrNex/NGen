@@ -37,11 +37,14 @@ OBJ= \
 	Bin/Image.o \
 	Bin/Texture.o \
 	Bin/Material.o \
+	Bin/Light.o \
 	Bin/DirectionalLight.o \
+	Bin/PointLight.o \
 	Bin/ShaderProgram.o \
 	Bin/ForwardShaderProgram.o \
 	Bin/DeferredGeometryShaderProgram.o \
 	Bin/DeferredDirectionalShaderProgram.o \
+	Bin/DeferredPointShaderProgram.o \
 	Bin/Camera.o \
 	Bin/GeometryBuffer.o \
 	Bin/RenderPipeline.o \
@@ -119,7 +122,13 @@ Bin/Texture.o: Render/Texture.c Render/Texture.h Bin/Image.o
 Bin/Material.o: Render/Material.c Render/Material.h Bin/Texture.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
-Bin/DirectionalLight.o: Render/DirectionalLight.c Render/DirectionalLight.h Math/Vector.o
+Bin/Light.o: Render/Light.c Render/Light.h Bin/Vector.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/DirectionalLight.o: Render/DirectionalLight.c Render/DirectionalLight.h Bin/Light.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/PointLight.o: Render/PointLight.c Render/PointLight.h Bin/Light.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/GeometryBuffer.o: Render/GeometryBuffer.c Render/GeometryBuffer.h
@@ -132,6 +141,9 @@ Bin/DeferredGeometryShaderProgram.o: Render/DeferredGeometryShaderProgram.c Rend
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/DeferredDirectionalShaderProgram.o: Render/DeferredDirectionalShaderProgram.c Render/DeferredDirectionalShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o Bin/EnvironmentManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/DeferredPointShaderProgram.o: Render/DeferredPointShaderProgram.c Render/DeferredPointShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/PointLight.o Bin/AssetManager.o Bin/EnvironmentManager.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/RenderPipeline.o: Render/RenderPipeline.c Render/RenderPipeline.h Bin/ShaderProgram.o

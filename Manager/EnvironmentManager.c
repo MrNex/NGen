@@ -55,7 +55,7 @@ void EnvironmentManager_Initialize(int* argc, char** argv)
 	EnvironmentManager_InitializeBuffer(environmentBuffer);
 
 	glutInitWindowSize(environmentBuffer->windowWidth, environmentBuffer->windowHeight);
-	glutInitWindowPosition(600, 0);
+	glutInitWindowPosition(0, 0);
 
 	glutInitContextVersion(environmentBuffer->majorGLContext, environmentBuffer->minorGLContext);
 	glutInitContextProfile(GLUT_CORE_PROFILE);
@@ -153,8 +153,8 @@ static EnvironmentBuffer* EnvironmentManager_AllocateBuffer(void)
 //	buffer: A pointer to the environmentBuffer to initialize
 static void EnvironmentManager_InitializeBuffer(EnvironmentBuffer* buffer)
 {
-	buffer->windowWidth = 800;
-	buffer->windowHeight = 600;
+	buffer->windowWidth = 1920;
+	buffer->windowHeight = 1080;
 	buffer->majorGLContext = 4;
 	buffer->minorGLContext = 3;
 	int titleLen =  strlen("NGen V4.0");

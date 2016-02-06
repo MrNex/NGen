@@ -3,6 +3,17 @@
 
 #include "../Math/Matrix.h"
 
+#define FrameOfReference_INIT_ON_STACK( frame ) \
+	Matrix scale##frame; \
+	Matrix rotation##frame; \
+	Vector position##frame; \
+	Matrix_INIT_ON_STACK( scale##frame , 3, 3); \
+	Matrix_INIT_ON_STACK( rotation##frame , 3, 3); \
+	Vector_INIT_ON_STACK( position##frame , 3); \
+	frame.scale = &(scale##frame); \
+	frame.rotation = &(rotation##frame); \
+	frame.position = &(position##frame);
+
 typedef struct FrameOfReference
 {
 	Matrix* scale;

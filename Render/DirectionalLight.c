@@ -22,16 +22,14 @@ DirectionalLight* DirectionalLight_Allocate(void)
 void DirectionalLight_Initialize(DirectionalLight* light, Vector* color, Vector* dir,
 		float aIntensity, float dIntensity)
 {
-	light->color = Vector_Allocate();
-	Vector_Initialize(light->color, 3);
-	Vector_Copy(light->color, color);
+
+	light->base = Light_Allocate();
+	Light_Initialize(light->base, color, aIntensity, dIntensity);
 
 	light->direction = Vector_Allocate();
 	Vector_Initialize(light->direction, 3);
 	Vector_Copy(light->direction, dir);
 
-	light->ambientIntensity = aIntensity;
-	light->diffuseIntensity = dIntensity;
 }
 
 ///
@@ -41,7 +39,7 @@ void DirectionalLight_Initialize(DirectionalLight* light, Vector* color, Vector*
 //	light: A pointer to the directional light being freed
 void DirectionalLight_Free(DirectionalLight* light)
 {
-	Vector_Free(light->color);
+	Light_Free(light->base);
 	Vector_Free(light->direction);
 	free(light);
 }

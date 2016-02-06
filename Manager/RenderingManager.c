@@ -66,7 +66,7 @@ void RenderingManager_Initialize(void)
 	}
 	*/
 
-	glClearColor(0.0f, 0.5f, 1.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glPointSize(2.0f);
 	glLineWidth(2.0f);
 }

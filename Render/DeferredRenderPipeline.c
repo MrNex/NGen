@@ -4,6 +4,7 @@
 
 #include "DeferredGeometryShaderProgram.h"
 #include "DeferredDirectionalShaderProgram.h"
+#include "DeferredPointShaderProgram.h"
 
 #include "../Data/LinkedList.h"
 
@@ -59,7 +60,7 @@ static void DeferredRenderPipeline_Render(RenderPipeline* pipeline, struct Rende
 //	pipeline: A pointer to the RenderPipeline to initialize as a DeferredRenderPipeline
 void DeferredRenderPipeline_Initialize(RenderPipeline* pipeline)
 {
-	RenderPipeline_Initialize(pipeline, 2);
+	RenderPipeline_Initialize(pipeline, 3);
 
 	pipeline->members = DeferredRenderPipeline_AllocateMembers();
 	DeferredRenderPipeline_InitializeMembers(pipeline->members);
@@ -69,6 +70,9 @@ void DeferredRenderPipeline_Initialize(RenderPipeline* pipeline)
 
 	pipeline->programs[1] = ShaderProgram_Allocate();
 	DeferredDirectionalShaderProgram_Initialize(pipeline->programs[1]);
+
+	pipeline->programs[2] = ShaderProgram_Allocate();
+	DeferredPointShaderProgram_Initialize(pipeline->programs[2]);
 
 	pipeline->Render = (RenderPipeline_RenderFunc)DeferredRenderPipeline_Render;
 	pipeline->FreeMembers = DeferredRenderPipeline_FreeMembers;
@@ -136,24 +140,28 @@ static void DeferredRenderPipeline_Render(RenderPipeline* pipeline, struct Rende
 	glDepthMask(GL_FALSE);
 	glDisable(GL_DEPTH_TEST);
 
+
+
 	//The lighting pass will need to blend the effects of the lighting with that of the geometry pass.
-	//glEnable(GL_BLEND);
-	//glBlendEquation(GL_FUNC_ADD);	//Will add the two resulting colors for each pixel
-	//glBlendFunc(GL_ONE, GL_ONE);	//Scales each by a factor of 1 when adding the geometry and lightning passes.
+	glEnable(GL_BLEND);
+	glBlendEquation(GL_FUNC_ADD);	//Will add the two resulting colors for each pixel
+	glBlendFunc(GL_ONE, GL_ONE);	//Scales each by a factor of 1 when adding the geometry and lightning passes.
+
 
 	//Bind gBuffer FBO to be read from
 	//Note: this binds the default FBO for writing and activates/binds textures
 	GeometryBuffer_BindForReading(members->gBuffer);
-
 	glClear(GL_COLOR_BUFFER_BIT);
-	
+
+
 	//Perform directional light rendering
 	pipeline->programs[1]->Render(pipeline->programs[1], buffer, members->gBuffer);
+	//Point light rendering	
+	pipeline->programs[2]->Render(pipeline->programs[2], buffer, gameObjs);
 
-	//glDisable(GL_BLEND);
+	//Disable the blending we enabled for the lighting pass.
+	glDisable(GL_BLEND);
 	
 	glFlush();
 
-	//Disable the blending we enabled for the lighting pass.
-	//glDisable(GL_BLEND);
 }

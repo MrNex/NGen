@@ -1,14 +1,12 @@
 #ifndef DIRECTIONALLIGHT_H
 #define DIRECTIONALLIGHT_H
 
-#include "../Math/Vector.h"
+#include "Light.h"
 
 typedef struct DirectionalLight
 {
-	Vector* color;
+	Light* base;
 	Vector* direction;
-	float ambientIntensity;
-	float diffuseIntensity;	
 }DirectionalLight;
 
 ///

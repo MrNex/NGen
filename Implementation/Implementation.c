@@ -1,7 +1,7 @@
 #include "Implementation.h"
 
-#include "../State/ParkourController.h"
-#include "../State/EnvironmentBuilder.h"
+#include "../State/FirstPersonCamera.h"
+
 
 ///
 //Initializes the scene within the engine.
@@ -13,35 +13,19 @@ void InitializeScene(void)
 	GObject* cam = GObject_Allocate();
 	GObject_Initialize(cam);
 
-	cam->body = RigidBody_Allocate();
-	RigidBody_Initialize(cam->body, cam->frameOfReference, 75.0f);
-	cam->body->coefficientOfRestitution = 0.2f;
-
-	Vector v;
-	Vector_INIT_ON_STACK(v, 3);
-	v.components[1] = -0.5f;
-	
-	cam->collider = Collider_Allocate();
-	AABBCollider_Initialize(cam->collider, 2.6f, 3.0f, 2.6f, &v); 
-
 	State* state = State_Allocate();
 
-	State_ParkourController_Initialize(state, 1000.0f, 25.0f, 0.01f, 300.0f, 1.0f);
+	State_FirstPersonCamera_Initialize(state, 3.0f, 50.0f, 0.05f);
 
 	GObject_AddState(cam,state);
-
-	Vector_Copy(&v, &Vector_ZERO);
-	v.components[1] = 10.0f;
-
-	GObject_Translate(cam, &v);
 
 	ObjectManager_AddObject(cam);
 
 	//Set directional light direction
-	//RenderingManager_GetRenderingBuffer()->directionalLight->direction->components[1] = -1.0f;
+	RenderingManager_GetRenderingBuffer()->directionalLight->direction->components[1] = -1.0f;
+	RenderingManager_GetRenderingBuffer()->directionalLight->base->diffuseIntensity = 0.0f;
 
 	//Create floor
-	/*
 	GObject* block = GObject_Allocate();
 	GObject_Initialize(block);
 
@@ -64,33 +48,112 @@ void InitializeScene(void)
 	block->body->dynamicFriction = block->body->staticFriction = 0.5f;
 	block->body->rollingResistance = 0.0f;
 
-	v.components[0] = 10.0f;
-	v.components[2] = 50.0f;
+	Vector v;
+	Vector_INIT_ON_STACK(v, 3);
+	v.components[0] = 20.0f;
+	v.components[2] = 60.0f;
 	v.components[1] = 1.0f;
 
 	GObject_Scale(block, &v);
 
 	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = 0.0f;
-	v.components[1] = -0.5f;
-	v.components[2] = -50.0f;
+	v.components[0] = -15.0f;
+	v.components[1] = -10.0f;
 
 	GObject_Translate(block, &v);
 
 	ObjectManager_AddObject(block);
-	*/
+	
+	//Create Large sphere
 
-	State* s = State_Allocate();
-	State_EnvironmentBuilder_Initialize(s);
+	block = GObject_Allocate();
+	GObject_Initialize(block);
 
-	GObject_AddState(cam, s);
+	block->mesh = AssetManager_LookupMesh("Sphere");
+	block->material = Material_Allocate();
+	Material_Initialize(block->material, AssetManager_LookupTexture("Test"));
+
+	block->collider = Collider_Allocate();
+	SphereCollider_Initialize(block->collider, 1.0f);
+
+	block->body = RigidBody_Allocate();
+	RigidBody_Initialize(block->body, block->frameOfReference, 2.0f);
+	block->body->dynamicFriction = block->body->staticFriction = 0.1f;
+
+	block->body->coefficientOfRestitution = 0.9f;
+	block->body->rollingResistance = 0.1f;
+
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = 0.0f;
+	v.components[1] = 0.0f;
+	v.components[2] = -5.0f;
+
+	GObject_Translate(block, &v);
+
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = v.components[1] = v.components[2] = 2.0f;
+	GObject_Scale(block, &v);
+	
+	ObjectManager_AddObject(block);
+	
+
+	//Create small sphere
+	
+	block = GObject_Allocate();
+	GObject_Initialize(block);
+
+	block->mesh = AssetManager_LookupMesh("Sphere");
+	block->material = Material_Allocate();
+	Material_Initialize(block->material, AssetManager_LookupTexture("Test"));
+	*Matrix_Index(block->material->colorMatrix, 0, 0) = 0.0f;
+	//*Matrix_Index(block->material->colorMatrix, 1, 1) = 0.5f;
+
+	block->collider = Collider_Allocate();
+	SphereCollider_Initialize(block->collider, 1.0f);
+
+	block->body = RigidBody_Allocate();
+	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
+	block->body->dynamicFriction = block->body->staticFriction = 0.08f;
+
+	block->body->coefficientOfRestitution = 0.8f;
+	block->body->rollingResistance = 0.1f;
+
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = -3.0f;
+	v.components[1] = -2.0f;
+	v.components[2] = -6.8f;
+
+	GObject_Translate(block, &v);
+
+	Vector_Copy(&v, &Vector_ZERO);
+	v.components[0] = v.components[1] = v.components[2] = 1.8f;
+	GObject_Scale(block, &v);
+	
+	ObjectManager_AddObject(block);
 
 
-	//Set gravity	
+	//Create light
+	block = GObject_Allocate();
+	GObject_Initialize(block);
+
+	block->light = PointLight_Allocate();
+	v.components[0] = v.components[1] = v.components[2] = 1.0f;
+	PointLight_Initialize(block->light, &Vector_ZERO, &v, 0.3f, 1.0f, 200.0f, 1.0f, 1.0f);
+
+	v.components[0] = -5.0f;
+	v.components[1] = -10.0f;
+	v.components[2] = -10.0f;
+	GObject_Translate(block, &v);
+
+	ObjectManager_AddObject(block);
+	
+	//Set gravity
+		
 	Vector* gravity = Vector_Allocate();
 	Vector_Initialize(gravity, 3);
 	gravity->components[1] = -9.81f;
 	
-	PhysicsManager_AddGlobalAcceleration(gravity);		
+	PhysicsManager_AddGlobalAcceleration(gravity);	
+	
 
 }

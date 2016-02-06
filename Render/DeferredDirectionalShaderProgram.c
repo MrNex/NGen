@@ -190,7 +190,7 @@ static void DeferredDirectionalShaderProgram_SetConstantUniforms(ShaderProgram* 
 		prog->shaderProgramID,
 		members->lightColorLocation,
 		1,
-		buffer->directionalLight->color->components
+		buffer->directionalLight->base->color->components
 	);
 
 	ProgramUniform3fv
@@ -205,14 +205,14 @@ static void DeferredDirectionalShaderProgram_SetConstantUniforms(ShaderProgram* 
 	(
 		prog->shaderProgramID,
 		members->ambientIntensityLocation,
-		buffer->directionalLight->ambientIntensity
+		buffer->directionalLight->base->ambientIntensity
 	);
 
 	ProgramUniform1f
 	(
 		prog->shaderProgramID,
 		members->diffuseIntensityLocation,
-		buffer->directionalLight->diffuseIntensity
+		buffer->directionalLight->base->diffuseIntensity
 	);
 }
 

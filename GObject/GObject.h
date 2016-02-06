@@ -4,6 +4,7 @@
 #include "../Render/FrameOfReference.h"
 #include "../Render/Mesh.h"
 #include "../Render/Material.h"
+#include "../Render/PointLight.h"
 
 #include "../State/State.h"
 
@@ -19,6 +20,7 @@ typedef struct GObject
 	LinkedList* states;
 	RigidBody* body;
 	Collider* collider;
+	PointLight* light;
 } GObject;
 
 ///

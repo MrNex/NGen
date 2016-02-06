@@ -523,9 +523,9 @@ static void State_ParkourController_Wallrun(GObject* obj, State* state)
 					float yaw = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
 					float pitch = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
 		
-					d->color->components[0] = cosf(yaw) * sinf(yaw) + .9f;
-					d->color->components[1] = cosf(yaw) * sinf(pitch) + .9f;
-					d->color->components[2] = cosf(pitch) + .9;
+					d->base->color->components[0] = cosf(yaw) * sinf(yaw) + .9f;
+					d->base->color->components[1] = cosf(yaw) * sinf(pitch) + .9f;
+					d->base->color->components[2] = cosf(pitch) + .9;
 
 					break;
 				}
@@ -542,9 +542,9 @@ static void State_ParkourController_Wallrun(GObject* obj, State* state)
 					float yaw = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
 					float pitch = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
 		
-					d->color->components[0] = cosf(yaw) * sinf(yaw) + .9f;
-					d->color->components[1] = cosf(yaw) * sinf(pitch) + .9f;
-					d->color->components[2] = cosf(pitch) + .9;
+					d->base->color->components[0] = cosf(yaw) * sinf(yaw) + .9f;
+					d->base->color->components[1] = cosf(yaw) * sinf(pitch) + .9f;
+					d->base->color->components[2] = cosf(pitch) + .9;
 
 
 				}
@@ -758,9 +758,9 @@ void State_ParkourController_Roll(GObject* obj, struct State_ParkourController_M
 	float yaw = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
 	float pitch = EnvironmentManager_Randf(0.0f, 3.14159f * 2.0f);
 		
-	d->color->components[0] = cosf(yaw) * sinf(yaw) + .8f;
-	d->color->components[1] = cosf(yaw) * sinf(pitch) + .8f;
-	d->color->components[2] = cosf(pitch) + .8;
+	d->base->color->components[0] = cosf(yaw) * sinf(yaw) + .8f;
+	d->base->color->components[1] = cosf(yaw) * sinf(pitch) + .8f;
+	d->base->color->components[2] = cosf(pitch) + .8;
 
 
 }
@@ -915,17 +915,17 @@ void State_ParkourController_Update(GObject* obj, State* state)
 		static float toggle = -1.0f;
 
 		static int index = 0;
-		d->color->components[index] += dt * toggle;
-		if(d->color->components[index] > 1.0f)
+		d->base->color->components[index] += dt * toggle;
+		if(d->base->color->components[index] > 1.0f)
 		{	
-			d->color->components[index] = 1.0f;
+			d->base->color->components[index] = 1.0f;
 			toggle *= -1.0f;
 
 			index = EnvironmentManager_Rand(0, 3);
 		}
-		else if(d->color->components[index] < 0.0f)
+		else if(d->base->color->components[index] < 0.0f)
 		{
-			d->color->components[index] = 0.0f;
+			d->base->color->components[index] = 0.0f;
 			toggle *= -1.0f;
 			index = EnvironmentManager_Rand(0, 3);
 		}

@@ -12,7 +12,8 @@ enum GeometryBuffer_TextureType
 	GeometryBuffer_TextureType_DIFFUSE,		//RGBA8 Internal Format
 	GeometryBuffer_TextureType_NORMAL,		//RGB32F InternalFormat
 	GeometryBuffer_TextureType_TEXTURECOORDINATE,	//RG32F Internal Format
-	GeometryBuffer_TextureType_DEPTH,		//DEPTH32F Internal format
+	GeometryBuffer_TextureType_DEPTH,		//DEPTH32F_STENCIL8 Internal format
+	GeometryBuffer_TextureType_FINAL,		//RGBA internal format
 	GeometryBuffer_TextureType_NUMTEXTURES		//The number of texture types
 };
 
@@ -47,17 +48,31 @@ void GeometryBuffer_Initialize(GeometryBuffer* gBuffer, unsigned int textureWidt
 void GeometryBuffer_Free(GeometryBuffer* gBuffer);
 
 ///
-//Binds the Frame Buffer Object of the geometry buffer to bind it's textures to be read from the shaders
-//
-//Parameters:
-//	gBuffer: A pointer to the geometry buffer being bound for reading
-void GeometryBuffer_BindForReading(GeometryBuffer* gBuffer);
-
-///
-//Binds the Frame Buffer Object of the Geometry Buffer to bind it's textures to be written to from the shaders.
+//Binds the Frame Buffer Object of the Geometry Buffer to bind it's textures to be written to from the DeferredGeometryShaderProgram.
 //
 //Parameters:
 //	gBuffer: A pointer to the geometry buffer being bound for writing
-void GeometryBuffer_BindForWriting(GeometryBuffer* gBuffer);
+void GeometryBuffer_BindForGeometryPass(GeometryBuffer* gBuffer);
+
+///
+//Binds the geometry buffer to have it's stencil texture written to from the DeferredStencilShaderProgram
+//
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer being bound for the stencil pass
+void GeometryBuffer_BindForStencilPass(GeometryBuffer* gBuffer);
+
+///
+//Binds the Frame Buffer Object of the geometry buffer to bind it's textures to be read from the Deferred lighting shaders
+// 
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer being bound for reading
+void GeometryBuffer_BindForLightPass(GeometryBuffer* gBuffer);
+
+///
+//Binds the FrameBufferObject of the geometry buffer to be read for the final pass
+//
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer being bound for the final pass
+void GeometryBuffer_BindForFinalPass(GeometryBuffer* gBuffer);
 
 #endif
