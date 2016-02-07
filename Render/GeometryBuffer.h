@@ -11,9 +11,9 @@ enum GeometryBuffer_TextureType
 	GeometryBuffer_TextureType_POSITION,		//RGB32F Internal Format
 	GeometryBuffer_TextureType_DIFFUSE,		//RGBA8 Internal Format
 	GeometryBuffer_TextureType_NORMAL,		//RGB32F InternalFormat
-	GeometryBuffer_TextureType_TEXTURECOORDINATE,	//RG32F Internal Format
-	GeometryBuffer_TextureType_DEPTH,		//DEPTH32F_STENCIL8 Internal format
+	//GeometryBuffer_TextureType_TEXTURECOORDINATE,	//RG32F Internal Format
 	GeometryBuffer_TextureType_FINAL,		//RGBA internal format
+	GeometryBuffer_TextureType_DEPTH,		//DEPTH32F_STENCIL8 Internal format
 	GeometryBuffer_TextureType_NUMTEXTURES		//The number of texture types
 };
 
@@ -46,6 +46,13 @@ void GeometryBuffer_Initialize(GeometryBuffer* gBuffer, unsigned int textureWidt
 //Parameters:
 //	gBuffer: A pointer to the geometry buffer being freed
 void GeometryBuffer_Free(GeometryBuffer* gBuffer);
+
+///
+//Clears the final texture of the geometry buffer
+//
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer to clear the final texture of
+void GeometryBuffer_ClearFinalTexture(GeometryBuffer* gBuffer);
 
 ///
 //Binds the Frame Buffer Object of the Geometry Buffer to bind it's textures to be written to from the DeferredGeometryShaderProgram.

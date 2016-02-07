@@ -45,6 +45,7 @@ OBJ= \
 	Bin/DeferredGeometryShaderProgram.o \
 	Bin/DeferredDirectionalShaderProgram.o \
 	Bin/DeferredPointShaderProgram.o \
+	Bin/DeferredStencilShaderProgram.o \
 	Bin/Camera.o \
 	Bin/GeometryBuffer.o \
 	Bin/RenderPipeline.o \
@@ -144,6 +145,9 @@ Bin/DeferredDirectionalShaderProgram.o: Render/DeferredDirectionalShaderProgram.
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/DeferredPointShaderProgram.o: Render/DeferredPointShaderProgram.c Render/DeferredPointShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/PointLight.o Bin/AssetManager.o Bin/EnvironmentManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/DeferredStencilShaderProgram.o: Render/DeferredStencilShaderProgram.c Render/DeferredStencilShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o Bin/ProgramUniform.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/RenderPipeline.o: Render/RenderPipeline.c Render/RenderPipeline.h Bin/ShaderProgram.o

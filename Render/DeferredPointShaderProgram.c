@@ -54,16 +54,6 @@ static void DeferredPointShaderProgram_InitializeMembers(ShaderProgram* prog);
 static void DeferredPointShaderProgram_FreeMembers(ShaderProgram* prog);
 
 ///
-//Sets the uniform variables needed by this shader program
-//which do not change between meshes
-//
-//Parameters:
-//	prog: A pointer to the deferred directional shader program to set the constant uniforms of
-//	buffer: A pointer to the rendering buffer to get the uniform values of
-//	gBuffer: A pointer to the geometry buffer containing the results from the geometry pass.
-static void DeferredPointShaderProgram_SetConstantUniforms(ShaderProgram* prog);
-
-///
 //Sets the uniform variables needed by the shader program
 //which do change between meshes
 //
@@ -80,7 +70,7 @@ static void DeferredPointShaderProgram_SetVariableUniforms(ShaderProgram* prog, 
 //	prog: A pointer to the DeferreddirectionalShaderProgram with which to render
 //	buffer: A pointer to the active rendering buffer which is to be used for rendering
 //	renderArgs: A pointer to a linked list of GameObject's to be rendered
-static void DeferredPointShaderProgram_Render(ShaderProgram* prog, RenderingBuffer* buffer, LinkedList* gObjects);
+static void DeferredPointShaderProgram_Render(ShaderProgram* prog, RenderingBuffer* buffer, GObject* gObject);
 
 ///
 //Function definitions
@@ -154,7 +144,7 @@ static void DeferredPointShaderProgram_FreeMembers(ShaderProgram* prog)
 //	prog: A pointer to the deferred directional shader program to set the constant uniforms of
 //	buffer: A pointer to the rendering buffer to get the uniform values of
 //	gBuffer: A pointer to the geometry buffer containing the results from the geometry pass.
-static void DeferredPointShaderProgram_SetConstantUniforms(ShaderProgram* prog)
+void DeferredPointShaderProgram_SetConstantUniforms(ShaderProgram* prog)
 {
 	struct DeferredPointShaderProgram_Members* members = (struct DeferredPointShaderProgram_Members*) prog->members;
 
@@ -203,8 +193,6 @@ static void DeferredPointShaderProgram_SetVariableUniforms(ShaderProgram* prog, 
 	Vector_Add(tempFrame.position, light->position, gameObj->frameOfReference->position); 
 
 	float lightRadius = PointLight_CalculateRadius(light);
-
-	printf("Light radius:\t%f\n", lightRadius);
 
 	Vector scaleVec;
 	Vector_INIT_ON_STACK(scaleVec, 3);
@@ -260,7 +248,7 @@ static void DeferredPointShaderProgram_SetVariableUniforms(ShaderProgram* prog, 
 		prog->shaderProgramID,
 		members->lightPositionLocation,
 		1,
-		light->position->components
+		tempFrame.position->components
 	);
 	//Attentuation
 	ProgramUniform1f
@@ -290,27 +278,44 @@ static void DeferredPointShaderProgram_SetVariableUniforms(ShaderProgram* prog, 
 //	prog: A pointer to the DeferreddirectionalShaderProgram with which to render
 //	buffer: A pointer to the active rendering buffer which is to be used for rendering
 //	gBuffer: A pointer to the geometry buffer containing information needed from the geommetry pass to render this frame.
-static void DeferredPointShaderProgram_Render(ShaderProgram* prog, RenderingBuffer* buffer, LinkedList* gObjects)
+static void DeferredPointShaderProgram_Render(ShaderProgram* prog, RenderingBuffer* buffer, GObject* gObject)
 {
 	Mesh* sphere = AssetManager_LookupMesh("Sphere");
 
 	glUseProgram(prog->shaderProgramID);
 
+
 	DeferredPointShaderProgram_SetConstantUniforms(prog);
 
-	struct LinkedList_Node* current = gObjects->head;
-	GObject* gameObj = NULL;
-	while(current != NULL)
-	{
-		gameObj = (GObject*)current->data;
-		if(gameObj->light != NULL)
-		{
-			DeferredPointShaderProgram_SetVariableUniforms(prog, buffer->camera, gameObj);
-			Mesh_Render(sphere, sphere->primitive);
-		}
+	glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
 
-		current = current->next;
-	}
+	//Now we should not update the depth buffer to perform the lightning pass.
+	glDepthMask(GL_FALSE);
+	glDisable(GL_DEPTH_TEST);
+
+	//The lighting pass will need to blend the effects of the lighting with that of the geometry pass.
+	glEnable(GL_BLEND);
+	glBlendEquation(GL_FUNC_ADD);	//Will add the two resulting colors for each pixel
+	glBlendFunc(GL_ONE, GL_ONE);	//Scales each by a factor of 1 when adding the geometry and lightning passes
+
+	//glDisable(GL_CULL_FACE);
+
+	glCullFace(GL_FRONT);
+
+	DeferredPointShaderProgram_SetVariableUniforms(prog, buffer->camera, gObject);
+	Mesh_Render(sphere, sphere->primitive);
+
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+
+	glDisable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ZERO);
+
+	//glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+
+	//glDisable(GL_STENCIL_TEST);
 }
 
 

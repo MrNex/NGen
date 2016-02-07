@@ -46,7 +46,7 @@ void RenderingManager_Initialize(void)
 {
 	//Enable Rendering Tests
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	glDepthFunc(GL_LEQUAL);
 
 
 	renderingBuffer = RenderingManager_AllocateBuffer();

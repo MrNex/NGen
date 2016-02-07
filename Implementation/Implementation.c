@@ -23,7 +23,8 @@ void InitializeScene(void)
 
 	//Set directional light direction
 	RenderingManager_GetRenderingBuffer()->directionalLight->direction->components[1] = -1.0f;
-	RenderingManager_GetRenderingBuffer()->directionalLight->base->diffuseIntensity = 0.0f;
+	RenderingManager_GetRenderingBuffer()->directionalLight->base->diffuseIntensity = 0.01f;
+	RenderingManager_GetRenderingBuffer()->directionalLight->base->ambientIntensity = 0.00f;
 
 	//Create floor
 	GObject* block = GObject_Allocate();
@@ -31,13 +32,13 @@ void InitializeScene(void)
 
 	block->mesh = AssetManager_LookupMesh("Cube");
 	block->material = Material_Allocate();
-	Material_Initialize(block->material, AssetManager_LookupTexture("Test"));
+	Material_Initialize(block->material, AssetManager_LookupTexture("White"));
 	block->material->tile->components[0] = 1.0f;
 	block->material->tile->components[1] = 3.0f;
 
 
-	*Matrix_Index(block->material->colorMatrix, 1, 1) = 0.0f;
-	*Matrix_Index(block->material->colorMatrix, 2, 2) = 0.0f;
+	//*Matrix_Index(block->material->colorMatrix, 1, 1) = 0.0f;
+	//*Matrix_Index(block->material->colorMatrix, 2, 2) = 0.0f;
 
 	block->collider = Collider_Allocate();
 	AABBCollider_Initialize(block->collider, 2.0f, 2.0f, 2.0f, &Vector_ZERO);
@@ -57,7 +58,7 @@ void InitializeScene(void)
 	GObject_Scale(block, &v);
 
 	Vector_Copy(&v, &Vector_ZERO);
-	v.components[0] = -15.0f;
+	//v.components[0] = -15.0f;
 	v.components[1] = -10.0f;
 
 	GObject_Translate(block, &v);
@@ -86,7 +87,7 @@ void InitializeScene(void)
 	Vector_Copy(&v, &Vector_ZERO);
 	v.components[0] = 0.0f;
 	v.components[1] = 0.0f;
-	v.components[2] = -5.0f;
+	v.components[2] = -0.0f;
 
 	GObject_Translate(block, &v);
 
@@ -137,15 +138,54 @@ void InitializeScene(void)
 	GObject_Initialize(block);
 
 	block->light = PointLight_Allocate();
-	v.components[0] = v.components[1] = v.components[2] = 1.0f;
-	PointLight_Initialize(block->light, &Vector_ZERO, &v, 0.3f, 1.0f, 200.0f, 1.0f, 1.0f);
+	v.components[0] = v.components[1] = 0.0f;
+	v.components[2] = 1.0f;
+	PointLight_Initialize(block->light, &Vector_ZERO, &v, 0.3f, 1.0f, 0.05f, -0.1f, 0.05f);
 
-	v.components[0] = -5.0f;
+	//v.components[0] = -5.0f;
 	v.components[1] = -10.0f;
-	v.components[2] = -10.0f;
+	//v.components[2] = -10.0f;
 	GObject_Translate(block, &v);
 
 	ObjectManager_AddObject(block);
+
+	//Create light 2
+	block = GObject_Allocate();
+	GObject_Initialize(block);
+
+	block->light = PointLight_Allocate();
+	v.components[0] = 1.0f;
+	v.components[1] = v.components[2] = 0.0f;
+	PointLight_Initialize(block->light, &Vector_ZERO, &v, 0.3f, 1.0f, 0.05f, -0.1f, 0.05f);
+
+	v.components[0] = -3.0f;
+	v.components[1] = -10.0f;
+	v.components[2] = -3.0f;
+	GObject_Translate(block, &v);
+
+	ObjectManager_AddObject(block);
+
+	//Create light 3
+	block = GObject_Allocate();
+	GObject_Initialize(block);
+
+	block->light = PointLight_Allocate();
+	v.components[0] = 0.0f;
+	v.components[1] = 1.0f;
+	v.components[2] = 0.0f;
+	PointLight_Initialize(block->light, &Vector_ZERO, &v, 0.3f, 1.0f, 0.1f, -0.1f, 0.05f);
+
+	v.components[0] = 3.0f;
+	v.components[1] = -10.0f;
+	v.components[2] = -3.0f;
+	GObject_Translate(block, &v);
+
+	ObjectManager_AddObject(block);
+
+
+
+		
+
 	
 	//Set gravity
 		

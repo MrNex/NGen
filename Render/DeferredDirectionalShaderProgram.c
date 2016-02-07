@@ -227,10 +227,31 @@ static void DeferredDirectionalShaderProgram_Render(ShaderProgram* prog, Renderi
 {
 	glUseProgram(prog->shaderProgramID);
 
+
+	//Now we should not update the depth buffer to perform the lightning pass.
+	//glDepthMask(GL_FALSE);
+	//glDisable(GL_DEPTH_TEST);
+
+	glDisable(GL_CULL_FACE);
+
+
+	//The lighting pass will need to blend the effects of the lighting with that of the geometry pass.
+	//glEnable(GL_BLEND);
+	//glBlendEquation(GL_FUNC_ADD);	//Will add the two resulting colors for each pixel
+	//glBlendFunc(GL_ONE, GL_ONE);	//Scales each by a factor of 1 when adding the geometry and lightning passes
+	
 	DeferredDirectionalShaderProgram_SetConstantUniforms(prog, buffer, gBuffer);
 
 	//glClear(GL_COLOR_BUFFER_BIT);
 	
 	Mesh_Render(AssetManager_LookupMesh("Square"), GL_TRIANGLES);
 
+	//glDisable(GL_BLEND);
+	//glBlendFunc(GL_ONE, GL_ZERO);
+
+	//glDepthMask(GL_TRUE);
+	//glEnable(GL_DEPTH_TEST);
+
+
+	glEnable(GL_CULL_FACE);
 }

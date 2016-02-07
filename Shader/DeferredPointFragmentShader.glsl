@@ -29,11 +29,17 @@ vec4 CalculatePointLight(vec3 worldPos, vec3 worldNormal)
 	vec4 ambientColor = ambientIntensity * vec4(lightColor, 1.0f);
 	
 	vec3 lightDirection = worldPos - lightPosition;
+	float distance = length(lightDirection);
+	lightDirection = normalize(lightDirection);
+
 	float diffuseFactor = -dot(worldNormal, lightDirection);
 	diffuseFactor = (diffuseFactor + abs(diffuseFactor))/2.0f;
 
 	vec4 diffuseColor = vec4(diffuseIntensity * diffuseFactor * lightColor, 1.0f);
-	return ambientColor + diffuseColor;
+
+	float attentuation = constantAttentuation + linearAttentuation * distance + exponentAttentuation * distance * distance;
+
+	return (ambientColor + diffuseColor) / attentuation;
 }
 
 ///

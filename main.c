@@ -191,6 +191,7 @@ int main(int argc, char* argv[])
 
 	//Check for errors
 	CheckGLErrors();
+	printf("Here\n");
 
 	///
 	//Set up callback registration

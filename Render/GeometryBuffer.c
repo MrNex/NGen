@@ -137,9 +137,11 @@ void GeometryBuffer_Initialize(GeometryBuffer* gBuffer, unsigned int textureWidt
 		0								//Mipmapping level
 	);
 
+	//Not really needed because of 1 to 1 mapping between window size and texture size
+	//Consider for split screen applications
 	///
 	//Texture Coordinate Texture
-
+	/*
 	//Initialize Texture Coordinate texture
 	glBindTexture(GL_TEXTURE_2D, gBuffer->textures[GeometryBuffer_TextureType_TEXTURECOORDINATE]);
 	glTexImage2D
@@ -169,43 +171,78 @@ void GeometryBuffer_Initialize(GeometryBuffer* gBuffer, unsigned int textureWidt
 		GL_TEXTURE_2D,								//Target attachment type
 		gBuffer->textures[GeometryBuffer_TextureType_TEXTURECOORDINATE],	//Texture to attach
 		0									//Mipmapping level
-	);
+	);*/
+
 
 	///
-	//Depth Texture
+	//Final texture
 
-	//Initialize Depth texture
+	//Initialize final texture
+	glBindTexture(GL_TEXTURE_2D, gBuffer->textures[GeometryBuffer_TextureType_FINAL]);
+	glTexImage2D
+	(
+		GL_TEXTURE_2D,		//Type
+		0,			//Mipmapping level
+		GL_RGB8,		//Internal format
+		textureWidth,
+		textureHeight,
+		0,			//Border width
+		GL_RGB,
+		GL_FLOAT,
+		NULL
+	);
+
+	//Because the textures will be a 1-1 mapping with the pixels in the window
+	//we want to make sure openGL does not attempt an unnecessary interpolation 
+	//when shading. 	
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glFramebufferTexture2D
+	(
+		GL_DRAW_FRAMEBUFFER,							//Target framebuffer type
+		GL_COLOR_ATTACHMENT0 + GeometryBuffer_TextureType_FINAL,		//Attachment point
+		GL_TEXTURE_2D,								//Attachment type
+		gBuffer->textures[GeometryBuffer_TextureType_FINAL],			//Texture to attach
+		0									//mipmapping level
+	);
+
+
+	///
+	//Depth Texturencil
+
+	//Initialize Depth/ste texture
 	glBindTexture(GL_TEXTURE_2D, gBuffer->textures[GeometryBuffer_TextureType_DEPTH]);
 	glTexImage2D
 	(
 		GL_TEXTURE_2D,		//Type
 		0,			//Mipmapping level
-		GL_DEPTH_COMPONENT32F,	//Internal format of image data (2 components each a 32 bit single floating point precision)
-		textureWidth,		//Width of texture
-		textureHeight,		//Height of texture
-		0,			//Border
-		GL_DEPTH_COMPONENT,	//Format of data to output into texture
-		GL_FLOAT,		//Data type of each element in texture
-		NULL			//Texture data (We will be generating the texture
+		GL_DEPTH32F_STENCIL8,	//Internal format of image data (2 components each a 32 bit single floating point precision)
+		textureWidth,					//Width of texture
+		textureHeight,					//Height of texture
+		0,						//Border
+		GL_DEPTH_STENCIL,				//Format of data to output into texture
+		GL_FLOAT_32_UNSIGNED_INT_24_8_REV,		//Data type of each element in texture
+		NULL						//Texture data (We will be generating the texture
 	);
 	//Attach Depth texture to frame buffer
 	glFramebufferTexture2D
 	(
 		GL_DRAW_FRAMEBUFFER, 					//Target framebuffer type
-		GL_DEPTH_ATTACHMENT,					//Attachment point to attach this buffer to
+		GL_DEPTH_STENCIL_ATTACHMENT,				//Attachment point to attach this buffer to
 		GL_TEXTURE_2D,						//Target attachment type
 		gBuffer->textures[GeometryBuffer_TextureType_DEPTH],	//Texture to attach
 		0							//Mipmapping level
 	);
 
 	//Draw buffers
-	GLenum buffersToDraw[GeometryBuffer_TextureType_NUMTEXTURES];
-	for(int i = 0; i < GeometryBuffer_TextureType_NUMTEXTURES; i++)
+	GLenum buffersToDraw[GeometryBuffer_TextureType_DEPTH];
+	for(int i = 0; i < GeometryBuffer_TextureType_DEPTH; i++)
 	{
 		buffersToDraw[i] = GL_COLOR_ATTACHMENT0 + i;
 	}
 
-	glDrawBuffers(GeometryBuffer_TextureType_NUMTEXTURES, buffersToDraw);
+	glDrawBuffers(GeometryBuffer_TextureType_DEPTH, buffersToDraw);
 
 	//Get status of framebuffer
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -228,6 +265,18 @@ void GeometryBuffer_Free(GeometryBuffer* gBuffer)
 	glDeleteTextures(GeometryBuffer_TextureType_NUMTEXTURES, gBuffer->textures);
 	glDeleteFramebuffers(1, &gBuffer->fbo);
 	free(gBuffer);
+}
+
+///
+//Clears the final texture of the geometry buffer
+//
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer to clear the final texture of
+void GeometryBuffer_ClearFinalTexture(GeometryBuffer* gBuffer)
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBuffer->fbo);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0 + GeometryBuffer_TextureType_FINAL);
+	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 ///
@@ -256,4 +305,74 @@ void GeometryBuffer_BindForReading(GeometryBuffer* gBuffer)
 void GeometryBuffer_BindForWriting(GeometryBuffer* gBuffer)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBuffer->fbo);
+	
 }
+
+///
+//Binds the Frame Buffer Object of the Geometry Buffer to bind it's textures to be written to from the DeferredGeometryShaderProgram.
+//
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer being bound for writing
+void GeometryBuffer_BindForGeometryPass(GeometryBuffer* gBuffer)
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBuffer->fbo);
+
+	GLenum drawBuffers[] = 
+	{
+		GL_COLOR_ATTACHMENT0 + GeometryBuffer_TextureType_POSITION,
+		GL_COLOR_ATTACHMENT0 + GeometryBuffer_TextureType_DIFFUSE,
+		GL_COLOR_ATTACHMENT0 + GeometryBuffer_TextureType_NORMAL
+	};
+
+	//Specify where the fragment shader will write
+	glDrawBuffers(3, drawBuffers);
+}
+
+///
+//Binds the geometry buffer to have it's stencil texture written to from the DeferredStencilShaderProgram
+//
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer being bound for the stencil pass
+void GeometryBuffer_BindForStencilPass(GeometryBuffer* gBuffer)
+{
+	//Just in case
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBuffer->fbo);
+
+	//We will use a null fragment shader for the stencil pass.
+	glDrawBuffer(GL_NONE);
+}
+
+///
+//Binds the Frame Buffer Object of the geometry buffer to bind it's textures to be read from the Deferred lighting shaders
+// 
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer being bound for reading
+void GeometryBuffer_BindForLightPass(GeometryBuffer* gBuffer)
+{
+	//Just in case
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBuffer->fbo);
+
+	//Draw to the final buffer!
+	glDrawBuffer(GL_COLOR_ATTACHMENT0 + GeometryBuffer_TextureType_FINAL);
+
+	//Bind Position - Normal
+	for(unsigned int i = 0; i < GeometryBuffer_TextureType_FINAL; i++)
+	{
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, gBuffer->textures[i]);
+	}
+}
+
+///
+//Binds the FrameBufferObject of the geometry buffer to be read for the final pass
+//
+//Parameters:
+//	gBuffer: A pointer to the geometry buffer being bound for the final pass
+void GeometryBuffer_BindForFinalPass(GeometryBuffer* gBuffer)
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);	//Bind default frame buffer for writing
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer->fbo);	//Bind gBuffer's final texture for blitting
+	glReadBuffer(GL_COLOR_ATTACHMENT0 + GeometryBuffer_TextureType_FINAL);
+}
+
+
