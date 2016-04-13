@@ -62,15 +62,7 @@ void GObject_InitializeDeepCopy(GObject* copy, GObject* original)
 	if(original->collider != NULL)
 	{
 		copy->collider = Collider_Allocate();
-		if(original->collider->type == COLLIDER_SPHERE)
-		{
-			SphereCollider_InitializeDeepCopy(copy->collider, original->collider);
-		}
-		else if(original->collider->type == COLLIDER_AABB)
-		{
-			AABBCollider_InitializeDeepCopy(copy->collider, original->collider);
-		}
-		else if(original->collider->type == COLLIDER_CONVEXHULL)
+		if(original->collider->type == COLLIDER_CONVEXHULL)
 		{
 			ConvexHullCollider_InitializeDeepCopy(copy->collider, original->collider);
 		}

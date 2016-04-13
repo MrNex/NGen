@@ -2,11 +2,19 @@
 
 #include <GL/glew.h>
 #include <GL/freeglut.h>
+#ifdef linux
+#include <GL/glx.h>
+#endif
+#ifdef windows
+#include <GL/wgl.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#include <sys/utsname.h>
 
 ///
 //Internal Declarations
@@ -24,6 +32,13 @@ EnvironmentBuffer* environmentBuffer = NULL;
 //Returns:
 //	A pointer to an uninitialized environmentBuffer
 static EnvironmentBuffer* EnvironmentManager_AllocateBuffer(void);
+
+///
+//Identifies the OS of the machine
+//
+//Returns:
+//	The OS of the machine
+static enum EnvironmentManager_OS EnvironmentManager_IdentifyOS(void);
 
 ///
 //Initializes an uninitialized environment buffer
@@ -69,6 +84,23 @@ void EnvironmentManager_Initialize(int* argc, char** argv)
 	{
 		printf("Glew initialization has failed! Aborting program.\n");
 		_Exit(-1);
+	}
+
+
+	if(environmentBuffer->operatingSystem == EnvironmentManager_OS_LINUX)
+	{
+#ifdef linux
+		environmentBuffer->glContextHandle = glXGetCurrentContext();
+		environmentBuffer->glDeviceHandle = glXGetCurrentDisplay();
+		printf("Context retrieved\n");
+#endif
+	}
+	else if(environmentBuffer->operatingSystem == EnvironmentManager_OS_WINDOWS)
+	{
+#ifdef windows
+		environmentBuffer->glContextHandle = wglGetCurrentContext();
+		environmentBuffer->glDeviceHandle = wglGetCurrentDisplay();
+#endif
 	}
 
 	//Seed random generator
@@ -146,6 +178,36 @@ static EnvironmentBuffer* EnvironmentManager_AllocateBuffer(void)
 	return malloc(sizeof(EnvironmentBuffer));
 }
 
+static enum EnvironmentManager_OS EnvironmentManager_IdentifyOS(void)
+{
+	//Determine the os
+	struct utsname osInfo;
+	if(uname(&osInfo))
+	{
+		//Error
+		printf("Error: EnvironmentManager Failed to identify OS\n");
+	}
+	else
+	{
+		printf("Operating system is %s\n", osInfo.sysname);
+		if(strcmp(osInfo.sysname, "Linux") == 0)
+		{
+			return EnvironmentManager_OS_LINUX;
+		}
+		else if(strcmp(osInfo.sysname, "Darwin") == 0)
+		{
+			return EnvironmentManager_OS_MAC;
+		}
+		else if(strncmp(osInfo.sysname, "CYGWIN", strlen("CYGWIN")) == 0 ||
+				strncmp(osInfo.sysname, "MINGW", strlen("MINGW")) == 0)
+		{
+			return EnvironmentManager_OS_WINDOWS;
+		}
+	}
+	return EnvironmentManager_OS_OTHER;
+
+}
+
 ///
 //Initializes an uninitialized environment buffer
 //
@@ -153,13 +215,15 @@ static EnvironmentBuffer* EnvironmentManager_AllocateBuffer(void)
 //	buffer: A pointer to the environmentBuffer to initialize
 static void EnvironmentManager_InitializeBuffer(EnvironmentBuffer* buffer)
 {
-	buffer->windowWidth = 1920;
-	buffer->windowHeight = 1080;
+	buffer->windowWidth = 800;
+	buffer->windowHeight = 600;
 	buffer->majorGLContext = 4;
 	buffer->minorGLContext = 3;
 	int titleLen =  strlen("NGen V4.0");
 	buffer->windowTitle = malloc(sizeof(char) * titleLen);
 	strcpy(buffer->windowTitle, "NGen V4.0");
+	buffer->operatingSystem = EnvironmentManager_IdentifyOS();
+
 }
 
 ///

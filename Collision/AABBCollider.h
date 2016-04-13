@@ -11,7 +11,7 @@ struct Collider;
 //Forward declaration of ColliderData_ConvexHull because of include guard blocking declaration in this file
 struct ColliderData_ConvexHull;
 
-struct ColliderData_AABB
+struct ColliderData_AABB_OLD
 {
 	//WARNING:
 	//IF YOU CHANGE THE ORDER OF THESE, REWRITE OCTTREE_NODE_DOESOBJECTCOLLIDE!
@@ -21,34 +21,36 @@ struct ColliderData_AABB
 	Vector* centroid;	//The centroid of the AABB
 };
 
+struct ColliderData_AABB
+{
+	float min[3];
+	float max[3];
+};
+
 ///
 //Allocates memory for a new Axis Aligned Bounding Box collider data
 //
 //returns:
 //	Pointer to newly allocated uninitialized axis aligned bounding box collider data
-struct ColliderData_AABB* AABBCollider_AllocateData();
+int AABBCollider_AllocateData();
 
 ///
 //Initializes an AABB collider's data set
 //
 //Parameters:
 //	AABB: The axis aligned bounding box data set being initialized
-//	width: The width of the AABB
-//	height: The height of the AABB
-//	depth: The depth of the AABB
-//	centroid: A pointer to a vector to copy as the centroid of the AABB
-void AABBCollider_InitializeData(struct ColliderData_AABB* AABB, const float width, const float height, const float depth, const Vector* centroid);
+//	min: The minimum xyz point on the AABB in object space
+//	max: The maximum xyz point on the AABB in object space
+void AABBCollider_InitializeData(struct ColliderData_AABB* AABB, const float min[3], const float max[3]);
 
 ///
 //Initializes an axis aligned bounding box collider
 //
 //parameters:
 //	collider: The collider to initialize
-//	width: The width of the bounding box
-//	height: The height of the bounding box
-//	depth: The depth of the bounding box
-//	Centroid: A pointer to a vector to copy as the centroid of te AABB
-void AABBCollider_Initialize(struct Collider* collider, float width, float height, float depth, const Vector* centroid);
+//	min: The minimum XYZ point on the AABB in object space
+//	max: The maximum XYZ point on the AABB in object space
+void AABBCollider_Initialize(struct Collider* collider, const float min[3], const float max[3]);
 
 ///
 //Initializes an axis aligned bounding box collider fit to a given mesh
@@ -59,20 +61,11 @@ void AABBCollider_Initialize(struct Collider* collider, float width, float heigh
 void AABBCollider_InitializeFromMesh(struct Collider* collider, const Mesh* mesh);
 
 ///
-//Initializes a AABB collider as a deep copy of another
-//This means any pointers will point to a Newly Allocated instance of identical memory
-//Parameters:
-//	copy: A pointer to an uninitialized collider to initialize as a deep copy
-//	original: A pointer to an AABB collider to deep copy
-void AABBCollider_InitializeDeepCopy(struct Collider* copy, struct Collider* original);
-
-
-///
 //Frees an axis aligned collider data set
 //
 //Parameters:
-//	colliderData: A pointer to the axis aligned bounding box collider data to free
-void AABBCollider_FreeData(struct ColliderData_AABB* colliderData);
+//	colliderDataID: The ID of the memoryunit containing the AABB collider data
+void AABBCollider_FreeData(int colliderDataID);
 
 ///
 //Gets the dimensions of an AABB scaled by the dimensions of a frame of reference
@@ -84,11 +77,28 @@ void AABBCollider_FreeData(struct ColliderData_AABB* colliderData);
 void AABBCollider_GetScaledDimensions(struct ColliderData_AABB* dest, const struct ColliderData_AABB* colliderData, const FrameOfReference* FoR);
 
 ///
+//Gets an AABB oriented in world space
+//
+//Parameters:
+//	dest: A pointer to the destination to store the AABB in world space
+//	colliderData: A pointer to the AABB toorient in worldspace
+//	frame: A pointer to the frame of reference with which to orient the AABB
+void AABBCollider_GetWorldAABB(struct ColliderData_AABB* dest, const struct ColliderData_AABB* colliderData, const FrameOfReference* frame);
+
+///
 //Takes an AABB Collider and represents it as a Convex Hull Collider
 //
 //Parameters:
 //	dest:A pointer to an initialized & allocated convex hull collider data to store the representation
 //	srcCollider: A pointer to an AABB collider data set to be represented as a convex hull collider
 void AABBCollider_ToConvexHullCollider(struct ColliderData_ConvexHull* dest, const struct ColliderData_AABB* srcCollider);
+
+///
+//Updates the worldspace data of this collider to match that of the given frame of reference
+//
+//Parameters:
+//	colliderDataID: The ID of the collider
+//	frame: A pointer to the frame of reference with which to orient this collider
+void AABBCollider_Update(const unsigned int colliderDataID, FrameOfReference* frame);
 
 #endif

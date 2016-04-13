@@ -14,6 +14,19 @@
 //		 are loaded into the uniform variable.
 //	value: Specifies a pointer to an array of count values that will
 //		be used to update the specified uniform variable.
+
+void ProgramUniform4fv(GLuint program, GLint location, GLsizei count, const GLfloat* components)
+{
+	if(GLEW_VERSION_4_3)
+	{
+		glProgramUniform4fv(program, location, count, components);
+	}
+	else
+	{
+		glUniform3fv(location, count, components);
+	}
+}
+
 void ProgramUniform3fv(GLuint program, GLint location, GLsizei count
 		      , const GLfloat* components)
 {

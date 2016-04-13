@@ -27,12 +27,19 @@ void Material_Initialize(Material* mat, Texture* t)
 	mat->tile = Vector_Allocate();
 	Vector_Initialize(mat->tile, 2);
 
+	mat->specularColor = Vector_Allocate();
+	Vector_Initialize(mat->specularColor, 3);
+
+	mat->specularColor->components[0] = mat->specularColor->components[1] = mat->specularColor->components[2] = 1.0f;
+
 	mat->tile->components[0] = mat->tile->components[1] = 1.0f;
 
 	mat->texture = t;
 
-	mat->specularIntensity = 0.0f;
-	mat->specularPower = 0.0f;
+	mat->specularPower = 1.0f;
+	mat->specularCoefficient = 0.2f;
+	mat->diffuseCoefficient = 0.6f;
+	mat->ambientCoefficient = 0.2f;
 }
 
 ///
@@ -49,9 +56,12 @@ void Material_InitializeDeepCopy(Material* copy, Material* original)
 	
 	Matrix_Copy(copy->colorMatrix, original->colorMatrix);
 	Vector_Copy(copy->tile, original->tile);
+	Vector_Copy(copy->specularColor, original->specularColor);
 
 	copy->specularPower = original->specularPower;
-	copy->specularIntensity = original->specularIntensity;
+	copy->specularCoefficient = original->specularCoefficient;
+	copy->diffuseCoefficient = original->diffuseCoefficient;
+	copy->ambientCoefficient = original->ambientCoefficient;
 }
 
 ///

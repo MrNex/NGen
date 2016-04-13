@@ -738,7 +738,8 @@ static void PhysicsManager_DetermineCollisionPoints(Vector** dest, struct Collis
 	//If either object is a sphere, first do the sphere test as it's the least expensive & most accurate
 	if(collision->obj2->collider->type == COLLIDER_SPHERE)
 	{
-		PhysicsManager_DetermineCollisionPointSphere(dest[1], collision->obj2->collider->data->sphereData, collision->obj2Frame, collision->minimumTranslationVector);
+		struct ColliderData_Sphere* sphereData = Collider_GetColliderData(collision->obj2->collider);
+		PhysicsManager_DetermineCollisionPointSphere(dest[1], sphereData, collision->obj2Frame, collision->minimumTranslationVector);
 		obj2PointFound = 1;
 
 		//If obj2 is a sphere and obj1 is anything but an AABB, they have the same collision point
@@ -755,7 +756,9 @@ static void PhysicsManager_DetermineCollisionPoints(Vector** dest, struct Collis
 		Vector_INIT_ON_STACK(relativeMTV, 3);
 		Vector_GetScalarProduct(&relativeMTV, collision->minimumTranslationVector, -1.0f);
 
-		PhysicsManager_DetermineCollisionPointSphere(dest[0], collision->obj1->collider->data->sphereData, collision->obj1Frame, &relativeMTV);
+		struct ColliderData_Sphere* sphereData = Collider_GetColliderData(collision->obj1->collider);
+
+		PhysicsManager_DetermineCollisionPointSphere(dest[0], sphereData, collision->obj1Frame, &relativeMTV);
 		obj1PointFound = 1;
 
 		//If obj1 is a sphere and obj2 is anything but an AABB, they have the same collision point
@@ -799,17 +802,21 @@ static void PhysicsManager_DetermineCollisionPoints(Vector** dest, struct Collis
 		//Determine which object has yet to have it's point found (This is the convex hull object)
 		if(!obj1PointFound)
 		{
+			
+
 			//If obj1 is convex we must convert obj2 to be convex as well.
 			struct ColliderData_ConvexHull* AABBAsConvex = ConvexHullCollider_AllocateData();
 			ConvexHullCollider_InitializeData(AABBAsConvex);
 
-			AABBCollider_ToConvexHullCollider(AABBAsConvex, collision->obj2->collider->data->AABBData);
+			struct ColliderData_AABB* aabb = Collider_GetColliderData(collision->obj2->collider);
+			AABBCollider_ToConvexHullCollider(AABBAsConvex, aabb);
 
 			//Next we must get obj1's relative MTV
 			Vector relativeMTV;
 			Vector_INIT_ON_STACK(relativeMTV, 3);
 			Vector_GetScalarProduct(&relativeMTV, collision->minimumTranslationVector, -1.0f);
 
+			//TODO: What if AABB has rotation? The rotation will not affect the convex hull in the same way. This needs to be fixed.
 			//Now we can determine the collision point of obj1 using the convex hull method
 			PhysicsManager_DetermineCollisionPointConvexHull(dest[0], 
 				collision->obj1->collider->data->convexHullData, collision->obj1Frame, AABBAsConvex, collision->obj2Frame, 
@@ -826,7 +833,8 @@ static void PhysicsManager_DetermineCollisionPoints(Vector** dest, struct Collis
 			struct ColliderData_ConvexHull* AABBAsConvex = ConvexHullCollider_AllocateData();
 			ConvexHullCollider_InitializeData(AABBAsConvex);
 
-			AABBCollider_ToConvexHullCollider(AABBAsConvex, collision->obj1->collider->data->AABBData);
+			struct ColliderData_AABB* aabb = Collider_GetColliderData(collision->obj1->collider);
+			AABBCollider_ToConvexHullCollider(AABBAsConvex, aabb);
 
 			//Now we can determine the collision point of obj2 using the convex hull method
 			PhysicsManager_DetermineCollisionPointConvexHull(dest[1], 

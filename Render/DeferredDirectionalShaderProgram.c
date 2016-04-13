@@ -56,17 +56,7 @@ static void DeferredDirectionalShaderProgram_FreeMembers(ShaderProgram* prog);
 //	prog: A pointer to the deferred directional shader program to set the constant uniforms of
 //	buffer: A pointer to the rendering buffer to get the uniform values of
 //	gBuffer: A pointer to the geometry buffer containing the results from the geometry pass.
-static void DeferredDirectionalShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct RenderingBuffer* buffer, GeometryBuffer* gBuffer);
-
-///
-//Sets the uniform variables needed by the shader program
-//which do change between meshes
-//
-//Parameters:
-//	prog: A pointer to the deferred directional shader program to set the uniform variables of
-//	cam: A pointer to the active camera containing information needed to calculate the uniforms
-//	gameObj: A pointer to the GObject containing the information needed for the uniforms
-static void DeferredDirectionalShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera* cam, GObject* gameObj);
+static void DeferredDirectionalShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct RenderingBuffer* buffer);
 
 ///
 //Renders a frame after lighting due to a directional light
@@ -153,7 +143,7 @@ static void DeferredDirectionalShaderProgram_FreeMembers(ShaderProgram* prog)
 //	prog: A pointer to the deferred directional shader program to set the constant uniforms of
 //	buffer: A pointer to the rendering buffer to get the uniform values of
 //	gBuffer: A pointer to the geometry buffer containing the results of the geometry pass.
-static void DeferredDirectionalShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct RenderingBuffer* buffer, GeometryBuffer* gBuffer)
+static void DeferredDirectionalShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct RenderingBuffer* buffer)
 {
 	DeferredDirectionalShaderProgram_Members* members = (DeferredDirectionalShaderProgram_Members*)prog->members;
 	
@@ -225,6 +215,9 @@ static void DeferredDirectionalShaderProgram_SetConstantUniforms(ShaderProgram* 
 //	light: A pointer to the directional light who's effects are being rendered.
 static void DeferredDirectionalShaderProgram_Render(ShaderProgram* prog, RenderingBuffer* buffer, GeometryBuffer* gBuffer)
 {
+	//Not used, but I'm unsure what the argument should be changed to.
+	(void)gBuffer;
+
 	glUseProgram(prog->shaderProgramID);
 
 
@@ -240,7 +233,7 @@ static void DeferredDirectionalShaderProgram_Render(ShaderProgram* prog, Renderi
 	//glBlendEquation(GL_FUNC_ADD);	//Will add the two resulting colors for each pixel
 	//glBlendFunc(GL_ONE, GL_ONE);	//Scales each by a factor of 1 when adding the geometry and lightning passes
 	
-	DeferredDirectionalShaderProgram_SetConstantUniforms(prog, buffer, gBuffer);
+	DeferredDirectionalShaderProgram_SetConstantUniforms(prog, buffer);
 
 	//glClear(GL_COLOR_BUFFER_BIT);
 	

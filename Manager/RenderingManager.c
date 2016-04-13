@@ -8,6 +8,7 @@
 
 #include "../Render/ForwardRenderPipeline.h"
 #include "../Render/DeferredRenderPipeline.h"
+#include "../Render/RayTracerRenderPipeline.h"
 
 ///
 //Internals
@@ -121,12 +122,26 @@ void RenderingManager_Render(LinkedList* gameObjects)
 	//Update the camera's view matrix
 	Camera_UpdateViewMatrix(renderingBuffer->camera);
 
+
+
+		
+	renderingBuffer->renderPipelines[RenderingManager_Pipeline_RAYTRACER]->Render
+	(
+		renderingBuffer->renderPipelines[RenderingManager_Pipeline_RAYTRACER],
+		renderingBuffer,
+		gameObjects
+	);
+	
+
+	/*
 	renderingBuffer->renderPipelines[RenderingManager_Pipeline_DEFERRED]->Render
 	(
 		renderingBuffer->renderPipelines[RenderingManager_Pipeline_DEFERRED],
 		renderingBuffer,
 		gameObjects
 	);
+	*/
+	
 	/*	
 	struct LinkedList_Node* current = gameObjects->head;
 
@@ -306,7 +321,10 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 
 	buffer->renderPipelines[RenderingManager_Pipeline_DEFERRED] = RenderPipeline_Allocate();
 	DeferredRenderPipeline_Initialize(buffer->renderPipelines[RenderingManager_Pipeline_DEFERRED]);
-	
+
+	buffer->renderPipelines[RenderingManager_Pipeline_RAYTRACER] = RenderPipeline_Allocate();
+	RayTracerRenderPipeline_Initialize(buffer->renderPipelines[RenderingManager_Pipeline_RAYTRACER]);
+
 	//
 	//TODO: Perform these error checks in the render pipeline initialization
 	//Checking shaders
@@ -338,7 +356,7 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 	lightColor.components[0] = lightColor.components[1] = lightColor.components[2] = 1.0f;
 	
 	buffer->directionalLight = DirectionalLight_Allocate();
-	DirectionalLight_Initialize(buffer->directionalLight, &lightColor, buffer->directionalLightVector, 0.2f, 1.0f);
+	DirectionalLight_Initialize(buffer->directionalLight, &lightColor, (Vector*)&Vector_ZERO, 0.2f, 1.0f);
 
 
 
@@ -354,12 +372,15 @@ static void RenderingManager_InitializeBuffer(RenderingBuffer* buffer)
 //      buffer: The buffer to free
 static void RenderingManager_FreeBuffer(RenderingBuffer* buffer)
 {
-	RenderPipeline_Free(buffer->renderPipelines[0]);
-	RenderPipeline_Free(buffer->renderPipelines[1]);
+	for(int i = 0; i < RenderingManager_Pipeline_NUMPIPELINES; ++i)
+	{
+		RenderPipeline_Free(buffer->renderPipelines[i]);
+	}
 	//free(buffer->shaderPrograms);
 	//GeometryBuffer_Free(buffer->gBuffer);
 	Camera_Free(buffer->camera);
 	Vector_Free(buffer->directionalLightVector);
 	DirectionalLight_Free(buffer->directionalLight);
 	//TODO: Actually free buffer??
+	free(buffer);
 }

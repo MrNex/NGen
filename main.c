@@ -27,6 +27,7 @@
 
 #include "Implementation/Implementation.h"
 #include "Manager/SystemManager.h"
+#include "Manager/KernelManager.h"
 
 #include "Math/Matrix.h"
 
@@ -65,11 +66,12 @@ void Init(void)
 {
 
 	//Initialize managers
+	CollisionManager_Initialize();
+	KernelManager_Initialize();
 	InputManager_Initialize();
 	RenderingManager_Initialize();
 	AssetManager_Initialize();
 	ObjectManager_Initialize();
-	CollisionManager_Initialize();
 	PhysicsManager_Initialize();
 	SystemManager_Initialize();
 
@@ -155,7 +157,7 @@ void Update(void)
 void DrawLoop(int val)
 {
 	glutPostRedisplay();
-	glutTimerFunc(val, DrawLoop, 16);
+	glutTimerFunc(val, DrawLoop, val);
 
 
 }

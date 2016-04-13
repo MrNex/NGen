@@ -20,6 +20,8 @@
 //		 are loaded into the uniform variable.
 //	value: Specifies a pointer to an array of count values or a sequence of values 
 //		that will be used to update the specified uniform variable.
+void ProgramUniform4fv(GLuint program, GLint location, GLsizei count, const GLfloat* components);
+
 void ProgramUniform3fv(GLuint program, GLint location, GLsizei count, const GLfloat* components);
 
 void ProgramUniformMatrix4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat* components);

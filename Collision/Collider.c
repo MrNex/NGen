@@ -1,6 +1,15 @@
+
 #include "Collider.h"
+#include "ColliderEnum.h"
 
 #include <stdlib.h>
+
+#include "../Manager/CollisionManager.h"
+
+///
+//Declarations
+///
+
 
 ///
 //Allocates memory for a Collider
@@ -52,13 +61,16 @@ void Collider_Free(Collider* collider)
 	switch(collider->type)
 	{
 	case COLLIDER_SPHERE:
-		SphereCollider_FreeData(collider->data->sphereData);
+		SphereCollider_FreeData(collider->data->sphereDataID);
 		break;
 	case COLLIDER_AABB:
-		AABBCollider_FreeData(collider->data->AABBData);
+		AABBCollider_FreeData(collider->data->AABBDataID);
 		break;
 	case COLLIDER_CONVEXHULL:
 		ConvexHullCollider_FreeData(collider->data->convexHullData);
+		break;
+	case COLLIDER_RAY:
+		RayCollider_FreeData(collider->data->rayData);
 		break;
 	}
 
@@ -72,3 +84,65 @@ void Collider_Free(Collider* collider)
 	free(collider);
 }
 
+///
+//Gets the collider data for a given collider
+//
+//Parameters:
+//	collider: A pointer to the collider to get the data from
+//
+//Returns:
+//	A pointer to the data for this collider
+void* Collider_GetColliderData(Collider* collider)
+{
+	switch(collider->type)
+	{
+	case COLLIDER_SPHERE:
+		return MemoryPool_RequestAddress(collisionBuffer->sphereData, collider->data->sphereDataID);
+		break;
+	case COLLIDER_AABB:
+		return MemoryPool_RequestAddress(collisionBuffer->aabbData, collider->data->AABBDataID);
+		break;
+	case COLLIDER_CONVEXHULL:
+		return collider->data->convexHullData;
+		break;
+	case COLLIDER_RAY:
+		return collider->data->rayData;
+		break;
+	}
+	return NULL;
+}
+
+///
+//Gets the collider data for a given collider oriented in world space
+//
+//Parameters:
+//	collider: A pointer to the collider to retrieve the world space collider data for
+//
+//Returns:
+//	A pointer to the data for this collider which is oriented in world space
+void* Collider_GetColliderDataWorldSpace(Collider* collider)
+{
+	MemoryPool* pool = CollisionManager_RetrieveMemoryPool(collider->type, 1);
+	return MemoryPool_RequestAddress(pool, collider->data->sphereDataID);
+}
+
+///
+//Updates a collider to mimic the orientation of a given frame of reference
+//
+//Parameters:
+//	collider: A pointer to the collider to update
+//	frame: A pointer to the frame of reference to update with
+void Collider_Update(Collider* collider, FrameOfReference* frame)
+{
+	switch(collider->type)
+	{
+		case COLLIDER_SPHERE:
+			SphereCollider_Update(collider->data->sphereDataID, frame);
+			break;
+		case COLLIDER_AABB:
+			AABBCollider_Update(collider->data->AABBDataID, frame);
+			break;
+		default:
+			break;
+	}
+}

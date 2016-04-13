@@ -4,6 +4,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#include <float.h>
+
 ///
 //Static declarations
 static unsigned int defaultMaxOccupancy = 3;
@@ -115,6 +117,20 @@ static unsigned char OctTree_Node_DoesAABBCollide(struct OctTree_Node* node, str
 //	1 if the convexHull intersects the octent but is not contained within the octent
 //	2 if the convexHull is completely contained within the octent
 static unsigned char OctTree_Node_DoesConvexHullCollide(struct OctTree_Node* node, struct ColliderData_ConvexHull* convexHull, FrameOfReference* frame);
+
+///
+//Determines if and how a ray is colliding with an oct tree node
+//
+//Parameters:
+//	node: A pointer to the node to check for collision with
+//	ray: A pointer t the ray to check for collisions with
+//	frame: The frame of reference with which to orient the ray
+//
+//Returns:
+//	0 if the convexHull does not collide with this octent
+//	1 if the convexHull intersects the octent but is not contained within the octent
+//	2 if the convexHull is completely contained within the octent (Impossible for a non-bouned ray)
+static unsigned char OctTree_Node_DoesRayCollide(struct OctTree_Node* node, struct ColliderData_Ray* ray, FrameOfReference* frame);
 
 ///
 //Implementations
@@ -848,18 +864,22 @@ unsigned char OctTree_Node_DoesObjectCollide(struct OctTree_Node* node, GObject*
 		primaryFrame = obj->frameOfReference;
 	}
 
+	void* colliderData = Collider_GetColliderData(obj->collider);
+
 	//Determine the type of collider the object has
 	switch(obj->collider->type)
 	{
 	case COLLIDER_SPHERE:
-		collisionStatus = OctTree_Node_DoesSphereCollide(node, obj->collider->data->sphereData, primaryFrame);
+		collisionStatus = OctTree_Node_DoesSphereCollide(node, colliderData, primaryFrame);
 		break;
 	case COLLIDER_AABB:
-		collisionStatus = OctTree_Node_DoesAABBCollide(node, obj->collider->data->AABBData, primaryFrame);
+		collisionStatus = OctTree_Node_DoesAABBCollide(node, colliderData, primaryFrame);
 		break;
 	case COLLIDER_CONVEXHULL:
-		collisionStatus = OctTree_Node_DoesConvexHullCollide(node, obj->collider->data->convexHullData, primaryFrame);
+		collisionStatus = OctTree_Node_DoesConvexHullCollide(node, colliderData, primaryFrame);
 		break;
+	case COLLIDER_RAY:
+		collisionStatus = OctTree_Node_DoesRayCollide(node, colliderData, primaryFrame);
 	}
 
 	return collisionStatus;
@@ -951,14 +971,17 @@ static unsigned char OctTree_Node_DoesAABBCollide(struct OctTree_Node* node, str
 	unsigned char collisionStatus = 0;
 
 	//Get centroid in world space to have the real center of the AABB
-	Vector pos;
-	Vector_INIT_ON_STACK(pos, 3);
-	Vector_Add(&pos, AABB->centroid, frame->position);
+	//Vector pos;
+	//Vector_INIT_ON_STACK(pos, 3);
+	//Vector_Add(&pos, AABB->centroid, frame->position);
 
 	//Get the scaled dimensions of AABB
-	struct ColliderData_AABB scaled;
-	AABBCollider_GetScaledDimensions(&scaled, AABB, frame);
+	struct ColliderData_AABB worldAABB;
+	//AABBCollider_GetScaledDimensions(&scaled, AABB, frame);
+	AABBCollider_GetWorldAABB(&worldAABB, AABB, frame);
 
+
+	/*
 	float bounds[6] = 
 	{
 		pos.components[0] - scaled.width / 2.0f,
@@ -968,13 +991,14 @@ static unsigned char OctTree_Node_DoesAABBCollide(struct OctTree_Node* node, str
 		pos.components[2] - scaled.depth / 2.0f,
 		pos.components[2] + scaled.depth / 2.0f
 	};
+	*/
 
 	unsigned char overlap = 0;
-	if(node->left <= bounds[1] && node->right >= bounds[0])
+	if(node->left <= worldAABB.max[0] && node->right >= worldAABB.min[0])
 	{
-		if(node->bottom <= bounds[3] && node->top >= bounds[2])
+		if(node->bottom <= worldAABB.max[1] && node->top >= worldAABB.min[1])
 		{
-			if(node->back <= bounds[5] && node->front >= bounds[4])
+			if(node->back <= worldAABB.max[2] && node->front >= worldAABB.min[2])
 			{
 				overlap = 1;
 			}
@@ -983,16 +1007,16 @@ static unsigned char OctTree_Node_DoesAABBCollide(struct OctTree_Node* node, str
 	//Set the collision status
 	collisionStatus = overlap;
 
-	//If we found that the bounds do overlap, we must check if the node contains the sphere
+	//If we found that the bounds do overlap, we must check if the node completely contains the AABB
 	if(collisionStatus == 1)
 	{
 
 		overlap = 0;
-		if(node->left <= bounds[0] && node->right >= bounds[1])
+		if(node->left <= worldAABB.min[0] && node->right >= worldAABB.max[0])
 		{
-			if(node->bottom <= bounds[2] && node->top >= bounds[3])
+			if(node->bottom <= worldAABB.min[1] && node->top >= worldAABB.max[1])
 			{
-				if(node->back <= bounds[4] && node->front >= bounds[5])
+				if(node->back <= worldAABB.min[2] && node->front >= worldAABB.max[2])
 				{
 					overlap = 1;
 				}
@@ -1024,9 +1048,9 @@ static unsigned char OctTree_Node_DoesConvexHullCollide(struct OctTree_Node* nod
 {
 	//Generate the minimum AABB from the convex hull
 	struct ColliderData_AABB AABB;
-	Vector AABBCentroid;
-	Vector_INIT_ON_STACK(AABBCentroid, 3);
-	AABB.centroid = &AABBCentroid;
+	//Vector AABBCentroid;
+	//Vector_INIT_ON_STACK(AABBCentroid, 3);
+	//AABB.centroid = &AABBCentroid;
 
 	ConvexHullCollider_GenerateMinimumAABB(&AABB, convexHull, frame);
 
@@ -1034,6 +1058,83 @@ static unsigned char OctTree_Node_DoesConvexHullCollide(struct OctTree_Node* nod
 	return OctTree_Node_DoesAABBCollide(node, &AABB, frame);
 }
 
+///
+//Gets the parametric time a ray enters and exits an octent.
+//
+//Parameters:
+//	tEnter: A pointer to the destination to store the time the ray entered the octent
+//	tExit: A pointer to the destination to store the time the ray exited the octent
+//	maxBound: The maximum bound of the octent in this dimension
+//	minBound: The minimum bound of the octent in this dimension
+//	worldRay: A pointer to the ray to check oriented in worldSpace
+//	dimension: The dimension to find the collision bounds along
+static void OctTree_Node_GetRayCollisionBounds1D(float* tEnter, float* tExit, float maxBound, float minBound, struct ColliderData_Ray* worldRay, int dimension)
+{
+	if(fabs(worldRay->direction->components[dimension]) > FLT_EPSILON)
+	{
+		if(worldRay->direction->components[dimension] < 0.0f)
+		{
+			*tEnter = (maxBound - worldRay->position->components[dimension]) / worldRay->direction->components[dimension];
+			*tExit = (minBound - worldRay->position->components[dimension]) / worldRay->direction->components[dimension];
+		}
+		else
+		{
+			*tEnter = (minBound - worldRay->position->components[dimension]) / worldRay->direction->components[dimension];
+			*tExit = (maxBound - worldRay->position->components[dimension]) / worldRay->direction->components[dimension];
+		}
+	}
+	else
+	{
+		*tEnter = -1.0f;
+		*tExit = -1.0f;
+	}
+}
+
+///
+//Determines if and how a ray is colliding with an oct tree node
+//
+//Parameters:
+//	node: A pointer to the node to check for collision with
+//	ray: A pointer t the ray to check for collisions with
+//	frame: The frame of reference with which to orient the ray
+//
+//Returns:
+//	0 if the convexHull does not collide with this octent
+//	1 if the convexHull intersects the octent but is not contained within the octent
+//	2 if the convexHull is completely contained within the octent (Impossible for a non-bouned ray)
+static unsigned char OctTree_Node_DoesRayCollide(struct OctTree_Node* node, struct ColliderData_Ray* ray, FrameOfReference* frame)
+{
+	struct ColliderData_Ray worldRay;
+	ColliderData_Ray_INIT_ON_STACK(worldRay);
+	RayCollider_GetWorldRay(&worldRay, ray, frame);
+
+	float tEnter[3] = { 0.0f };
+	float tExit[3] = { 0.0f };
+
+	OctTree_Node_GetRayCollisionBounds1D(tEnter, tExit, node->right, node->left, &worldRay, 0);
+	OctTree_Node_GetRayCollisionBounds1D(tEnter + 1, tExit + 1, node->top, node->bottom, &worldRay, 1);
+	OctTree_Node_GetRayCollisionBounds1D(tEnter + 2, tExit + 2, node->front, node->back, &worldRay, 2);
+
+	int largestIndex = 0;
+	for(int i = 1; i < 3; i++)
+	{
+		if(tEnter[i] > tEnter[largestIndex])
+			largestIndex = i;
+	}
+
+	Vector point;
+	Vector_INIT_ON_STACK(point, 3);
+
+	Vector_GetScalarProduct(&point, worldRay.direction, tEnter[largestIndex]);
+
+	if(point.components[0] < node->left || point.components[0] > node->right ||
+			point.components[1] < node->bottom || point.components[1] > node->top ||
+			point.components[2] < node->back || point.components[2] > node->front)
+	{
+		return 0;
+	}
+	return 1;
+}
 
 ///
 //Definition:
@@ -1099,6 +1200,8 @@ void OctTree_Node_CleanAll(OctTree* tree, struct OctTree_Node* node)
 		}
 	}
 }
+
+
 
 ///
 //Searches up from a leaf node to find the lowest node which fully contains this object

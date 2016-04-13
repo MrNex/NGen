@@ -49,6 +49,16 @@ ShaderProgram* ShaderProgram_Allocate();
 void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char* fPath);
 
 ///
+//Initializes a shader program with a geometry shader
+//
+//Parameters:
+//	prog: The shader program to initialize
+//	vPath: filepath to vertex shader .glsl file
+//	gPath: filepath to geometry shader .glsl file
+//	fPath: filepath to fragment shader .glsl file
+void ShaderProgram_InitializeWithGeometry(ShaderProgram* prog, const char* vPath, const char* gPath, const char* fPath);
+
+///
 //Frees the memory being taken up by a shader program
 //
 //Parameters:

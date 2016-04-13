@@ -1,6 +1,21 @@
 #ifndef ENVIRONMENTMANAGER_H
 #define ENVIRONMENTMANAGER_H
 
+#if defined __linux__
+#define linux
+#elif defined(_WIN32) || defined(_WIN64)
+#define windows
+#endif
+
+#include <GL/glew.h>
+#include <GL/freeglut.h>
+#ifdef linux
+#include <GL/glx.h>
+#endif
+#ifdef windows
+#include <GL/wgl.h>
+#endif
+
 enum EnvironmentManager_OS
 {
 	EnvironmentManager_OS_WINDOWS,
@@ -21,7 +36,12 @@ typedef struct EnvironmentBuffer
 	int majorGLContext;
 	int minorGLContext;
 
+	GLXContext glContextHandle;
+	Display* glDeviceHandle;
+
 	enum EnvironmentManager_OS operatingSystem;
+	
+
 } EnvironmentBuffer;
 
 ///

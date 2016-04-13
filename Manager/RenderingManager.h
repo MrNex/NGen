@@ -18,12 +18,13 @@ enum RenderingManager_Pipeline
 {
 	RenderingManager_Pipeline_FORWARD,
 	RenderingManager_Pipeline_DEFERRED,
-	RenderingManager_Pipeline_NUMSHADERS
+	RenderingManager_Pipeline_RAYTRACER,
+	RenderingManager_Pipeline_NUMPIPELINES
 };
 
 typedef struct RenderingBuffer
 {
-	RenderPipeline* renderPipelines[RenderingManager_Pipeline_NUMSHADERS];
+	RenderPipeline* renderPipelines[RenderingManager_Pipeline_NUMPIPELINES];
 	Camera* camera;
 	Vector* directionalLightVector;
 	DirectionalLight* directionalLight;

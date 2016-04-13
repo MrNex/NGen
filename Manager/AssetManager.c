@@ -152,6 +152,11 @@ void AssetManager_LoadAssets(void)
 	t = Texture_Allocate();
 	Texture_Initialize(t, i);
 	HashMap_Add(assetBuffer->textureMap, "Jacob", t, strlen("Jacob"));
+
+	i = Loader_Load24BitBMPFile("./Assets/Textures/granite.bmp");
+	t = Texture_Allocate();
+	Texture_Initialize(t, i);
+	HashMap_Add(assetBuffer->textureMap, "Granite", t, strlen("Granite"));
 }
 
 ///

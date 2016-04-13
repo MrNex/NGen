@@ -5,7 +5,7 @@
 
 ///
 //Internal Declarations
-static int defaultCapacity = 8;
+static int defaultCapacity = 32;
 static float defaultGrowth = 2.0f;
 
 

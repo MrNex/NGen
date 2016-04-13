@@ -824,13 +824,6 @@ void ConvexHullCollider_GenerateMinimumAABB(struct ColliderData_AABB* dest, cons
 		firstPointAssigned = 1;
 	}
 
-	//Determine the centroid & dimensions of the AABB
-	for(int i = 0; i < 3; i++)
-	{
-		dest->centroid->components[i] = (max.components[i] + min.components[i])/2.0f;
-	}
-
-	dest->width = max.components[0] - min.components[0];
-	dest->height = max.components[1] - min.components[1];
-	dest->depth = max.components[2] - min.components[2];
+	Vector_CopyArray(dest->min, min.components, 3);
+	Vector_CopyArray(dest->max, max.components, 3);
 }

@@ -91,6 +91,83 @@ void ShaderProgram_Initialize(ShaderProgram* prog, const char* vPath, const char
 }
 
 ///
+//Initializes a shader program with a geometry shader
+//
+//Parameters:
+//	prog: The shader program to initialize
+//	vPath: filepath to vertex shader .glsl file
+//	gPath: filepath to geometry shader .glsl file
+//	fPath: filepath to fragment shader .glsl file
+void ShaderProgram_InitializeWithGeometry(ShaderProgram* prog, const char* vPath, const char* gPath, const char* fPath)
+{
+	//Shader cmopilation
+	GLuint vsShaderID = LoadShader(vPath, GL_VERTEX_SHADER);
+	GLuint gShaderID = LoadShader(gPath, GL_GEOMETRY_SHADER);
+	GLuint fsShaderID = LoadShader(fPath, GL_FRAGMENT_SHADER);
+
+	//Check for comiler errors
+	if (vsShaderID == 0 || fsShaderID == 0 || gShaderID == 0)
+	{
+		printf("Shader failed to complete. Shader program not created.\n");
+		return;
+	}
+	
+	//Shader linking
+	prog->shaderProgramID = glCreateProgram();
+
+	glAttachShader(prog->shaderProgramID, vsShaderID);
+	glAttachShader(prog->shaderProgramID, gShaderID);
+	glAttachShader(prog->shaderProgramID, fsShaderID);
+
+	glLinkProgram(prog->shaderProgramID);
+
+	glDetachShader(prog->shaderProgramID, vsShaderID);
+	glDetachShader(prog->shaderProgramID, gShaderID);
+	glDetachShader(prog->shaderProgramID, fsShaderID);
+
+	glDeleteShader(vsShaderID);
+	glDeleteShader(gShaderID);
+	glDeleteShader(fsShaderID);
+
+	//Set uniforms to NULL to avoid errors if somebody improperly initializes a shader program.
+	prog->members = NULL;
+
+	//Program complete, checking for errors
+	//
+	GLint status = 0;
+	glGetProgramiv(prog->shaderProgramID, GL_LINK_STATUS, &status);
+
+	//Valid shaders are returned here
+	if (status == GL_TRUE)
+	{
+		return;
+	}
+
+	//If code reaches this point, shader program creation was invalid.
+	GLint logLength = 0;
+	glGetProgramiv(prog->shaderProgramID, GL_INFO_LOG_LENGTH, &logLength);
+
+	//Create character array to store log in
+	char* log = (char*)malloc(sizeof(char) * (logLength + 1));			//Leaving room for null terminator
+
+	//Retrieve log and store in character array
+	glGetShaderInfoLog(
+		prog->shaderProgramID,	//Program's log we are getting
+		logLength,			//Length of log
+		0,				//Pointer to length, not needed because we provided a length of log
+		log				//character array to store log in
+		);
+
+	log[logLength] = '\0';
+
+	//Print out log
+	printf("Error linking shaders:\nlog: %s", log);
+
+	//Never Forget
+	free(log);
+}
+
+///
 //Frees the memory being taken up by a shader program
 //
 //Parameters:
@@ -122,7 +199,7 @@ static GLuint LoadShader(const char* fileName, GLenum shaderType)
 		return 0;
 	}
 
-	printf("\n\nSource:\n%s", fileContents);
+	//printf("\n\nSource:\n%s", fileContents);
 
 	GLuint shaderIndex = glCreateShader(shaderType);
 	glShaderSource(

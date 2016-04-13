@@ -5,7 +5,7 @@ LIBS=-lm
 ifeq ($(OS),Windows_NT)
 	LIBS += -lglew32 -lfreeglut -lglu32 -lopengl32
 else
-	LIBS += -lGLEW -lglut -lGLU -lGL
+	LIBS += -lGLEW -lglut -lGLU -lGL -lOpenCL
 endif
 
 STATES_C=$(wildcard State/*.c)
@@ -14,6 +14,7 @@ STATES_O=$(addprefix Bin/State/,$(notdir $(STATES_C:.c=.o)))
 
 MANAGERS_O= \
 	Bin/EnvironmentManager.o \
+	Bin/KernelManager.o \
 	Bin/ObjectManager.o \
 	Bin/AssetManager.o \
 	Bin/CollisionManager.o \
@@ -24,6 +25,7 @@ MANAGERS_O= \
 	Bin/SystemManager.o
 
 OBJ= \
+	Bin/Compute.o \
 	Bin/Vector.o \
 	Bin/Matrix.o \
 	Bin/LinkedList.o \
@@ -31,6 +33,7 @@ OBJ= \
 	Bin/Hash.o \
 	Bin/HashMap.o \
 	Bin/OctTree.o \
+	Bin/MemoryPool.o \
 	Bin/InputManager.o \
 	Bin/FrameOfReference.o \
 	Bin/Mesh.o \
@@ -46,19 +49,35 @@ OBJ= \
 	Bin/DeferredDirectionalShaderProgram.o \
 	Bin/DeferredPointShaderProgram.o \
 	Bin/DeferredStencilShaderProgram.o \
+	Bin/PixelProjectionGeometryShaderProgram.o \
+	Bin/PixelProjectionDirectionalShaderProgram.o \
+	Bin/PixelProjectionShadowShaderProgram.o \
+	Bin/RayTracerGeometryShaderProgram.o \
+	Bin/RayTracerShadowShaderProgram.o \
+	Bin/RayTracerPointShaderProgram.o \
+	Bin/RayTracerStencilShaderProgram.o \
+	Bin/RayTracerDirectionalShaderProgram.o \
 	Bin/Camera.o \
 	Bin/GeometryBuffer.o \
+	Bin/RayBuffer.o \
 	Bin/RenderPipeline.o \
 	Bin/ForwardRenderPipeline.o \
 	Bin/DeferredRenderPipeline.o \
+	Bin/PixelProjectionRenderPipeline.o \
+	Bin/RayTracerRenderPipeline.o \
+	Bin/KernelProgram.o \
+	Bin/RayTracerDirectionalShadowKernelProgram.o \
+	Bin/RayTracerPointShadowKernelProgram.o \
 	Bin/RigidBody.o \
 	Bin/SphereCollider.o \
 	Bin/AABBCollider.o \
 	Bin/ConvexHullCollider.o \
+	Bin/RayCollider.o \
 	Bin/Collider.o \
 	Bin/GObject.o \
 	Bin/Loader.o \
 	Bin/ProgramUniform.o \
+	Bin/KernelManager.o \
 	Bin/EnvironmentManager.o \
 	Bin/ObjectManager.o \
 	Bin/RenderingManager.o \
@@ -77,6 +96,9 @@ NGen: $(OBJ) $(STATES_O)
 
 ##
 #Math
+Bin/Compute.o: Math/Compute.c Math/Compute.h
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
 Bin/Vector.o: Math/Vector.c Math/Vector.h
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
@@ -98,6 +120,11 @@ Bin/Hash.o: Data/Hash.c Data/Hash.h
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/HashMap.o: Data/HashMap.c Data/HashMap.h Bin/DynamicArray.o Bin/Hash.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+##
+#Memory
+Bin/MemoryPool.o: Memory/MemoryPool.c Memory/MemoryPool.h Bin/DynamicArray.o Bin/LinkedList.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##
@@ -135,6 +162,9 @@ Bin/PointLight.o: Render/PointLight.c Render/PointLight.h Bin/Light.o
 Bin/GeometryBuffer.o: Render/GeometryBuffer.c Render/GeometryBuffer.h
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
+Bin/RayBuffer.o: Render/RayBuffer.c Render/RayBuffer.h
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
 Bin/ForwardShaderProgram.o: Render/ForwardShaderProgram.c Render/ForwardShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
@@ -150,6 +180,30 @@ Bin/DeferredPointShaderProgram.o: Render/DeferredPointShaderProgram.c Render/Def
 Bin/DeferredStencilShaderProgram.o: Render/DeferredStencilShaderProgram.c Render/DeferredStencilShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o Bin/ProgramUniform.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
+Bin/PixelProjectionGeometryShaderProgram.o: Render/PixelProjectionGeometryShaderProgram.c Render/PixelProjectionGeometryShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o Bin/EnvironmentManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/PixelProjectionDirectionalShaderProgram.o: Render/PixelProjectionDirectionalShaderProgram.c Render/PixelProjectionDirectionalShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o Bin/EnvironmentManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/PixelProjectionShadowShaderProgram.o: Render/PixelProjectionShadowShaderProgram.c Render/PixelProjectionShadowShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o Bin/EnvironmentManager.o Bin/LinkedList.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/RayTracerGeometryShaderProgram.o: Render/RayTracerGeometryShaderProgram.c Render/RayTracerGeometryShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o Bin/EnvironmentManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/RayTracerShadowShaderProgram.o: Render/RayTracerShadowShaderProgram.c Render/RayTracerShadowShaderProgram.h Bin/CollisionManager.o Bin/Collider.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/RayTracerDirectionalShaderProgram.o: Render/RayTracerDirectionalShaderProgram.c Render/RayTracerDirectionalShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o Bin/EnvironmentManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/RayTracerPointShaderProgram.o: Render/RayTracerPointShaderProgram.c Render/RayTracerPointShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o Bin/EnvironmentManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/RayTracerStencilShaderProgram.o: Render/RayTracerStencilShaderProgram.c Render/RayTracerStencilShaderProgram.h Bin/ShaderProgram.o Bin/RenderingManager.o Bin/AssetManager.o Bin/ProgramUniform.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
 Bin/RenderPipeline.o: Render/RenderPipeline.c Render/RenderPipeline.h Bin/ShaderProgram.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
@@ -157,6 +211,23 @@ Bin/ForwardRenderPipeline.o: Render/ForwardRenderPipeline.c Render/ForwardRender
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/DeferredRenderPipeline.o: Render/DeferredRenderPipeline.c Render/DeferredRenderPipeline.h Bin/RenderPipeline.o Bin/GeometryBuffer.o Bin/LinkedList.o Bin/EnvironmentManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/PixelProjectionRenderPipeline.o: Render/PixelProjectionRenderPipeline.c Render/PixelProjectionRenderPipeline.h Bin/RenderPipeline.o Bin/GeometryBuffer.o Bin/LinkedList.o Bin/EnvironmentManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/RayTracerRenderPipeline.o: Render/RayTracerRenderPipeline.c Render/RayTracerRenderPipeline.h Bin/RenderPipeline.o Bin/GeometryBuffer.o Bin/LinkedList.o Bin/EnvironmentManager.o Bin/RayTracerDirectionalShadowKernelProgram.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+##
+#Device
+Bin/KernelProgram.o: Device/KernelProgram.c Device/KernelProgram.h Bin/KernelManager.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/RayTracerDirectionalShadowKernelProgram.o: Device/RayTracerDirectionalShadowKernelProgram.c Device/RayTracerDirectionalShadowKernelProgram.h Bin/KernelProgram.o Bin/RenderingManager.o Bin/KernelManager.o Bin/CollisionManager.o Bin/RayBuffer.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/RayTracerPointShadowKernelProgram.o: Device/RayTracerPointShadowKernelProgram.c Device/RayTracerPointShadowKernelProgram.h Bin/KernelProgram.o Bin/RenderingManager.o Bin/KernelManager.o Bin/CollisionManager.o Bin/RayBuffer.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##
@@ -178,6 +249,9 @@ Bin/AABBCollider.o: Collision/AABBCollider.c Collision/AABBCollider.h Bin/FrameO
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/ConvexHullCollider.o: Collision/ConvexHullCollider.c Collision/ConvexHullCollider.h Bin/LinkedList.o Bin/DynamicArray.o Bin/AABBCollider.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/RayCollider.o: Collision/RayCollider.c Collision/RayCollider.h 
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/Collider.o: Collision/Collider.c Collision/Collider.h Bin/ConvexHullCollider.o Bin/SphereCollider.o Bin/AABBCollider.o
@@ -225,6 +299,9 @@ Bin/SystemManager.o: Manager/SystemManager.c Manager/SystemManager.h
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/EnvironmentManager.o: Manager/EnvironmentManager.c Manager/EnvironmentManager.h
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/KernelManager.o: Manager/KernelManager.c Manager/KernelManager.h Bin/KernelProgram.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##

@@ -11,10 +11,14 @@ typedef struct Material
 {
 	Matrix* colorMatrix;
 	Vector* tile;
+	Vector* specularColor;
 
 	Texture* texture;	
 
-	float specularIntensity;
+	float ambientCoefficient;
+	float diffuseCoefficient;
+	float specularCoefficient;
+
 	float specularPower;
 
 } Material;

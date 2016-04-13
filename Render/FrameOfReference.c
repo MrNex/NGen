@@ -185,3 +185,38 @@ void FrameOfReference_SetRotation(FrameOfReference* frame, Matrix* rotation)
 	Matrix_Copy(frame->rotation, rotation);
 }
 
+///
+//Transforms a vector using this frame of reference
+//If v is oriented within the frame of reference,
+//The transformation is such that v will end up in world space.
+//
+//Parameters:
+//	frame: A pointer to the frame of reference with which to transform a vector
+//	v: A pointer to the vector to transform
+void FrameOfReference_TransformVector(FrameOfReference* frame, Vector* v)
+{
+	//TODO Return values upon error involving invalid matrix/vector operations
+	//and handle here indicating it was a frame of reference function that went wrong.
+	Matrix_TransformVector(frame->rotation, v);
+	Matrix_TransformVector(frame->scale, v);
+
+	Vector_Increment(v, frame->position);
+
+}
+
+///
+//Gets a vector transformed by a frame of reference
+//If v is oriented within the frame of reference,
+//The transformation is such that v will end up in world space.
+//
+//Parameters:
+//	dest: A pointer to a vector to store the result of the transformation in
+//	frame: A pointer to a frame of reference with which to perform the transformation
+//	v: A pointer to the vector being transformed
+void FrameOfReference_GetTransformedVector(Vector* dest, FrameOfReference* frame, const Vector* v)
+{
+	//TODO Return values upon error involving invalid matrix/vector operations
+	//and handle here indicating it was a frame of reference function that went wrong.
+	Vector_Copy(dest, v);
+	FrameOfReference_TransformVector(frame, dest);
+}

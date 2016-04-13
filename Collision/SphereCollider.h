@@ -14,6 +14,7 @@ struct Collider;
 
 struct ColliderData_Sphere
 {
+	float x, y, z;
 	float radius;
 };
 
@@ -21,8 +22,8 @@ struct ColliderData_Sphere
 //Allocates memory for a new sphere collider data set
 //
 //Returns:
-//	Pointer to a newly allocated sphere collider
-struct ColliderData_Sphere* SphereCollider_AllocateData();
+//	ID in collisionBuffer of a newly allocated sphere collider
+int SphereCollider_AllocateData();
 
 ///
 //Initializes a sphere collider
@@ -30,9 +31,8 @@ struct ColliderData_Sphere* SphereCollider_AllocateData();
 //Parameters:
 //	collider: The collider being initialized
 //	rad: The radius of the collider to initialize
-//TODO:
-//	centroid: A pointer to a vector to copy as the centroid of the sphere collider
-void SphereCollider_Initialize(struct Collider* collider, const float rad);
+//	offset: A pointer to a vector to copy as the center of the sphere collider in object space
+void SphereCollider_Initialize(struct Collider* collider, float rad, const Vector* offset);
 
 ///
 //Initializes a sphere collider as a deep copy of another
@@ -46,8 +46,8 @@ void SphereCollider_InitializeDeepCopy(struct Collider* copy, struct Collider* o
 //Frees a sphere collider data set
 //
 //Parameters:
-//	colliderData: A pointer to the sphere collider data to free
-void SphereCollider_FreeData(struct ColliderData_Sphere* colliderData);
+//	colliderDataID: The ID of the memory unit containing the sphere collider data
+void SphereCollider_FreeData(int colliderDataID);
 
 ///
 //Gets the sphere radius scaled by the maximum scale of a frame of reference
@@ -56,5 +56,14 @@ void SphereCollider_FreeData(struct ColliderData_Sphere* colliderData);
 //	Collider: The collider to get the scaled radius of
 //	FoR: The frame of reference to base scaling off of
 float SphereCollider_GetScaledRadius(const struct ColliderData_Sphere* colliderData, const FrameOfReference* FoR);
+
+///
+//Updates the x, y, and z position of the sphere to match the position
+//of the given frame of reference
+//
+//Parameters:
+//	sphereDataID: the ID of the sphere data to update
+//	frame: A pointer to the frame of reference to update with
+void SphereCollider_Update(const unsigned int sphereDataID, const FrameOfReference* frame);
 
 #endif

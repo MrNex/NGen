@@ -6,6 +6,8 @@
 
 #include "../Data/OctTree.h"
 
+#include "../Memory/MemoryPool.h"
+
 struct Collision
 {
 	GObject* obj1;
@@ -19,6 +21,10 @@ struct Collision
 
 typedef struct CollisionBuffer
 {
+	MemoryPool* sphereData;
+	MemoryPool* worldSphereData;
+	MemoryPool* aabbData;
+	MemoryPool* worldAABBData;
 	LinkedList* collisions;		//Contains the list of registered collisions for each frame
 } CollisionBuffer;
 
@@ -48,7 +54,17 @@ void CollisionManager_Initialize(void);
 //Frees any resources allocated by the collision manager
 void CollisionManager_Free(void);
 
-
+///
+//Gets a pointer to the memory pool which contains a certain type of collider
+//
+//Parameters:
+//	type: 		The type of the collider
+//	worldData: 	0 if the collider is desired in object space
+//			1 if the collider should be oriented in world space
+//
+//Returns:
+//	A pointer to the memory pool containing the desired data
+MemoryPool* CollisionManager_RetrieveMemoryPool(ColliderType type, unsigned char worldData);
 
 ///
 //Tests for collisions on all objects which have colliders 
@@ -108,6 +124,16 @@ void CollisionManager_TestCollision(struct Collision* dest, GObject* obj1, Frame
 void CollisionManager_TestSphereCollision(struct Collision* dest, GObject* obj1, FrameOfReference* obj1FoR, GObject* obj2, FrameOfReference* obj2FoR);
 
 ///
+//Tests for collision between an object with a sphere collider and a ray
+//
+//Parameters:
+//	dest: Collision to store the results of the test in
+//	ray: A pointer to the ray to test for collision with
+//	sphereObj: A pointer to an object with a sphere collider to test
+//	sphereFoR: A pointer to the frame of reference of the sphere object
+void CollisionManager_TestRaySphereCollision(struct Collision* dest, GObject* rayObj, FrameOfReference* rayFoR, GObject* sphereObj, FrameOfReference* sphereFoR); 
+
+///
 //Tests if an object with a AABB is colliding with an object with a bounding sphere
 //
 //Parameters:
@@ -141,6 +167,17 @@ void CollisionManager_TestAABBCollision(struct Collision* dest, GObject* obj1, F
 void CollisionManager_TestAABBConvexCollision(struct Collision* dest, GObject* AABBObj, FrameOfReference* AABBObjFrame, GObject* convexObj, FrameOfReference* convexObjFrame);
 
 ///
+//Tests if an object with an axis aligned bounding box is colliding with an object with a ray collider
+//
+//Parameters:
+//	dest: Collision to store the results of the test in
+//	AABBObj: A pointer to the object which has an AABBCollider
+//	AABBObjFrame: Pointer to the frame of reference used to orient the object with the AABB
+//	rayObj: A pointer to the object which has a ray collider
+//	rayFrame: Pointer to the frame of reference used to orient the ray
+void CollisionManager_TestAABBRayCollision(struct Collision* dest, GObject* AABBObj, FrameOfReference* AABBObjFrame, GObject* rayObj, FrameOfReference* rayFrame);
+
+///
 //Tests if two game object's convex hulls are colliding
 //Utilizes the Separating axis theorem
 //
@@ -153,6 +190,17 @@ void CollisionManager_TestAABBConvexCollision(struct Collision* dest, GObject* A
 void CollisionManager_TestConvexCollision(struct Collision* dest, GObject* obj1, FrameOfReference* obj1FoR, GObject* obj2, FrameOfReference* obj2FoR);
 
 ///
+//Tests if a game objects convex hull is colliding with a ray
+//
+//Parameters:
+//	dest: pointer to Collision to store the results of the test in
+//	convexObj: pointer to THe gameobject with the convex hull being tested
+//	convexFrame: pointer to The frame of reference used to orient the convex hull collider
+//	rayObj: pointer to The gameobject with the ray collider being tested
+//	rayFrame: pointer to The frame of reference used to orient the ray
+void CollisionManager_TestConvexRayCollision(struct Collision* dest, GObject* convexObj, FrameOfReference* convexFrame, GObject* rayObj, FrameOfReference* rayFrame);
+
+///
 //Tests if a a game object's convex hull is colliding with a bounding sphere
 //
 //Parameters:
@@ -162,5 +210,58 @@ void CollisionManager_TestConvexCollision(struct Collision* dest, GObject* obj1,
 //	sphere: The gameobject with the sphere collider to test
 //	sphereFoR: The frame of reference to use to orient the sphere collider
 void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject* convexObj, FrameOfReference* convexFoR, GObject* sphere, FrameOfReference* sphereFoR);
+
+///
+//Tests if two gameobject's ray colliders are colliding
+//
+//Parameters:
+//	dest: A pointer to a collision to store the results in
+//	obj1: A pointer to the first object with a ray collider to test collision with
+//	obj1Frame: A pointer to the frame of reference used to orient the first object
+//	obj2: A pointer to the second object with a ray collider to test collision wit
+//	obj2Frame: A pointer to the frame of referenc eused to orient the second object
+void CollisionManager_TestRayCollision(struct Collision* dest, GObject* obj1, FrameOfReference* obj1Frame, GObject* obj2, FrameOfReference* obj2Frame);
+
+///
+//Performs a ray cast against a specific object
+//
+//Parameters:
+//	worldRay: a pointer to the ray to raycast with oriented in worldspace
+//	gObj: A pointer to the GObject to test with
+//
+//Returns:
+//	0 if there is no collision between the ray and the GObject
+//	1 if there is a collision between the ray and the GObject
+unsigned char CollisionManager_RayCastGObject(struct ColliderData_Ray* worldRay, GObject* gObj);
+
+///
+//Performs a ray cast against a sphere collider
+//
+//Parameters:
+//	worldRay: A pointer to the ray to raycast with oriented in worldSpace
+//	sphere: A pointer to the sphere collider to raycast against
+//	sphereFoR: A pointer to the frame of reference with which to orient the sphere
+unsigned char CollisionManager_RayCastSphere(struct ColliderData_Ray* worldRay, struct ColliderData_Sphere* sphere, FrameOfReference* sphereFoR);
+
+///
+//Gets the parametric value of the intersection point between a ray and a sphere
+//returns NaN if no intersection point exists.
+//
+//Parameters:
+//	worldRay: a pointer to the ray to test oriented in worldspace
+//	worldSphere: a pointer to the sphere to test oriented in worldspace
+//
+//returns:
+//	a float indicating the parametric value along the ray where first the intersection point of the ray and the sphere lay
+//	will return NaN if no such point exists
+float CollisionManager_GetRaySphereIntersection(struct ColliderData_Ray* worldRay, struct ColliderData_Sphere* sphere, FrameOfReference* sphereFoR);
+
+///
+//Gets the parametric value of the intersection point between a ray and an AABB
+//
+//Parameters:
+//	worldRay: A pointer to the ray to test oriented in worldspace
+//	aabb: A pointer to the AABB to test oriented in worldspace
+float CollisionManager_GetRayAABBIntersection(struct ColliderData_Ray* worldRay, struct ColliderData_AABB* aabb, FrameOfReference* aabbFoR);
 
 #endif
