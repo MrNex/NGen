@@ -5,8 +5,7 @@
 #include "../Data/LinkedList.h"
 
 #include "../Data/OctTree.h"
-
-#include "../Memory/MemoryPool.h"
+#include "../Data/MemoryPool.h"
 
 struct Collision
 {
@@ -23,6 +22,7 @@ typedef struct CollisionBuffer
 {
 	MemoryPool* sphereData;
 	MemoryPool* worldSphereData;
+	MemoryPool* sphereTransformations;
 	MemoryPool* aabbData;
 	MemoryPool* worldAABBData;
 	LinkedList* collisions;		//Contains the list of registered collisions for each frame

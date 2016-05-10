@@ -23,6 +23,7 @@ struct State_Remove_Members
 {
 	float currentTime;
 	float removeTime;
+	unsigned int objID;
 };
 
 ///
@@ -31,7 +32,7 @@ struct State_Remove_Members
 //Parameters:
 //	s: The state to initialize as a remove state
 //	seconds: The number of seconds until removal of this object from the simulation
-void State_Remove_Initialize(State* state, float seconds)
+void State_Remove_Initialize(State* state, float seconds, unsigned int objID)
 {
 	state->members = (State_Members)malloc(sizeof(struct State_Remove_Members));
 	//Get members
@@ -39,6 +40,7 @@ void State_Remove_Initialize(State* state, float seconds)
 
 	members->currentTime = 0.0f;
 	members->removeTime = seconds;
+	members->objID = objID;
 
 	state->State_Members_Free = State_Remove_Free;
 	state->State_Update = State_Remove_Update;
@@ -71,6 +73,6 @@ void State_Remove_Update(GObject* GO, State* state)
 	members->currentTime += TimeManager_GetDeltaSec();
 	if(members->currentTime > members->removeTime)
 	{
-		ObjectManager_QueueDelete(GO);
+		ObjectManager_QueueReleaseObject(members->objID);
 	}
 }

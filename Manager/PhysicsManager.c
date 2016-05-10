@@ -297,6 +297,17 @@ void PhysicsManager_Update(LinkedList* gameObjects)
 }
 
 ///
+//Updates the physics manager referencing a memory pool of gameobjects in the simulation
+//
+//Parameters:
+//	pool: A pointer to the memory pool of gameobjects in the simulation
+void PhysicsManager_UpdateWithMemoryPool(MemoryPool* pool)
+{
+	PhysicsManager_UpdateBodiesWithMemoryPool(pool);
+	PhysicsManager_UpdateObjectsWithMemoryPool(pool);
+}
+
+///
 //Updates the Rigidbody components of all gameObjects
 //
 //Parameters:
@@ -325,6 +336,31 @@ void PhysicsManager_UpdateBodies(LinkedList* gameObjects)
 
 		current = next;
 
+	}
+}
+
+///
+//Updates the Rigidbody components of all gameobjects contained in the memorypool
+//
+//Parameters:
+//	pool: The memory pool of gameobjects to have their rigidbodies updated
+void PhysicsManager_UpdateBodiesWithMemoryPool(MemoryPool* pool)
+{
+	float dt = TimeManager_GetDeltaSec();
+
+	for(unsigned int i = 0; i < pool->pool->capacity; i++)
+	{
+		GObject* obj = (GObject*)MemoryPool_RequestAddress(pool, i);
+		if(obj->body != NULL)
+		{
+			if(obj->body->physicsOn)
+			{
+				PhysicsManager_ApplyGlobals(obj->body);
+				PhysicsManager_UpdateLinearPhysicsOfBody(obj->body, dt);
+				PhysicsManager_UpdateRotationalPhysicsOfBody(obj->body, dt);
+
+			}
+		}
 	}
 }
 
@@ -512,6 +548,47 @@ void PhysicsManager_UpdateObjects(LinkedList* gameObjects)
 	}
 }
 
+
+///
+//Updates the FrameOfReference component of all gameObjects in a memory pool to match their rigidbodies
+//
+//Parameters:
+//	pool: A pointer to the memorypool of objects to update
+void PhysicsManager_UpdateObjectsWithMemoryPool(MemoryPool* pool)
+{
+	float dt = TimeManager_GetDeltaSec();
+	GObject* gameObject = NULL;
+
+
+	for(unsigned int i = 0; i < pool->pool->capacity; i++)
+	{
+		gameObject = (GObject*)MemoryPool_RequestAddress(pool, i);
+		if(gameObject->body != NULL)
+		{
+			if( gameObject->body->physicsOn)
+			{
+				Vector_Copy(gameObject->frameOfReference->position, gameObject->body->frame->position);
+				Matrix_Copy(gameObject->frameOfReference->rotation, gameObject->body->frame->rotation);
+
+				//Update previous net force
+				Vector_GetScalarProduct(gameObject->body->previousNetForce, gameObject->body->netForce, dt);
+				Vector_Increment(gameObject->body->previousNetForce, gameObject->body->netImpulse);
+
+				//Update previous net torque
+				Vector_GetScalarProduct(gameObject->body->previousNetTorque, gameObject->body->netTorque, dt);
+				Vector_Increment(gameObject->body->previousNetTorque, gameObject->body->netInstantaneousTorque);
+
+				//Set netforce back to 0
+				Vector_Copy(gameObject->body->netForce, &Vector_ZERO);
+				Vector_Copy(gameObject->body->acceleration, &Vector_ZERO);
+				Vector_Copy(gameObject->body->netImpulse, &Vector_ZERO);
+				Vector_Copy(gameObject->body->netTorque, &Vector_ZERO);
+				Vector_Copy(gameObject->body->netInstantaneousTorque, &Vector_ZERO);
+			}
+		}
+	}
+
+}
 
 ///
 //Resolves all collisions in a linked list

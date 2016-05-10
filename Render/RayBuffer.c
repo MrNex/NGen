@@ -4,6 +4,22 @@
 
 #include <stdio.h>
 
+#include "../Manager/AssetManager.h"
+#include "../Manager/KernelManager.h"
+#include "../Manager/CollisionManager.h"
+
+///
+//Initializes the references to the raybuffer textures from OpenCL kernel memory
+//
+//Parameters:
+//	rBuffer: A pointer to the ray buffer to initialize the references of
+static void RayBuffer_InitializeCLReferences(RayBuffer* rBuffer);
+
+static const char* RayBuffer_TextureTypeStrings[RayBuffer_TextureType_NUMTEXTURES] = 
+{
+	"Position", "Diffuse", "Normal", "MaterialLocal", "Specular", "Shadow", "GlobalMaterial", "Depth"
+};
+
 ///
 //Allocates memory for a RayBuffer
 //
@@ -24,6 +40,7 @@ RayBuffer* RayBuffer_Allocate(void)
 //	textureHeight: The height of the RayBuffer's textures
 void RayBuffer_Initialize(RayBuffer* rBuffer, unsigned int textureWidth, unsigned int textureHeight)
 {
+	rBuffer->passType[0] = rBuffer->passType[1] = rBuffer->passType[2] = 0;
 	rBuffer->textureWidth = textureWidth;
 	rBuffer->textureHeight = textureHeight;
 
@@ -138,8 +155,8 @@ void RayBuffer_Initialize(RayBuffer* rBuffer, unsigned int textureWidth, unsigne
 	);
 
 	///
-	//Material Texture
-	glBindTexture(GL_TEXTURE_2D, rBuffer->textures[RayBuffer_TextureType_MATERIAL]);
+	//Local Material Texture
+	glBindTexture(GL_TEXTURE_2D, rBuffer->textures[RayBuffer_TextureType_LOCALMATERIAL]);
 	glTexImage2D
 	(
 		GL_TEXTURE_2D,
@@ -159,9 +176,9 @@ void RayBuffer_Initialize(RayBuffer* rBuffer, unsigned int textureWidth, unsigne
 	glFramebufferTexture2D
 	(
 		GL_FRAMEBUFFER,
-		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_MATERIAL,
+		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_LOCALMATERIAL,
 		GL_TEXTURE_2D,
-		rBuffer->textures[RayBuffer_TextureType_MATERIAL],
+		rBuffer->textures[RayBuffer_TextureType_LOCALMATERIAL],
 		0
 	);
 
@@ -228,36 +245,31 @@ void RayBuffer_Initialize(RayBuffer* rBuffer, unsigned int textureWidth, unsigne
 	);
 
 	///
-	//Final texture
-
-	//Initialize final texture
-	glBindTexture(GL_TEXTURE_2D, rBuffer->textures[RayBuffer_TextureType_FINAL]);
+	//Global Material Texture
+	glBindTexture(GL_TEXTURE_2D, rBuffer->textures[RayBuffer_TextureType_GLOBALMATERIAL]);
 	glTexImage2D
 	(
-		GL_TEXTURE_2D,		//Type
-		0,			//Mipmapping level
-		GL_RGB8,		//Internal format
+		GL_TEXTURE_2D,
+		0,
+		GL_RGBA32F,
 		textureWidth,
 		textureHeight,
-		0,			//Border width
-		GL_RGB,
+		0,
+		GL_RGBA,
 		GL_FLOAT,
 		NULL
 	);
 
-	//Because the textures will be a 1-1 mapping with the pixels in the window
-	//we want to make sure openGL does not attempt an unnecessary interpolation 
-	//when shading. 	
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	glFramebufferTexture2D
 	(
-		GL_FRAMEBUFFER,							//Target framebuffer type
-		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_FINAL,		//Attachment point
-		GL_TEXTURE_2D,								//Attachment type
-		rBuffer->textures[RayBuffer_TextureType_FINAL],			//Texture to attach
-		0									//mipmapping level
+		GL_FRAMEBUFFER,
+		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_GLOBALMATERIAL,
+		GL_TEXTURE_2D,
+		rBuffer->textures[RayBuffer_TextureType_GLOBALMATERIAL],
+		0
 	);
 
 
@@ -304,17 +316,85 @@ void RayBuffer_Initialize(RayBuffer* rBuffer, unsigned int textureWidth, unsigne
 		printf("Error occurred creating RayBuffer: 0x%x\nBuffer was not created!!\n", status);
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	//Create references to textures from CL memory
+	RayBuffer_InitializeCLReferences(rBuffer);
+
 	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 ///
+//Helper function to initialize a CL ray buffer texture from gl ray buffer texture
+//
+//Parameters:
+//	kBuf: Pointer to the Kernel Buffer containing the context and device on which to store this memory
+//	rBuffer: A pointer to the ray buffer to initialize the CL reference of
+//	type: The type of texture to initialize a reference to
+static void RayBuffer_InitializeCLReference(KernelBuffer* kBuf, RayBuffer* rBuffer, const enum RayBuffer_TextureType type)
+{
+	cl_int err = 0;
+	rBuffer->textureRefs[type] = clCreateFromGLTexture
+	(
+		kBuf->clContext,
+		CL_MEM_READ_WRITE,
+		GL_TEXTURE_2D,
+		0,
+		rBuffer->textures[type],
+		&err
+	);
+	const size_t len1 = strlen("RayBuffer_InitializeCLReference :: ");
+	const size_t len2 = strlen(RayBuffer_TextureTypeStrings[type]);
+	const size_t len = len1 + len2 + 1;
+
+	char finalString[len];
+       	sprintf(finalString, "RayBuffer_InitializeCLReference :: %s", RayBuffer_TextureTypeStrings[type]);
+	KernelManager_CheckCLErrors(err, finalString);
+}
+
+//////
+//Initializes the references to the raybuffer textures from OpenCL kernel memory
+//
+//Parameters:
+//	rBuffer: A pointer to the ray buffer to initialize the references of
+static void RayBuffer_InitializeCLReferences(RayBuffer* rBuffer)
+{
+	KernelBuffer* kBuf = KernelManager_GetKernelBuffer();
+
+	for(int i = 0; i < RayBuffer_TextureType_DEPTH; i++)
+	{
+		RayBuffer_InitializeCLReference(kBuf, rBuffer, i);
+	};
+}
+
+///
+//Converts a texture type enum value to a string
+//
+//Parameters:
+//	type: The type to conver tot a string
+//
+//Returns:
+//	A pointer to a null terminated constant character array containing the string
+const char* RayBuffer_TextureTypeToString(enum RayBuffer_TextureType type)
+{
+	return RayBuffer_TextureTypeStrings[type];
+}
+
 //Frees memory allocated by a geometry buffer
 //
 //Parameters:
 //	rBuffer: A pointer to the geometry buffer being freed
 void RayBuffer_Free(RayBuffer* rBuffer)
 {
+	cl_int err = 0;
+	//const size_t len = (sizeof("RayBuffer_Free :: clReleaseMemObject :: ###") + 1)/sizeof(char);
+	char errorString[(sizeof("RayBuffer_Free :: clReleaseMemObject :: ###") + 1)/sizeof(char)] = { '0' };
+	for(int i = 0; i < RayBuffer_TextureType_DEPTH; i++)
+	{
+		err = clReleaseMemObject(rBuffer->textureRefs[i]);
+		sprintf(errorString, "RayBuffer_Free :: clReleaseMemObject :: %d", i);
+		KernelManager_CheckCLErrors(err, errorString);
+	}
 	glDeleteTextures(RayBuffer_TextureType_NUMTEXTURES, rBuffer->textures);
 	glDeleteFramebuffers(1, &rBuffer->fbo);
 	free(rBuffer);
@@ -347,41 +427,63 @@ void RayBuffer_BindForGeometryPass(RayBuffer* rBuffer)
 		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_POSITION,
 		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_DIFFUSE,
 		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_NORMAL,
-		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_MATERIAL,
-		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_SPECULAR
+		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_LOCALMATERIAL,
+		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_SPECULAR,
+		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_SHADOW,
+		GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_GLOBALMATERIAL
 	};
 
 	//Specify where the fragment shader will write
-	glDrawBuffers(5, drawBuffers);
+	glDrawBuffers(7, drawBuffers);
 }
 
+
 ///
-//Binds the Ray Buffer to be read/written from/to for the shadow pass by the PixelProjectionShadowShaderProgram
+//Binds the ray buffer for use with KernelPrograms
 //
 //Parameters:
-//	rBuffer: A pointer to the ray buffer being bound for the shadow pass
-void RayBuffer_BindForShadowPass(RayBuffer* rBuffer)
-{
-	glBindFramebuffer(GL_FRAMEBUFFER, rBuffer->fbo);
-
-	glDrawBuffer(GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_SHADOW);
-
-
-
-	glActiveTexture(GL_TEXTURE0 + RayBuffer_TextureType_POSITION);
-	glBindTexture(GL_TEXTURE_2D, rBuffer->textures[RayBuffer_TextureType_POSITION]);
-
-	//glActiveTexture(GL_TEXTURE0 + RayBuffer_TextureType_SHADOW);
-	//glBindTexture(GL_TEXTURE_2D, rBuffer->textures[RayBuffer_TextureType_SHADOW]);
-}
-
-///
-//Binds the ray buffer for use with the RayTracerShadowKernelProgram
-void RayBuffer_BindForShadowKernel()
+//	rBuffer: A pointer to the ray buffer to bind for kernel use
+void RayBuffer_BindForKernels(RayBuffer* rBuffer, cl_event* event)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	
+	KernelBuffer* kBuf = KernelManager_GetKernelBuffer();
+	
+	cl_int err = 0;
+
+	
+	err = clEnqueueAcquireGLObjects
+	(
+		kBuf->clQueue,
+		RayBuffer_TextureType_DEPTH,
+		&rBuffer->textureRefs[0],
+		0,
+		NULL,
+		event
+	);
+	KernelManager_CheckCLErrors(err, "RayBuffer_BindForKernels :: clEnqueueAcquireGLObjects");
+	
+	
+}
+
+///
+//Releases the ray buffer textures from openCL kernel use
+//
+//Parameters:
+//	rBuffer: A pointer to the ray buffer to release from kernel use
+//	event: A pointer to an event which will be tracking the progress of buffer release
+void RayBuffer_ReleaseFromKernels(RayBuffer* rBuffer, cl_event* event)
+{
+	
+	KernelBuffer* kBuf = KernelManager_GetKernelBuffer();
+	
+	cl_int err = 0;
+	err = clEnqueueReleaseGLObjects(kBuf->clQueue, RayBuffer_TextureType_DEPTH, &rBuffer->textureRefs[0], 0, NULL, event);
+
+	KernelManager_CheckCLErrors(err, "RayBuffer_ReleaseFromKernels :: clEnqueueReleaseGLObjects");
+	
 }
 
 ///
@@ -410,26 +512,31 @@ void RayBuffer_BindForLightPass(RayBuffer* rBuffer)
 	glBindFramebuffer(GL_FRAMEBUFFER, rBuffer->fbo);
 
 	//Draw to the final buffer!
-	glDrawBuffer(GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_FINAL);
+	//glDrawBuffer(GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_FINAL);
 
 	//Bind Position - Specular
-	for(unsigned int i = 0; i < RayBuffer_TextureType_FINAL; i++)
+	for(unsigned int i = 0; i < RayBuffer_TextureType_GLOBALMATERIAL; i++)
 	{
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, rBuffer->textures[i]);
 	}
+
 }
 
 ///
-//Binds the FrameBufferObject of the geometry buffer to be read for the final pass
+//Binds the ray buffer for the local illumination pass
 //
 //Parameters:
-//	rBuffer: A pointer to the geometry buffer being bound for the final pass
-void RayBuffer_BindForFinalPass(RayBuffer* rBuffer)
+//	rBuffer: A ointer to the ray buffer to bind
+void RayBuffer_BindForLocalPass(RayBuffer* rBuffer)
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);	//Bind default frame buffer for writing
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, rBuffer->fbo);	//Bind rBuffer's final texture for blitting
-	glReadBuffer(GL_COLOR_ATTACHMENT0 + RayBuffer_TextureType_FINAL);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, rBuffer->fbo);
+
+	for(unsigned int i = 0; i < RayBuffer_TextureType_DEPTH; i++)
+	{
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, rBuffer->textures[i]);
+	}
 }
 
 ///
@@ -455,7 +562,7 @@ void* RayBuffer_AllocateTextureData(RayBuffer* buffer, enum RayBuffer_TextureTyp
 		break;
 	case RayBuffer_TextureType_DIFFUSE:
 	case RayBuffer_TextureType_SPECULAR:
-	case RayBuffer_TextureType_FINAL:
+	//case RayBuffer_TextureType_FINAL:
 		components = 4;
 		depth = 1;
 		break;
@@ -486,7 +593,7 @@ static GLenum RayBuffer_DetermineTextureFormat(enum RayBuffer_TextureType type)
 		break;
 	case RayBuffer_TextureType_DIFFUSE:
 	case RayBuffer_TextureType_SPECULAR:
-	case RayBuffer_TextureType_FINAL:
+	//case RayBuffer_TextureType_FINAL:
 		return GL_RGBA;
 		break;
 	case RayBuffer_TextureType_SHADOW:
@@ -508,7 +615,7 @@ static GLenum RayBuffer_DetermineTexturePixelType(enum RayBuffer_TextureType typ
 		break;
 	case RayBuffer_TextureType_DIFFUSE:
 	case RayBuffer_TextureType_SPECULAR:
-	case RayBuffer_TextureType_FINAL:
+	//case RayBuffer_TextureType_FINAL:
 		return GL_FLOAT;
 		break;
 	case RayBuffer_TextureType_SHADOW:

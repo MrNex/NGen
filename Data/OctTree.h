@@ -4,6 +4,7 @@
 #include "../GObject/GObject.h"		//The data the oct tree will contain
 #include "DynamicArray.h"
 #include "HashMap.h"
+#include "MemoryPool.h"
 
 struct OctTree_Node
 {
@@ -85,6 +86,14 @@ void OctTree_Free(OctTree* tree);
 //	tree: A pointer to the oct tree to update
 //	gameObjects: A linked list of all game objects currently in the simulation
 void OctTree_Update(OctTree* tree, LinkedList* gameObjects);
+
+///
+//Updates the position of all gameobjects in a given memory pool within the octtree
+//
+//Parameters:
+//	tree: A pointer to the oct tree to update
+//	pool: A memory pool of gameobjects in the simulation to update
+void OCtTree_UpdateWithMemoryPool(OctTree* tree, MemoryPool* pool);
 
 ///
 //Adds a game object to the oct tree

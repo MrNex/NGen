@@ -48,6 +48,8 @@ void State_MeshSwap_Update(GObject* GO, State* state)
 	//State is unused
 	(void)state;
 
+	Material* material = MemoryPool_RequestAddress(assetBuffer->materialPool, GO->materialID);
+
 	if(InputManager_IsKeyDown('1'))
 	{
 		GO->mesh = AssetManager_LookupMesh("Cube");
@@ -79,27 +81,27 @@ void State_MeshSwap_Update(GObject* GO, State* state)
 
 	if(InputManager_IsKeyDown('r'))
 	{
-		*Matrix_Index(GO->material->colorMatrix, 0, 0) = 1.0f;
-		*Matrix_Index(GO->material->colorMatrix, 1, 1) = 0.0f;
-		*Matrix_Index(GO->material->colorMatrix, 2, 2) = 0.0f;
+		*Matrix_IndexArray(material->colorMatrix, 0, 0, 4) = 1.0f;
+		*Matrix_IndexArray(material->colorMatrix, 1, 1, 4) = 0.0f;
+		*Matrix_IndexArray(material->colorMatrix, 2, 2, 4) = 0.0f;
 	}
 	else if(InputManager_IsKeyDown('g'))
 	{
-		*Matrix_Index(GO->material->colorMatrix, 0, 0) = 0.0f;
-		*Matrix_Index(GO->material->colorMatrix, 1, 1) = 1.0f;
-		*Matrix_Index(GO->material->colorMatrix, 2, 2) = 0.0f;
+		*Matrix_IndexArray(material->colorMatrix, 0, 0, 4) = 0.0f;
+		*Matrix_IndexArray(material->colorMatrix, 1, 1, 4) = 1.0f;
+		*Matrix_IndexArray(material->colorMatrix, 2, 2, 4) = 0.0f;
 	}
 	else if(InputManager_IsKeyDown('b'))
 	{
-		*Matrix_Index(GO->material->colorMatrix, 0, 0) = 0.0f;
-		*Matrix_Index(GO->material->colorMatrix, 1, 1) = 0.0f;
-		*Matrix_Index(GO->material->colorMatrix, 2, 2) = 1.0f;
+		*Matrix_IndexArray(material->colorMatrix, 0, 0, 4) = 0.0f;
+		*Matrix_IndexArray(material->colorMatrix, 1, 1, 4) = 0.0f;
+		*Matrix_IndexArray(material->colorMatrix, 2, 2, 4) = 1.0f;
 	}
 	else if(InputManager_IsKeyDown('c'))
 	{
-		*Matrix_Index(GO->material->colorMatrix, 0, 0) = 1.0f;
-		*Matrix_Index(GO->material->colorMatrix, 1, 1) = 1.0f;
-		*Matrix_Index(GO->material->colorMatrix, 2, 2) = 1.0f;
+		*Matrix_IndexArray(material->colorMatrix, 0, 0, 4) = 1.0f;
+		*Matrix_IndexArray(material->colorMatrix, 1, 1, 4) = 1.0f;
+		*Matrix_IndexArray(material->colorMatrix, 2, 2, 4) = 1.0f;
 	}
 
 	if(InputManager_IsKeyDown('p'))

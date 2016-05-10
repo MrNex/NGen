@@ -7,14 +7,17 @@ in vec3 f_normal;
 uniform sampler2D textureDiffuse;
 uniform mat4 colorMatrix;
 uniform vec2 tileVector;
-uniform vec4 materialVector;
+uniform vec4 localMaterialVector;
+uniform vec4 globalMaterialVector;
 uniform vec4 specularColorVector;
 
 layout (location = 0) out vec3 out_worldPosition;
 layout (location = 1) out vec4 out_color;
 layout (location = 2) out vec3 out_normal;
-layout (location = 3) out vec4 out_material;
+layout (location = 3) out vec4 out_localMaterial;
 layout (location = 4) out vec4 out_specular;
+layout (location = 5) out float out_shadow;
+layout (location = 6) out vec4 out_globalMaterial;
 
 void main()
 {
@@ -40,6 +43,7 @@ void main()
 	//Note the component wise multiplication below
 	out_color = colorMatrix * texture2D(textureDiffuse, tileVector * f_textureCoordinates); 
 	out_normal = f_normal;
-	out_material = materialVector;
+	out_localMaterial = localMaterialVector;
 	out_specular = specularColorVector;
+	out_globalMaterial = globalMaterialVector;
 }

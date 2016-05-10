@@ -12,14 +12,9 @@
 
 typedef struct RayTracerDirectionalShadowKernelProgram_Members
 {
-	cl_mem shadowTexture;
-	cl_mem positionTexture;
 	cl_mem sphereShadowTexture;
 	cl_mem aabbShadowTexture;
 	cl_mem lightDirection;
-
-	cl_mem spheres;
-	cl_mem aabbs;
 
 	cl_kernel directionalSphereShadowKernel;
 	cl_kernel directionalAABBShadowKernel;
@@ -40,7 +35,7 @@ static RayTracerDirectionalShadowKernelProgram_Members* RayTracerDirectionalShad
 //Parameters:
 //	prog: A pointer to the kernel program to initialize the members of
 //	buffer: A pointer to The currently active Kernel buffer
-static void RayTracerDirectionalShadowKernelProgram_InitializeMembers(KernelProgram* prog, KernelBuffer* buffer, RayBuffer* rBuffer);
+static void RayTracerDirectionalShadowKernelProgram_InitializeMembers(KernelProgram* prog, KernelBuffer* buffer);
 
 ///
 //Frees the members of a RayTracerDirectionalShadow kernel program
@@ -55,8 +50,8 @@ static void RayTracerDirectionalShadowKernelProgram_FreeMembers(KernelProgram* p
 //Parameters:
 //	prog: A pointer to the RayTracerDirectionalShadowKernelProgram to execute
 //	buffer: A pointer to the active KernelBuffer containing the context and device on which to execute
-//	rBuffer: A pointer to the ray buffer containing data needed for execution
-static void RayTracerDirectionalShadowKernelProgram_Execute(KernelProgram* prog, KernelBuffer* buffer, RayBuffer* rBuffer);
+//	params: A pointer to the struct containing data needed for execution
+static void RayTracerDirectionalShadowKernelProgram_Execute(KernelProgram* prog, KernelBuffer* buffer, struct RayTracerDirectionalShadowKernelProgram_ExecutionParameters* params);
 
 ///
 //Initializes a RayTracerDirectionalShadow Kernel Program
@@ -64,13 +59,12 @@ static void RayTracerDirectionalShadowKernelProgram_Execute(KernelProgram* prog,
 //Parameters:
 //	prog: A pointer to an uninitialized Kernel Progral to initialize as a RayTracerDirectionalShadow Kernel Program
 //	buffer: A pointer to the KernelBuffer containing the context and device on which to build the kernel
-//	rBuffer: A pointer to the RayBuffer cotaining the textures this kernel will use
-void RayTracerDirectionalShadowKernelProgram_Initialize(KernelProgram* prog, KernelBuffer* buffer, RayBuffer* rBuffer)
+void RayTracerDirectionalShadowKernelProgram_Initialize(KernelProgram* prog, KernelBuffer* buffer)
 {
 	KernelProgram_Initialize(prog, "Kernel/RayTracerShadowRayKernelProgram.cl", buffer);
 	
 	prog->members = RayTracerDirectionalShadowKernelProgram_AllocateMembers();
-	RayTracerDirectionalShadowKernelProgram_InitializeMembers(prog, buffer, rBuffer);
+	RayTracerDirectionalShadowKernelProgram_InitializeMembers(prog, buffer);
 
 	prog->FreeMembers = RayTracerDirectionalShadowKernelProgram_FreeMembers;
 	prog->Execute = (KernelProgram_ExecuteFunc)RayTracerDirectionalShadowKernelProgram_Execute;
@@ -92,38 +86,13 @@ static RayTracerDirectionalShadowKernelProgram_Members* RayTracerDirectionalShad
 //Parameters:
 //	prog: A pointer to the kernel program to initialize the members of
 //	buffer: A pointer to The currently active Kernel buffer
-static void RayTracerDirectionalShadowKernelProgram_InitializeMembers(KernelProgram* prog, KernelBuffer* buffer, RayBuffer* rBuffer)
+static void RayTracerDirectionalShadowKernelProgram_InitializeMembers(KernelProgram* prog, KernelBuffer* buffer)
 {
 	RayTracerDirectionalShadowKernelProgram_Members* members = prog->members;
 
 	EnvironmentBuffer* envBuffer = EnvironmentManager_GetEnvironmentBuffer();
 
-	unsigned char numSpheres, numAABBs;
-	numSpheres = collisionBuffer->sphereData->pool->capacity;
-	numAABBs = collisionBuffer->aabbData->pool->capacity;
-
 	cl_int clError;
-	members->shadowTexture = clCreateFromGLTexture
-	(
-		buffer->clContext, 
-		CL_MEM_WRITE_ONLY,
-		GL_TEXTURE_2D,
-		0,
-		rBuffer->textures[RayBuffer_TextureType_SHADOW],
-		&clError
-	);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_InitializeMembers :: clCreateFromGLTexture :: SHADOW");
-
-	members->positionTexture = clCreateFromGLTexture
-	(
-		buffer->clContext,
-		CL_MEM_READ_ONLY,
-		GL_TEXTURE_2D,
-		0,
-		rBuffer->textures[RayBuffer_TextureType_POSITION],
-		&clError
-	);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_InitializeMembers :: clCreateFromGLTexture :: POSITION");
 
 	cl_image_format format;
 	format.image_channel_order = CL_R;
@@ -174,29 +143,6 @@ static void RayTracerDirectionalShadowKernelProgram_InitializeMembers(KernelProg
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_InitializeMembers :: clCreateBuffer :: light");
 
 
-	
-
-	members->spheres = clCreateBuffer
-	(
-		buffer->clContext,
-		CL_MEM_READ_ONLY,
-		sizeof(struct ColliderData_Sphere) * numSpheres,
-		NULL,
-		&clError
-	);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_InitializeMembers :: clCreateBuffer :: sphere");
-
-	members->aabbs = clCreateBuffer
-	(
-		buffer->clContext,
-		CL_MEM_READ_ONLY,
-		sizeof(struct ColliderData_AABB) * numAABBs,
-		NULL,
-		&clError
-	);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKerelProgram_InitializeMembers :: clCreateBuffer :: aabbs");
-
-	
 	members->directionalSphereShadowKernel = clCreateKernel(prog->clProgram, "ComputeDirectionalSphereShadowTexture", &clError);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_InitializeMembers :: clCreateKernel :: ComputeDirectionalSphereShadowTexture");
 
@@ -220,12 +166,6 @@ static void RayTracerDirectionalShadowKernelProgram_FreeMembers(KernelProgram* p
 	RayTracerDirectionalShadowKernelProgram_Members* members = prog->members;
 
 	cl_int clError;
-	clError = clReleaseMemObject(members->positionTexture);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_FreeMembers :: clReleaseMemObject :: positionTexture");
-
-
-	clError = clReleaseMemObject(members->shadowTexture);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_FreeMembers :: clReleaseMemObject :: shadowTexture");
 
 	clError = clReleaseMemObject(members->sphereShadowTexture);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_FreeMembers :: clReleaseMemObject :: sphereShadowTexture");
@@ -237,13 +177,6 @@ static void RayTracerDirectionalShadowKernelProgram_FreeMembers(KernelProgram* p
 	clError = clReleaseMemObject(members->lightDirection);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_FreeMembers :: clReleaseMemObject :: lightDirection");
 
-
-	clError = clReleaseMemObject(members->spheres);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_FreeMembers :: clReleaseMemObject :: spheres");
-
-	clError = clReleaseMemObject(members->aabbs);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_FreeMembers :: clReleaseMemObject :: aabbs");
-
 	free(members);
 	prog->members = NULL;
 }
@@ -254,59 +187,24 @@ static void RayTracerDirectionalShadowKernelProgram_FreeMembers(KernelProgram* p
 //Parameters:
 //	prog: A pointer to the RayTracerDirectionalShadowKernelProgram to execute
 //	buffer: A pointer to the active KernelBuffer containing the context and device on which to execute
-//	rBuffer: A pointer to the ray buffer containing data needed for execution
-static void RayTracerDirectionalShadowKernelProgram_Execute(KernelProgram* prog, KernelBuffer* buffer, RayBuffer* rBuffer)
+//	params: A pointer to the struct containing data needed for execution
+static void RayTracerDirectionalShadowKernelProgram_Execute(KernelProgram* prog, KernelBuffer* buffer, struct RayTracerDirectionalShadowKernelProgram_ExecutionParameters* params)
 {
-	struct ColliderData_Sphere* spheres = collisionBuffer->worldSphereData->pool->data;
-	struct ColliderData_AABB* aabbs = collisionBuffer->worldAABBData->pool->data;
+	RayBuffer* rBuffer = params->srcBuffer;
 
-	static int counter = 0;
-
-	
-	if( ++counter > 10)
-	{
-		Vector_PrintTransposeArray((float*)aabbs, 12);
-
-		counter = 0;
-	}
+	unsigned int numGObjects = objectBuffer->objectPool->pool->size;
 
 	unsigned char numSpheres, numAABBs;
-	numSpheres = collisionBuffer->sphereData->pool->size;
-	numAABBs = collisionBuffer->aabbData->pool->size;
+	numSpheres = collisionBuffer->worldSphereData->pool->size;
+	numAABBs = collisionBuffer->worldAABBData->pool->size;
 
 	RenderingBuffer* renderingBuffer = RenderingManager_GetRenderingBuffer();
 	RayTracerDirectionalShadowKernelProgram_Members* members = prog->members;
 
 	cl_int clError;
 
-	const unsigned int numBeforeExecution = 5;
+	const unsigned int numBeforeExecution = 1;
 	cl_event completeBeforeExecution[numBeforeExecution];
-
-	//Acquire OGL resources
-	//glActiveTexture(GL_TEXTURE0 + RayBuffer_TextureType_SHADOW);
-	//glBindTexture(GL_TEXTURE_2D, rBuffer->textures[RayBuffer_TextureType_SHADOW]);
-	clError = clEnqueueAcquireGLObjects
-	(
-		buffer->clQueue, 
-		1, 
-		&members->shadowTexture, 
-		0, 
-		NULL, 
-		&completeBeforeExecution[0]
-	);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clEnqueueAcquireGLObjects");
-	
-	clError = clEnqueueAcquireGLObjects
-	(
-		buffer->clQueue, 
-		1, 
-		&members->positionTexture, 
-		0, 
-		NULL, 
-		&completeBeforeExecution[1]
-	);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clEnqueueAcquireGLObjects");
-
 
 	//Update non-ogl cl device memory
 	clError = clEnqueueWriteBuffer
@@ -319,41 +217,9 @@ static void RayTracerDirectionalShadowKernelProgram_Execute(KernelProgram* prog,
 		renderingBuffer->directionalLight->direction->components,
 		0,
 		NULL,
-		&completeBeforeExecution[2]
+		&completeBeforeExecution[0]
 	);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clEnqueueWriteBuffer :: lightDirection");
-
-
-	clError = clEnqueueWriteBuffer
-	(
-		buffer->clQueue,
-		members->spheres,
-		CL_FALSE,
-		0,
-		sizeof(struct ColliderData_Sphere) * numSpheres,
-		spheres,
-		0,
-		NULL,
-		&completeBeforeExecution[3]
-	);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clEnqueueWriteBuffer :: sphere");
-
-	
-
-	clError = clEnqueueWriteBuffer
-	(
-		buffer->clQueue,
-		members->aabbs,
-		CL_FALSE,
-		0,
-		sizeof(struct ColliderData_AABB) * numAABBs,
-		aabbs,
-		0,
-		NULL,
-		&completeBeforeExecution[4]
-	);
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clEnqueueWriteBuffer :: aabbs");
-
 
 	///
 	//Execution
@@ -366,18 +232,27 @@ static void RayTracerDirectionalShadowKernelProgram_Execute(KernelProgram* prog,
 	clError = clSetKernelArg(members->directionalAABBShadowKernel, 0, sizeof(members->aabbShadowTexture), &members->aabbShadowTexture);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: aabbShadowTexture");
 
-	clError = clSetKernelArg(members->directionalAABBShadowKernel, 1, sizeof(members->positionTexture), &members->positionTexture);
+	clError = clSetKernelArg(members->directionalAABBShadowKernel, 1, sizeof(rBuffer->textureRefs[RayBuffer_TextureType_POSITION]), &rBuffer->textureRefs[RayBuffer_TextureType_POSITION]);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: directionalAABBShadowKernel :: positionTexture");
 
 	clError = clSetKernelArg(members->directionalAABBShadowKernel, 2, sizeof(members->lightDirection), &members->lightDirection);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: directionalAABBShadowKernel :: lightDirection");
 
-	clError = clSetKernelArg(members->directionalAABBShadowKernel, 3, sizeof(members->aabbs), &members->aabbs);
+	clError = clSetKernelArg(members->directionalAABBShadowKernel, 3, sizeof(*params->gObjects), params->gObjects);		
+	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKErnelArg :: directionalAABBShadowKernel :: gObjects");
+	
+	clError = clSetKernelArg(members->directionalAABBShadowKernel, 4, sizeof(*params->materials), params->materials);		
+	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKErnelArg :: directionalAABBShadowKernel :: materials");
+	
+
+	clError = clSetKernelArg(members->directionalAABBShadowKernel, 5, sizeof(*params->aabbs), params->aabbs);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: aabbs");
 
-	clError = clSetKernelArg(members->directionalAABBShadowKernel, 4, sizeof(cl_bool) * numAABBs, NULL);
+	clError = clSetKernelArg(members->directionalAABBShadowKernel, 6, sizeof(cl_bool) * numAABBs, NULL);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: directionalAABBShadowKernel :: shadowReduce");
-	
+
+	clError = clSetKernelArg(members->directionalAABBShadowKernel, 7, sizeof(size_t) * numAABBs, NULL);
+	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Exeture :: clSetKernelArg :: directionalAABBShadowKernel :: indexReduce");	
 
 	const size_t numGlobalAABB[3] = { rBuffer->textureWidth, rBuffer->textureHeight, numAABBs };
 	const size_t numLocalAABB[3] = { 1, 1, numAABBs };
@@ -400,19 +275,31 @@ static void RayTracerDirectionalShadowKernelProgram_Execute(KernelProgram* prog,
 	//Set Kernel Arguments
 	clError = clSetKernelArg(members->directionalSphereShadowKernel, 0, sizeof(members->sphereShadowTexture), &members->sphereShadowTexture);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: shadowTexture");
-	clError = clSetKernelArg(members->directionalSphereShadowKernel, 1, sizeof(members->positionTexture), &members->positionTexture);
+	clError = clSetKernelArg(members->directionalSphereShadowKernel, 1, sizeof(rBuffer->textureRefs[RayBuffer_TextureType_POSITION]), &rBuffer->textureRefs[RayBuffer_TextureType_POSITION]);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: positionTexture");
 
 	clError = clSetKernelArg(members->directionalSphereShadowKernel, 2, sizeof(members->lightDirection), &members->lightDirection);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: lightDirection");
-	clError = clSetKernelArg(members->directionalSphereShadowKernel, 3, sizeof(members->spheres), &members->spheres);
+
+	clError = clSetKernelArg(members->directionalSphereShadowKernel, 3, sizeof(*params->gObjects), params->gObjects);
+	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: gObjects");
+
+	clError = clSetKernelArg(members->directionalSphereShadowKernel, 4, sizeof(*params->materials), params->materials);
+	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: materials");
+
+
+
+
+	clError = clSetKernelArg(members->directionalSphereShadowKernel, 5, sizeof(*params->spheres), params->spheres);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: sphere");
 
-	clError = clSetKernelArg(members->directionalSphereShadowKernel, 4, sizeof(cl_bool) * numSpheres, NULL);
+	clError = clSetKernelArg(members->directionalSphereShadowKernel, 6, sizeof(cl_bool) * numGObjects, NULL);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: shadowReduce");
 
-	const size_t numGlobalSpheres[3] = { rBuffer->textureWidth, rBuffer->textureHeight, numSpheres};
-	const size_t numLocalSpheres[3] = { 1, 1, numSpheres};
+	clError = clSetKernelArg(members->directionalSphereShadowKernel, 7, sizeof(float) * numGObjects, NULL);
+
+	const size_t numGlobalSpheres[3] = { rBuffer->textureWidth, rBuffer->textureHeight, numGObjects};
+	const size_t numLocalSpheres[3] = { 1, 1, numGObjects};
 
 
 	//Execute kernel
@@ -430,7 +317,7 @@ static void RayTracerDirectionalShadowKernelProgram_Execute(KernelProgram* prog,
 	);
 
 
-	clError = clSetKernelArg(members->reduceShadowTextures, 0, sizeof(members->shadowTexture), &members->shadowTexture);
+	clError = clSetKernelArg(members->reduceShadowTextures, 0, sizeof(rBuffer->textureRefs[RayBuffer_TextureType_SHADOW]), &rBuffer->textureRefs[RayBuffer_TextureType_SHADOW]);
 	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clSetKernelArg :: reduceShadowTextures :: shadowTexture");
 	
 	clError = clSetKernelArg(members->reduceShadowTextures, 1, sizeof(members->sphereShadowTexture), &members->sphereShadowTexture);
@@ -460,13 +347,8 @@ static void RayTracerDirectionalShadowKernelProgram_Execute(KernelProgram* prog,
 
 
 
-	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clEnqueueNDRangeKernel");
+	KernelManager_CheckCLErrors(clError, "RayTracerDirectionalShadowKernelProgram_Execute :: clEnqueueNDRangeKernel :: reduceShadowTextures");
 
-	cl_event cleanup[2];
-
-	clError = clEnqueueReleaseGLObjects(buffer->clQueue, 1, &members->shadowTexture, 1, &reduction, &cleanup[0]);
-	clError = clEnqueueReleaseGLObjects(buffer->clQueue, 1, &members->positionTexture, 1, &reduction, &cleanup[1]);
-
-	clWaitForEvents(2, cleanup);
+	clWaitForEvents(1, &reduction);
 	clFinish(buffer->clQueue);
 }

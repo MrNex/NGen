@@ -479,6 +479,98 @@ void OctTree_Update(OctTree* tree, LinkedList* gameObjects)
 }
 
 ///
+//Updates the position of all gameobjects in a given memory pool within the octtree
+//
+//Parameters:
+//	tree: A pointer to the oct tree to update
+//	pool: A memory pool of gameobjects in the simulation to update
+void OCtTree_UpdateWithMemoryPool(OctTree* tree, MemoryPool* pool)
+{
+	
+	//while(current != NULL)
+	//{
+	for(unsigned int i = 0; i < pool->pool->capacity; i++)
+	{
+		GObject* gameObj = (GObject*)MemoryPool_RequestAddress(pool, i);
+		//Find all gameObjects which have entries in the octtree (& treemap)
+		if(gameObj->collider != NULL)
+		{
+			//Get the treemap entry
+			DynamicArray* log = (DynamicArray*)HashMap_LookUp(tree->map, &gameObj, sizeof(GObject*))->data;
+
+			if(log->size <= 0)
+			{
+				//printf("Not contained in any tree..\n");
+				//OctTree_AddAndLog(tree, gameObj);
+			}
+
+			//For each OctTree_Node the game object was in
+			for(unsigned int i = 0; i < log->size; i++)
+			{
+				struct OctTree_NodeStatus* nodeStatus = (struct OctTree_NodeStatus*)DynamicArray_Index(log, i);
+				//get it's current status for this node
+				unsigned char currentStatus = OctTree_Node_DoesObjectCollide(nodeStatus->node, gameObj);
+
+				//If the status has remained the same, continue to the next one
+				if(nodeStatus->collisionStatus == currentStatus) continue;
+
+				//If the current status says that the object is no longer in the node
+				if(currentStatus == 0)
+				{
+
+					printf("Object left node\n");
+
+					//Remove the object from this node
+					OctTree_Node_Remove(nodeStatus->node, gameObj);
+					//Find where it moved
+					struct OctTree_Node* containingNode = OctTree_SearchUp(nodeStatus->node, gameObj);
+					//If it is still in a node
+					if(containingNode != NULL)
+					{
+						//Add it to that node!
+						OctTree_Node_AddAndLog(tree, containingNode, gameObj);
+					}
+					else
+					{
+						printf("No node found to relocate\n");
+					}
+					//Remove the ith nodeStatus from the log
+					DynamicArray_RemoveAndReposition(log, i);
+				}
+				//Object was fully contained, and now it is not
+				else if(currentStatus == 1)
+				{
+					printf("Object leaving node\n");
+
+					//Update the status
+					nodeStatus->collisionStatus = currentStatus;
+					//Find where it moved
+					struct OctTree_Node* containingNode = OctTree_SearchUp(nodeStatus->node, gameObj);
+					//If it is even in a node anymore
+					if(containingNode != NULL)
+					{
+						//Add it to that node!
+						OctTree_Node_AddAndLog(tree, containingNode, gameObj);
+					}
+					else
+					{
+						printf("No node found to relocate\n");
+					}
+				}
+				//Object was partially contained and now it is fully contained!
+				else
+				{
+					printf("Object entered node\n");
+
+					//Update the status
+					nodeStatus->collisionStatus = currentStatus;
+				}
+			}
+		}
+	}
+}
+
+///
 //Adds a game object to the oct tree
 //
 //Parameters:

@@ -4,16 +4,66 @@
 #include "../Math/Matrix.h"
 #include "Texture.h"
 
+/*
+typedef struct Material_ColorMatrix
+{
+	float[16] colorMatrix;
+}
+
+typedef union Material_Specular
+{
+	struct Material_SpecularProperties specular;
+	float[4] specularVector;
+};
+
+struct Material_SpecularProperties
+{
+	float r;
+	float g;
+	float b;
+	float a;
+};
+
+typedef union Material_Local
+{
+	struct Material_LocalProperties local;
+	float[4] localVector;
+} Material_Local;
+
+struct Material_LocalProperties
+{
+	float ambientCoefficient;
+	float diffuseCoefficient;
+	float specularCoefficient;
+	float specularPower;
+};
+
+typedef union Material_Global
+{
+	struct Material_GlobalProperties global;
+	float[4] globalVector;
+};
+struct Material_GlobalProperties
+{
+	float localCoefficient;
+	float reflectionCoefficient;
+	float transmissionCoefficient;
+	unsigned int texturePoolID;
+};
+*/
+
 ///
 //Defines a material
 //A material is essentially a set of uniforms which are coupled with a texture.
-typedef struct Material
+/*
+typedef struct MaterialOLD
 {
 	Matrix* colorMatrix;
 	Vector* tile;
 	Vector* specularColor;
 
-	Texture* texture;	
+	//Texture* texture;	
+	unsigned int texturePoolID;
 
 	float ambientCoefficient;
 	float diffuseCoefficient;
@@ -22,13 +72,38 @@ typedef struct Material
 	float specularPower;
 
 } Material;
+*/
+
+
+typedef struct Material
+{
+
+	float colorMatrix[16];
+	float specularColor[4];
+	float tile[2];	
+	
+	float ambientCoefficient;
+	float diffuseCoefficient;
+	float specularCoefficient;
+	float specularPower;
+
+	float localCoefficient;
+	float reflectedCoefficient;
+	float transmittedCoefficient;
+
+	unsigned int texturePoolID;	
+
+	float indexOfRefraction;
+	int padA;	//OpenCL requires 16 byte alignment of structs
+} Material;
+
 
 ///
 //Allocates memory for a new material
 //
 //Returns:
-//	A pointer to the newly allocated material
-Material* Material_Allocate(void);
+//	ID of newly allocated material
+unsigned int Material_Allocate(void);
 
 ///
 //Initializes a material
@@ -36,24 +111,16 @@ Material* Material_Allocate(void);
 //Parameters:
 //	mat: A pointer to the material to initialize
 //	t: A pointer to the texture which this material represents an instance of
-void Material_Initialize(Material* mat, Texture* t);
-
-///
-//Initializes a deep copy of a Material
-//This means any pointers will point to Newly Allocated instances of identical memory
-//NOTE: Does not deep copy texture (points to same location as original)
-//
-//Parameters:
-//	copy: A pointer to an uninitialized material to initialize as a deep copy
-//	original: A pointer to a material to copy
-void Material_InitializeDeepCopy(Material* copy, Material* original);
+//void Material_Initialize(Material* mat, Texture* t);
+//	tPoolID: The id of this texture in the AssetMAnager_texturePool
+void Material_Initialize(unsigned int mID, unsigned int tPoolID);
 
 ///
 //Frees a material
 //Does not free the associated texture!!
 //
 //Parameters:
-//	mat: A pointer to the material to free
-void Material_Free(Material* mat);
+//	mID: the ID of the material to free
+void Material_Free(unsigned int mID);
 
 #endif

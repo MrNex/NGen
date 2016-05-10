@@ -4,6 +4,9 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+#include <CL/cl.h>
+#include <CL/cl_gl.h>
+
 ///
 //Defines the types of textures a ray buffer can contain
 enum RayBuffer_TextureType
@@ -11,19 +14,25 @@ enum RayBuffer_TextureType
 	RayBuffer_TextureType_POSITION,		//RGB32F Internal Format
 	RayBuffer_TextureType_DIFFUSE,		//RGBA8 Internal Format
 	RayBuffer_TextureType_NORMAL,		//RGB32F Internal Format
-	RayBuffer_TextureType_MATERIAL,		//RGBA32F Internal Format
+	RayBuffer_TextureType_LOCALMATERIAL,	//RGBA32F Internal Format
 	RayBuffer_TextureType_SPECULAR,		//RGBA8
 	RayBuffer_TextureType_SHADOW,		//R8 Internal Format
-	RayBuffer_TextureType_FINAL,		//RGBA8 internal format
+	RayBuffer_TextureType_GLOBALMATERIAL,	//RGBA32F Internal format
 	RayBuffer_TextureType_DEPTH,		//DEPTH32F_STENCIL8 Internal format
 	RayBuffer_TextureType_NUMTEXTURES	//The number of texture types
 };
+
+
 
 typedef struct RayBuffer
 {
 	GLuint fbo;						//Frame buffer object
 	GLuint textures[RayBuffer_TextureType_NUMTEXTURES];
+	cl_mem textureRefs[RayBuffer_TextureType_DEPTH];
 	int textureWidth, textureHeight;
+
+	unsigned int passType[3];	//Determines if GlobalMaterial information gets written in the LocalPass
+
 } RayBuffer;
 
 ///
@@ -50,6 +59,16 @@ void RayBuffer_Initialize(RayBuffer* rBuffer, unsigned int textureWidth, unsigne
 void RayBuffer_Free(RayBuffer* rBuffer);
 
 ///
+//Converts a texture type enum value to a string
+//
+//Parameters:
+//	type: The type to conver tot a string
+//
+//Returns:
+//	A pointer to a null terminated constant character array containing the string
+const char* RayBuffer_TextureTypeToString(enum RayBuffer_TextureType type);
+
+///
 //Clears the final texture of the ray buffer
 //
 //Parameters:
@@ -64,15 +83,20 @@ void RayBuffer_ClearTexture(RayBuffer* rBuffer, enum RayBuffer_TextureType type)
 void RayBuffer_BindForGeometryPass(RayBuffer* rBuffer);
 
 ///
-//Binds the Ray Buffer to be read/written from/to for the shadow pass by the PixelProjectionShadowShaderProgram
-//NOTE: DO NOT USE FOR RAY TRACER SHADOW KERNEL
+//Binds the ray buffer to be written to by the ray tracer shadow kernel program
+//
 //Parameters:
-//	rBuffer: A pointer to the ray buffer being bound for the shadow pass
-void RayBuffer_BindForShadowPass(RayBuffer* rBuffer);
+//	rBuffer: A pointer to the ray buffer to bind for kernel use
+//	event: A pointer to a cl_event which will be filled with an event tracking the progress of buffer binding
+void RayBuffer_BindForKernels(RayBuffer* rBuffer, cl_event* event);
 
 ///
-//Binds the ray buffer to be written to by the ray tracer shadow kernel program
-void RayBuffer_BindForShadowKernel();
+//Releases the ray buffer textures from openCL kernel use
+//
+//Parameters:
+//	rBuffer: A pointer to the ray buffer to release from kernel use
+//	event: A pointer to an event which will be tracking the progress of buffer release
+void RayBuffer_ReleaseFromKernels(RayBuffer* rBuffer, cl_event* event);
 
 ///
 //Binds the ray buffer to have it's stencil texture written to from the DeferredStencilShaderProgram
@@ -89,11 +113,11 @@ void RayBuffer_BindForStencilPass(RayBuffer* rBuffer);
 void RayBuffer_BindForLightPass(RayBuffer* rBuffer);
 
 ///
-//Binds the FrameBufferObject of the ray buffer to be read for the final pass
+//Binds the ray buffer for the local illumination pass
 //
 //Parameters:
-//	rBuffer: A pointer to the ray buffer being bound for the final pass
-void RayBuffer_BindForFinalPass(RayBuffer* rBuffer);
+//	rBuffer: A ointer to the ray buffer to bind
+void RayBuffer_BindForLocalPass(RayBuffer* rBuffer);
 
 ///
 //Allocates the necessary memory to hold the data contained in a texture image.

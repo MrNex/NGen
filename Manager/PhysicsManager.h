@@ -18,6 +18,7 @@
 #include "../GObject/GObject.h"
 #include "../Data/DynamicArray.h"
 #include "../Data/LinkedList.h"
+#include "../Data/MemoryPool.h"
 
 typedef struct PhysicsBuffer
 {
@@ -64,11 +65,25 @@ void PhysicsManager_AddGlobalAcceleration(Vector* acceleration);
 void PhysicsManager_Update(LinkedList* gameObjects);
 
 ///
+//Updates the physics manager referencing a memory pool of gameobjects in the simulation
+//
+//Parameters:
+//	pool: A pointer to the memory pool of gameobjects in the simulation
+void PhysicsManager_UpdateWithMemoryPool(MemoryPool* pool);
+
+///
 //Updates the Rigidbody components of all gameObjects
 //
 //Parameters:
 //	gameObjects: THe linked list of gameobjects to update their rigidBodies
 void PhysicsManager_UpdateBodies(LinkedList* gameObjects);
+
+///
+//Updates the Rigidbody components of all gameobjects contained in the memorypool
+//
+//Parameters:
+//	pool: The memory pool of gameobjects to have their rigidbodies updated
+void PhysicsManager_UpdateBodiesWithMemoryPool(MemoryPool* pool);
 
 ///
 //Applies all global forces to the given rigidbody
@@ -102,6 +117,13 @@ void PhysicsManager_UpdateRotationalPhysicsOfBody(RigidBody* body, float dt);
 //Parameters:
 //	gameObjects: the linked list of gameObjects to update their rigidbodies
 void PhysicsManager_UpdateObjects(LinkedList* gameObjects);
+
+///
+//Updates the FrameOfReference component of all gameObjects in a memory pool to match their rigidbodies
+//
+//Parameters:
+//	pool: A pointer to the memorypool of objects to update
+void PhysicsManager_UpdateObjectsWithMemoryPool(MemoryPool* pool);
 
 ///
 //Resolves all collisions in a linked list

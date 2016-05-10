@@ -1,5 +1,14 @@
 #include "GObject.h"
 
+#include "../Manager/ObjectManager.h"
+
+///
+//Replaces below function for memory pools
+unsigned int GObject_Request(void)
+{
+	return ObjectManager_RequestObject();
+}
+
 ///
 //Allocates memory for a new Game Object
 //
@@ -25,7 +34,8 @@ void GObject_Initialize(GObject* GO)
 	LinkedList_Initialize(GO->states);
 
 	GO->mesh = NULL;
-	GO->material = NULL;
+	GO->materialID = 0;
+	GO->colliderID = 0;
 	GO->body = NULL;
 	GO->collider = NULL;
 	GO->light = NULL;
@@ -48,16 +58,6 @@ void GObject_InitializeDeepCopy(GObject* copy, GObject* original)
 	LinkedList_Initialize(copy->states);
 
 	copy->mesh = original->mesh;
-
-	if(original->material != NULL)
-	{
-		copy->material = Material_Allocate();
-		Material_InitializeDeepCopy(copy->material, original->material);
-	}
-	else
-	{
-		copy->material = NULL;
-	}
 
 	if(original->collider != NULL)
 	{
@@ -101,6 +101,75 @@ void GObject_InitializeDeepCopy(GObject* copy, GObject* original)
 }
 
 ///
+//Replaces below function for memory pools
+void GObject_Release(unsigned int objID)
+{
+	ObjectManager_QueueReleaseObject(objID);
+}
+
+///
+//Frees all internal components of a GObject
+//WARNING: THIS SHOULD ONLY BE CALLED BY OBJECT MANAGER
+//
+//Parameters:
+//	objID: the ID of the object memory unit to free the members of
+void GObject_FreeMembers(unsigned int objID)
+{
+	GObject* GO = ObjectManager_LookupObject(objID);
+
+	//Free frame of reference
+	FrameOfReference_Free(GO->frameOfReference);
+
+	//Free all (if any) states
+	struct LinkedList_Node* current = GO->states->head;
+	struct LinkedList_Node* next = NULL;
+	State* currentState = NULL;
+
+	while(current != NULL)
+	{
+		next = current->next;
+		currentState = (State*)current->data;
+		//Free the state
+		//which frees the members
+		State_Free(currentState);
+		current = next;
+	}
+
+	//Free list of states
+	LinkedList_Free(GO->states);
+
+	//Free other components if gameobject has them
+
+	//One mesh might be shared by many objects, so we probably should leave
+	//The deletion of these to the AssetManager
+	//if(GO->mesh != NULL)
+		//Mesh_Free(GO->mesh);
+	//if(GO->texture != NULL)
+		//Texture_Free(GO->texture);
+	GO->colliderID = 0;
+	if(GO->materialID != 0)
+	{
+		Material_Free(GO->materialID);
+	}
+	if(GO->body != NULL)
+	{
+		RigidBody_Free(GO->body);
+	}
+	if(GO->collider != NULL)
+	{
+		Collider_Free(GO->collider);
+	}
+	if(GO->light != NULL)
+	{
+		PointLight_Free(GO->light);
+	}
+
+
+	//Very very very important to set the memory to 0 when finished!!!
+	memset(GO, 0, sizeof(GObject));
+}
+
+///
 //Frees all components of a GObject
 //
 //Parameters:
@@ -136,9 +205,9 @@ void GObject_Free(GObject* GO)
 		//Mesh_Free(GO->mesh);
 	//if(GO->texture != NULL)
 		//Texture_Free(GO->texture);
-	if(GO->material != NULL)
+	if(GO->materialID != 0)
 	{
-		Material_Free(GO->material);
+		Material_Free(GO->materialID);
 	}
 	if(GO->body != NULL)
 	{
@@ -198,6 +267,12 @@ void GObject_Update(GObject* GO)
 		currentState = (State*)current->data;
 		currentState->State_Update(GO, currentState);
 		current = next;
+	}
+
+	if(GO->collider != NULL)
+	{
+		GO->colliderID = GO->collider->data->sphereDataID;
+		GO->colliderType = GO->collider->type;
 	}
 }
 

@@ -21,7 +21,7 @@
 #include "../Manager/PhysicsManager.h"
 
 #include <stdio.h>
-
+#include <math.h>
 
 struct State_FirstPersonCamera_Members
 {
@@ -113,37 +113,46 @@ void State_FirstPersonCamera_Rotate(GObject* GO, State* state)
 
 	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
 
+	//If the player's mouse is locked
 	if(InputManager_GetInputBuffer().mouseLock)
 	{
+
+		
 		//Get members
 		struct State_FirstPersonCamera_Members* members = (struct State_FirstPersonCamera_Members*)state->members;
-
-		float dt = TimeManager_GetDeltaSec();
-
+		//Get the change in mouse position
 		int deltaMouseX = (InputManager_GetInputBuffer().mousePosition[0] - InputManager_GetInputBuffer().previousMousePosition[0]);
 		int deltaMouseY = (InputManager_GetInputBuffer().mousePosition[1] - InputManager_GetInputBuffer().previousMousePosition[1]);
 
-		Vector* axis = Vector_Allocate();
-		Vector_Initialize(axis, 3);
-
-		if (deltaMouseX != 0)
+		//If there is X rotation
+		if(deltaMouseX != 0)
 		{
-
-
-			axis->components[1] = 1.0f;
-			Camera_Rotate(cam, axis, members->rotationSpeed * deltaMouseX * dt);
-			axis->components[1] = 0.0f;
+			if(deltaMouseX > 10)
+			{
+				deltaMouseX = 10;
+			}
+			else if(deltaMouseX < -10)
+			{
+				deltaMouseX = -10;
+			}
+			//Rotate the camera
+			Camera_ChangeYaw(cam, (float)deltaMouseX * members->rotationSpeed);
 		}
-
-		if (deltaMouseY != 0)
+		//If there is Y rotation
+		if(deltaMouseY != 0)
 		{
-			axis->components[0] = 1.0f;
-
-			Camera_Rotate(cam, axis, members->rotationSpeed * deltaMouseY * dt);
-			axis->components[0] = 0.0f;
+			if(deltaMouseY > 10)
+			{
+				deltaMouseY = 10;
+			}
+			else if(deltaMouseY < -10)
+			{
+				deltaMouseY = -10;
+			}
+			//TODO: Prevent camera from looking "Too high"
+			//Rotate the camera
+			Camera_ChangePitch(cam, (float)deltaMouseY * members->rotationSpeed);
 		}
-
-		Vector_Free(axis);
 	}
 
 

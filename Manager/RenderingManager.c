@@ -1,14 +1,31 @@
+#if defined __linux__
+
+//Enable POSIX definitions (for timespec)
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif
+//#define _POSIX_C_SOURCE 1
+
+#include <time.h>
+
+#endif 
+
 #include "RenderingManager.h"
+
 
 #include <stdio.h>
 
 #include "../Compatibility/ProgramUniform.h"
 
 #include "AssetManager.h"
+#include "TimeManager.h"
 
 #include "../Render/ForwardRenderPipeline.h"
 #include "../Render/DeferredRenderPipeline.h"
 #include "../Render/RayTracerRenderPipeline.h"
+
 
 ///
 //Internals
@@ -70,6 +87,11 @@ void RenderingManager_Initialize(void)
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glPointSize(2.0f);
 	glLineWidth(2.0f);
+
+	int numAttachments;
+	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &numAttachments);
+
+	printf("\nThere are %d allowed attachments", numAttachments); 
 }
 
 ///
@@ -117,7 +139,9 @@ RenderingBuffer* RenderingManager_GetRenderingBuffer()
 void RenderingManager_Render(LinkedList* gameObjects)
 {
 	//Clear buffers
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//NOTE: THIS WAS NOT HERE BEFORE MORNING
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//Update the camera's view matrix
 	Camera_UpdateViewMatrix(renderingBuffer->camera);
@@ -245,6 +269,30 @@ void RenderingManager_Render(LinkedList* gameObjects)
 	//Start drawing threads on gpu
 	glFlush();
 	*/
+}
+
+///
+//Renders a memory pool of objects with the active rendering pipeline
+//Skips gameobjects which are uninitialized or do not have a mesh
+//
+//Parameters:
+//	memoryPool: A pointer to the memory pool of game objects to render
+void RenderingManager_RenderWithMemoryPool(MemoryPool* memoryPool)
+{
+	//Update the camera's view matrix
+	Camera_UpdateViewMatrix(renderingBuffer->camera);
+
+	renderingBuffer->renderPipelines[RenderingManager_Pipeline_RAYTRACER]->Render
+	(
+		renderingBuffer->renderPipelines[RenderingManager_Pipeline_RAYTRACER],
+		renderingBuffer,
+		memoryPool
+	);
+
+	//TimeManager_Update();
+	//TimeManager_Update();
+
+
 }
 
 ///

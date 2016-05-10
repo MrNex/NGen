@@ -3,9 +3,10 @@
 uniform sampler2D positionTexture;
 uniform sampler2D diffuseTexture;
 uniform sampler2D normalTexture;
-uniform sampler2D materialTexture;
+uniform sampler2D localMaterialTexture;
 uniform sampler2D specularTexture;
 uniform sampler2D shadowTexture;
+uniform sampler2D globalMaterialTexture;
 
 uniform vec3 viewPositionVector;
 
@@ -15,6 +16,17 @@ uniform vec3 lightColor;
 uniform vec3 lightDirection;
 uniform float ambientIntensity;
 uniform float diffuseIntensity;
+
+//TODO: Do this in a better way
+uniform bool isLocal;
+uniform bool isReflection;
+uniform bool isTransmission;
+
+layout (location = 0) out vec4 out_localColor;
+layout (location = 1) out vec4 out_reflectionColor;
+layout (location = 2) out vec4 out_transmissionColor;
+layout (location = 3) out vec3 out_globalMaterial;
+layout (location = 4) out vec3 out_transMaterial;
 
 ///
 //Calculates the effect of the directional light on the surface drawn in this fragment.
@@ -74,16 +86,27 @@ void main()
 	vec4 diffuseColor = texture(diffuseTexture, textureCoordinate);
 	vec3 worldNormal = texture(normalTexture, textureCoordinate).xyz;
 	worldNormal = normalize(worldNormal);
-	vec4 materialVector = texture(materialTexture, textureCoordinate);
+	vec4 materialVector = texture(localMaterialTexture, textureCoordinate);
 	vec4 specularColor = texture(specularTexture, textureCoordinate);
 	vec4 shadowVec = texture(shadowTexture, textureCoordinate);
+	vec3 globalMaterialVector = texture(globalMaterialTexture, textureCoordinate).xyz;
+
 	float shadow = shadowVec.r;
-	//shadowVec.a = 1.0f;
+	
+	vec4 surfaceColor = vec4(0.0f);
 
 	vec3 toViewer = normalize(viewPositionVector - worldPos);
 
-	vec4 surfaceColor = CalculateDirectionalLight(worldPos, worldNormal, toViewer, materialVector, diffuseColor, specularColor, shadow);
+	surfaceColor = CalculateDirectionalLight(worldPos, worldNormal, toViewer, materialVector, diffuseColor, specularColor, shadow);
 
 
-	gl_FragColor = surfaceColor;
+	//gl_FragColor = surfaceColor;
+	//globalMaterialVector = vec3(1.0f, 0.0f, 0.0f);
+
+	out_localColor = surfaceColor * float(isLocal);
+	out_reflectionColor = surfaceColor * float(isReflection);
+	out_transmissionColor = surfaceColor * float(isTransmission);
+	out_globalMaterial = globalMaterialVector * float(isLocal);
+	out_transMaterial = globalMaterialVector * float(isTransmission);
+
 }

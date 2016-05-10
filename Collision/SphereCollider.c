@@ -19,7 +19,8 @@ int SphereCollider_AllocateData()
 	//struct ColliderData_Sphere* colliderData = (struct ColliderData_Sphere*)malloc(sizeof(struct ColliderData_Sphere));
 	int id = MemoryPool_RequestID(collisionBuffer->sphereData);
 	int wID = MemoryPool_RequestID(collisionBuffer->worldSphereData);
-	if(id != wID)
+	int tID = MemoryPool_RequestID(collisionBuffer->sphereTransformations);
+	if(id != wID || id != tID)
 	{
 		printf("Determinism error: SphereCollider_AllocateData.\nid:\t%d\trID:\t%d\n", id, wID);
 	}
@@ -92,6 +93,7 @@ void SphereCollider_Update(const unsigned int sphereDataID, const FrameOfReferen
 {
 	struct ColliderData_Sphere* sphereData = MemoryPool_RequestAddress(collisionBuffer->sphereData, sphereDataID);
 	struct ColliderData_Sphere* worldSphereData = MemoryPool_RequestAddress(collisionBuffer->worldSphereData, sphereDataID);
+	float* transform = MemoryPool_RequestAddress(collisionBuffer->sphereTransformations, sphereDataID);
 
 	Vector worldSphere;			//Points to [worldSphereData.x, worldSphereData.y, worldSphereData.z]
 	worldSphere.dimension = 3;
@@ -110,4 +112,18 @@ void SphereCollider_Update(const unsigned int sphereDataID, const FrameOfReferen
 	worldSphereData->z += frame->position->components[2];
 
 	worldSphereData->radius = SphereCollider_GetScaledRadius(sphereData, frame);
+
+	Matrix m;
+	m.numRows = 4;
+	m.numColumns = 4;
+	m.components = transform;
+
+	for(int i = 0; i < 3; i++)
+	{
+		for(int j = 0; j < 3; j++)
+		{
+			*Matrix_Index(&m, i, j) = Matrix_GetIndex(frame->rotation, i, j);
+		}
+		*Matrix_Index(&m, i, 3) = frame->position->components[i];
+	}
 }

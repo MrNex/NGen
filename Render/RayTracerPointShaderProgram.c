@@ -195,7 +195,7 @@ void RayTracerPointShaderProgram_SetConstantUniforms(ShaderProgram* prog)
 	ProgramUniform1i(prog->shaderProgramID, members->positionTextureLocation, RayBuffer_TextureType_POSITION);
 	ProgramUniform1i(prog->shaderProgramID, members->diffuseTextureLocation, RayBuffer_TextureType_DIFFUSE);
 	ProgramUniform1i(prog->shaderProgramID, members->normalTextureLocation, RayBuffer_TextureType_NORMAL);
-	ProgramUniform1i(prog->shaderProgramID, members->materialTextureLocation, RayBuffer_TextureType_MATERIAL);
+	ProgramUniform1i(prog->shaderProgramID, members->materialTextureLocation, RayBuffer_TextureType_LOCALMATERIAL);
 	ProgramUniform1i(prog->shaderProgramID, members->specularTextureLocation, RayBuffer_TextureType_SPECULAR);
 	ProgramUniform1i(prog->shaderProgramID, members->shadowTextureLocation, RayBuffer_TextureType_SHADOW);
 }

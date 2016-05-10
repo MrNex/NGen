@@ -57,6 +57,14 @@ void RenderingManager_SetCameraUniforms(void);
 void RenderingManager_Render(LinkedList* gameObjects);
 
 ///
+//Renders a memory pool of objects with the active rendering pipeline
+//Skips gameobjects which are uninitialized or do not have a mesh
+//
+//Parameters:
+//	memoryPool: A pointer to the memory pool of game objects to render
+void RenderingManager_RenderWithMemoryPool(MemoryPool* memoryPool);
+
+///
 //Renders a list of gameobjects using the Deferred Rendering pipeline
 //as their individual meshes. Skips any gameobject which does not have
 //a mesh.

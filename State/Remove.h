@@ -10,7 +10,7 @@
 //Parameters:
 //	s: The state to initialize as a remove state
 //	seconds: The number of seconds until removal of this object from the simulation
-void State_Remove_Initialize(State* state, float seconds);
+void State_Remove_Initialize(State* state, float seconds, unsigned int objID);
 
 ///
 //Frees memory allocated by a remove state

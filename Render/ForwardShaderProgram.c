@@ -229,9 +229,9 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 		modelViewProjection.components
 	);
 
-	if(gameObj->material != NULL)
-	{
-		Material* material = gameObj->material;
+	//if(gameObj->material != NULL)
+	//{
+		Material* material = MemoryPool_RequestAddress(assetBuffer->materialPool, gameObj->materialID);
 
 		//Color matrix
 		ProgramUniformMatrix4fv
@@ -240,7 +240,7 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 			members->colorMatrixLocation,
 			1,
 			GL_TRUE,
-			material->colorMatrix->components
+			material->colorMatrix
 		);
 
 		//Tile vector
@@ -249,14 +249,16 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 			prog->shaderProgramID,
 			members->tileLocation,
 			1,
-			material->tile->components
+			material->tile
 		);
 
 		//Texture
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, material->texture->textureID);
+		GLuint textureID = AssetManager_LookupTextureByID(material->texturePoolID);
+		glBindTexture(GL_TEXTURE_2D, textureID);
 		ProgramUniform1i(prog->shaderProgramID, members->textureLocation, 0);
-	}
+	//}
+	/*
 	else
 	{
 		static float defaultTile[2] = {1.0f, 1.0f};
@@ -289,11 +291,12 @@ static void ForwardShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera
 
 		//Texture
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, AssetManager_LookupTexture("Test")->textureID);
+		glBindTexture(GL_TEXTURE_2D, AssetManager_LookupTexture("Test"));
 		ProgramUniform1i(prog->shaderProgramID, members->textureLocation, 0);
 
 
 	}
+	*/
 	
 }
 

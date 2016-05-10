@@ -653,8 +653,8 @@ void State_ParkourController_Shoot(GObject* obj, State* state)
 			//Set the appearance
 			bullet->mesh = AssetManager_LookupMesh("Cube");
 			//bullet->texture = AssetManager_LookupTexture("White");
-			bullet->material = Material_Allocate();
-			Material_Initialize(bullet->material, AssetManager_LookupTexture("Jacob"));
+			bullet->materialID = Material_Allocate();
+			Material_Initialize(bullet->materialID, AssetManager_LookupTexture("Jacob"));
 			//*Matrix_Index(bullet->material->colorMatrix, 1, 1) = 0.0f;
 			//*Matrix_Index(bullet->material->colorMatrix, 2, 2) = 0.0f;
 
@@ -694,7 +694,7 @@ void State_ParkourController_Shoot(GObject* obj, State* state)
 
 			//Add the remove state
 			State* state = State_Allocate();
-			State_Remove_Initialize(state, 7.0f);
+			State_Remove_Initialize(state, 7.0f, 0);
 			GObject_AddState(bullet, state);
 
 			//Add the bullet to the world

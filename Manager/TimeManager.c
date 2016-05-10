@@ -210,6 +210,13 @@ float TimeManager_GetDeltaSec(void)
 #ifdef linux
 	float dt = (float)timeBuffer->deltaTime.tv_sec;
 	dt += (float)timeBuffer->deltaTime.tv_nsec / 1000000000.0f;
+
+	//TODO: Remove constant dt
+	//return 0.00002f;
+	if(dt > 0.01f)
+	{
+		dt = 0.01f;
+	}
 	return dt;	
 #endif
 }

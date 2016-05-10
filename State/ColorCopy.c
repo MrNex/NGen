@@ -1,4 +1,5 @@
 #include "ColorCopy.h"
+#include "../Manager/AssetManager.h"
 
 struct State_ColorCopy_Members
 {
@@ -31,12 +32,13 @@ void State_ColorCopy_Initialize(State* state, Matrix* m)
 void State_ColorCopy_Update(GObject* obj, State* state)
 {
 
+	Material* material = MemoryPool_RequestAddress(assetBuffer->materialPool, obj->materialID);
 	struct State_ColorCopy_Members* members = (struct State_ColorCopy_Members*)state->members;
 	for(int i = 0; i < 3; i++)
 	{
 		for(int j = 0; j < 3; j++)
 		{
-			*Matrix_Index(obj->material->colorMatrix, i, j) = Matrix_GetIndex(members->copyMatrix, i, j);
+			*Matrix_IndexArray(material->colorMatrix, i, j, 4) = Matrix_GetIndex(members->copyMatrix, i, j);
 		}
 	}
 }

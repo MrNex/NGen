@@ -953,22 +953,11 @@ void CollisionManager_TestAABBCollision(struct Collision* dest, GObject* obj1, F
 	struct ColliderData_AABB* AABB1 = Collider_GetColliderDataWorldSpace(obj1->collider);
 	struct ColliderData_AABB* AABB2 = Collider_GetColliderDataWorldSpace(obj2->collider);
 
-	/*
-	struct ColliderData_AABB scaledAABB1;
-	struct ColliderData_AABB scaledAABB2;
-
-	AABBCollider_GetScaledDimensions(&scaledAABB1, AABB1, obj1Frame);
-	AABBCollider_GetScaledDimensions(&scaledAABB2, AABB2, obj2Frame);
-	*/
-
 	//If there is a collision, there will be overlap of the opposite bounds of the bounding box on each axi
-
-
 	float minOverlap;
 	int minIndex = 0;
 
 	//If any axis does not contain any overlap, there is no collision
-	float overlaps[3] = { 0.0f };
 	for(int i = 0; i < 3; i++)
 	{
 		if(AABB1->min[i] <= AABB2->max[i] && 
@@ -976,8 +965,8 @@ void CollisionManager_TestAABBCollision(struct Collision* dest, GObject* obj1, F
 		{
 			float candidate = AABB1->min[i] < AABB2->min[i] ?
 				AABB2->min[i] - AABB1->max[i] :
-				AABB2->max[i] - AABB1->min[i];
-			if(i == 0 || fabs(candidate) < minOverlap)
+				AABB1->min[i] - AABB2->max[i];
+			if(i == 0 || fabs(candidate) < fabs(minOverlap))
 			{
 				minOverlap = candidate;
 				minIndex = i;
@@ -994,115 +983,18 @@ void CollisionManager_TestAABBCollision(struct Collision* dest, GObject* obj1, F
 		}
 	}
 
-	/*
-	//X Axis test
-	//Get overlap of Right face of obj1 with left face of obj2
-	float overlapRight = (obj1Frame->position->components[0] + AABB1->centroid->components[0] + (scaledAABB1.width / 2.0f)) - 
-		((obj2Frame->position->components[0] + AABB2->centroid->components[0]) - (scaledAABB2.width / 2.0f));
-	if(overlapRight < 0.0f)
-	{
-		//No collision, set the collision attributes to null
-		dest->overlap = 0.0f;
-		dest->obj1 = NULL;
-		dest->obj2 = NULL;
-		dest->obj1Frame = NULL;
-		dest->obj2Frame = NULL;
-
-		return;
-	}
-
-	//Get overlap of left face of obj1 with right face of obj2
-	float overlapLeft = (obj2Frame->position->components[0] + AABB2->centroid->components[0] + (scaledAABB2.width / 2.0f)) - 
-		((obj1Frame->position->components[0] + AABB1->centroid->components[0]) - (scaledAABB1.width / 2.0f));
-	if(overlapLeft < 0.0f)
-	{
-		//No collision, set the collision attributes to null
-		dest->overlap = 0.0f;
-		dest->obj1 = NULL;
-		dest->obj2 = NULL;
-		dest->obj1Frame = NULL;
-		dest->obj2Frame = NULL;
-
-		return;
-	}
-
-	//Y Axis Tests
-	//Get overlap of top face of obj1 with bottom face of obj2
-	float overlapTop = (obj1Frame->position->components[1] + AABB1->centroid->components[1] + (scaledAABB1.height / 2.0f)) - 
-		((obj2Frame->position->components[1] + AABB2->centroid->components[1]) - (scaledAABB2.height / 2.0f));
-	if(overlapTop < 0.0f)
-	{
-		//No collision, set the collision attributes to null
-		dest->overlap = 0.0f;
-		dest->obj1 = NULL;
-		dest->obj2 = NULL;
-		dest->obj1Frame = NULL;
-		dest->obj2Frame = NULL;
-
-		return;
-	}
-
-	//Get overlap of bottom face of obj1 with top face of obj2
-	float overlapBottom = (obj2Frame->position->components[1] + AABB2->centroid->components[1] + (scaledAABB2.height / 2.0f)) - 
-		((obj1Frame->position->components[1] + AABB1->centroid->components[1]) - (scaledAABB1.height / 2.0f));
-	if(overlapBottom < 0.0f)
-	{
-		//No collision, set the collision attributes to null
-		dest->overlap = 0.0f;
-		dest->obj1 = NULL;
-		dest->obj2 = NULL;
-		dest->obj1Frame = NULL;
-		dest->obj2Frame = NULL;
-
-		return;
-	}
-
-	//Get overlap of front face of obj1 with back face of obj2
-	float overlapFront = (obj1Frame->position->components[2] + AABB1->centroid->components[2] + (scaledAABB1.depth / 2.0f)) - 
-		((obj2Frame->position->components[2] + AABB2->centroid->components[2]) - (scaledAABB2.depth / 2.0f));
-	if(overlapFront < 0.0f)
-	{
-		//No collision, set the collision attributes to null
-		dest->overlap = 0.0f;
-		dest->obj1 = NULL;
-		dest->obj2 = NULL;
-		dest->obj1Frame = NULL;
-		dest->obj2Frame = NULL;
-
-		return;
-	}
-
-	//Get overlap of back face of obj1 with front face of obj2
-	float overlapBack = (obj2Frame->position->components[2] + AABB2->centroid->components[2] + (scaledAABB2.depth / 2.0f)) - ((obj1Frame->position->components[2] + AABB1->centroid->components[2]) - (scaledAABB1.depth / 2.0f));
-	if(overlapBack < 0.0f)
-	{
-		//No collision, set the collision attributes to null
-		dest->overlap = 0.0f;
-		dest->obj1 = NULL;
-		dest->obj2 = NULL;
-		dest->obj1Frame = NULL;
-		dest->obj2Frame = NULL;
-
-		return;
-	}
-	*/
 
 
-	//If code reaches this point, there is a collision. 
-	//The minimum translation vector ends up being a face normal of obj1
-	//By convention the MTV must ALWAYS point towards collision->obj1. Therefore,
-	//We must assign obj2 to collision->obj1, and obj1 to collision->obj2. This way, the face normal of collision->obj2
-	//(And therefore the MTV) will be pointing towards obj1.
-	dest->obj1 = obj2;
-	dest->obj1Frame = obj2Frame;
+	dest->obj1 = obj1;
+	dest->obj1Frame = obj1Frame;
 
-	dest->obj2 = obj1;
-	dest->obj2Frame = obj1Frame;
+	dest->obj2 = obj2;
+	dest->obj2Frame = obj2Frame;
 
 	//We must determine the minimum translation vector.
 	//The MTV will be the axis with the minimum overlap
 	Vector_Copy(dest->minimumTranslationVector, &Vector_ZERO);
-	
+
 	if(minOverlap < 0.0f)
 	{
 		dest->minimumTranslationVector->components[minIndex] = -1.0f;
@@ -1115,49 +1007,6 @@ void CollisionManager_TestAABBCollision(struct Collision* dest, GObject* obj1, F
 	dest->overlap = fabs(minOverlap);
 
 
-	/*
-	//Righ face
-	dest->overlap = overlapRight;
-	Vector_Copy(dest->minimumTranslationVector, &Vector_E1);
-
-	//Left Face
-	if(overlapLeft < dest->overlap)
-	{
-		dest->overlap = overlapLeft;
-		Vector_Copy(dest->minimumTranslationVector, &Vector_E1);
-		Vector_Scale(dest->minimumTranslationVector, -1.0f);
-	}
-
-	//Top Face
-	if(overlapTop < dest->overlap)
-	{
-		dest->overlap = overlapTop;
-		Vector_Copy(dest->minimumTranslationVector, &Vector_E2);
-	}
-
-	//Bottom face
-	if(overlapBottom < dest->overlap)
-	{
-		dest->overlap = overlapBottom;
-		Vector_Copy(dest->minimumTranslationVector, &Vector_E2);
-		Vector_Scale(dest->minimumTranslationVector, -1.0f);
-	}
-
-	//Front face
-	if(overlapFront < dest->overlap)
-	{
-		dest->overlap = overlapFront;
-		Vector_Copy(dest->minimumTranslationVector, &Vector_E3);
-	}
-
-	//Back face
-	if(overlapBack < dest->overlap)
-	{
-		dest->overlap = overlapBack;
-		Vector_Copy(dest->minimumTranslationVector, &Vector_E3);
-		Vector_Scale(dest->minimumTranslationVector, -1.0f);
-	}
-	*/
 }
 
 ///
@@ -1751,8 +1600,15 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 	//struct ColliderData_Sphere* sphere = sphereObj->collider->data->sphereData;
 
 	struct ColliderData_ConvexHull* convexHull = Collider_GetColliderData(convexObj->collider);
-	
 	struct ColliderData_Sphere* sphere = Collider_GetColliderData(sphereObj->collider);
+	struct ColliderData_Sphere* worldSphere = Collider_GetColliderDataWorldSpace(sphereObj->collider);
+
+	Vector spherePos;
+	Vector_INIT_ON_STACK(spherePos, 3);
+
+	spherePos.components[0] = worldSphere->x;
+	spherePos.components[1] = worldSphere->y;
+	spherePos.components[2] = worldSphere->z;
 
 	//Create an array of pointers to vectors to hold the oriented points and axes of the convex hull collider
 	Vector** orientedPoints = (Vector**)malloc(sizeof(Vector*) * convexHull->points->size);
@@ -1774,7 +1630,7 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 	ConvexHullCollider_GetOrientedAxes(orientedAxes, convexHull, convexFoR);
 
 	//Get the scaled radius of the sphere
-	float scaledRadius = SphereCollider_GetScaledRadius(sphere, sphereFoR);
+	float scaledRadius = worldSphere->radius;//SphereCollider_GetScaledRadius(sphere, sphereFoR);
 
 	//Create a list of candidate faces for the collision
 	DynamicArray* candidates = DynamicArray_Allocate();
@@ -1793,7 +1649,7 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 		vertexIndex = *(int*)DynamicArray_Index(face->indicesOnFace, i);
 		vertex = orientedPoints[vertexIndex];
 
-		Vector_Subtract(&vertexToCenter, sphereFoR->position, vertex);
+		Vector_Subtract(&vertexToCenter, &spherePos, vertex);
 
 		currentDistance = fabs(Vector_DotProduct(orientedAxes[i], &vertexToCenter));
 
@@ -1820,17 +1676,19 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 	Vector closestPointOnFace;		//Closest Point on face to sphere's center
 	Vector_INIT_ON_STACK(closestPointOnFace, 3);
 
+	unsigned char ranOnce = 0;
 	float smallestDist = 0.0f;
 
 	for(unsigned int i = 0; i < candidates->size; i++)
 	{
+		ranOnce = 1;
 		int index = *(int*)DynamicArray_Index(candidates, i);
 		face = *(struct ConvexHullCollider_Face**)DynamicArray_Index(convexHull->faces, index);
 		
 		//Determine if the projection of the sphere's center onto the plane in which the face lies, lies inside the face
-		Vector_GetProjection(&sphereProj, sphereFoR->position, face->normal);
+		Vector_GetProjection(&sphereProj, &spherePos, face->normal);
 		Vector_Scale(&sphereProj, -1.0f);
-		Vector_Increment(&sphereProj, sphereFoR->position);
+		Vector_Increment(&sphereProj, &spherePos);
 		//Now we have the projection if the plane went through the origin, but that is not a guarantee. So we must find the offset in the direction
 		//Along the plane normal which the plane lies to find the actual projection.
 
@@ -1940,13 +1798,13 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 		if(i == 0)
 		{
 			Vector_Copy(&closestPointOnPoly, &closestPointOnFace);
-			Vector_Subtract(&distance, sphereFoR->position, &closestPointOnPoly);
+			Vector_Subtract(&distance, &spherePos, &closestPointOnPoly);
 			smallestDist = Vector_GetMag(&distance);
 		}
 		else
 		{
 
-			Vector_Subtract(&distance, sphereFoR->position, &closestPointOnFace);
+			Vector_Subtract(&distance, &spherePos, &closestPointOnFace);
 			float dist = Vector_GetMag(&distance);
 			if(dist < smallestDist)
 			{
@@ -1972,7 +1830,7 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 	DynamicArray_Free(candidates);
 
 	//Determine if the closest point we found on the convex hull is contained within the sphere
-	if(smallestDist > scaledRadius)
+	if(smallestDist > scaledRadius || !ranOnce)
 	{
 		//If the distance from the closest point to the sphere's center is greater than the scaled radius there must not be a collision
 		//If there is no collision set the collision attributes to 0.
@@ -1992,7 +1850,7 @@ void CollisionManager_TestConvexSphereCollision(struct Collision* dest, GObject*
 	dest->obj2 = sphereObj;
 	dest->obj2Frame = sphereFoR;
 
-	Vector_Subtract(dest->minimumTranslationVector, &closestPointOnPoly, sphereFoR->position);
+	Vector_Subtract(dest->minimumTranslationVector, &closestPointOnPoly, &spherePos);
 	Vector_Normalize(dest->minimumTranslationVector);
 }
 
@@ -2565,13 +2423,23 @@ static void CollisionManager_InitializeBuffer(CollisionBuffer* buffer)
 	buffer->worldSphereData = MemoryPool_Allocate();
 	MemoryPool_Initialize(buffer->worldSphereData, sizeof(struct ColliderData_Sphere));
 
+	buffer->sphereTransformations = MemoryPool_Allocate();
+	MemoryPool_Initialize(buffer->sphereTransformations, sizeof(float) * 16);
+
+	//Create default sphere located at origin with radius 0
+
+//	unsigned int transformID = SphereCollider_AllocateData();
+//	float* mat = MemoryPool_RequestAddress(buffer->sphereTransformations, transformID);
+//	Matrix_ToIdentityArray(mat, 4);
+
 	buffer->aabbData = MemoryPool_Allocate();
 	MemoryPool_Initialize(buffer->aabbData, sizeof(struct ColliderData_AABB));
 
 	buffer->worldAABBData = MemoryPool_Allocate();
 	MemoryPool_Initialize(buffer->worldAABBData, sizeof(struct ColliderData_AABB));
 
-
+	//Create default AABB located at origin with dimensions of length 0
+	//AABBCollider_AllocateData();
 }
 
 
@@ -2596,6 +2464,7 @@ static void CollisionManager_FreeBuffer(CollisionBuffer* buffer)
 
 	MemoryPool_Free(buffer->sphereData);
 	MemoryPool_Free(buffer->worldSphereData);
+	MemoryPool_Free(buffer->sphereTransformations);
 
 	MemoryPool_Free(buffer->aabbData);
 	MemoryPool_Free(buffer->worldAABBData);

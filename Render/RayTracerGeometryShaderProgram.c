@@ -16,7 +16,8 @@ typedef struct RayTracerGeometryShaderProgram_Members
 	GLint colorMatrixLocation;
 	GLint tileLocation;
 
-	GLint materialLocation;
+	GLint localMaterialLocation;
+	GLint globalMaterialLocation;
 	GLint specularColorLocation;
 } RayTracerGeometryShaderProgram_Members;
 
@@ -61,7 +62,7 @@ static void RayTracerGeometryShaderProgram_SetConstantUniforms(ShaderProgram* pr
 //	prog: A pointer to the raytracer geometry shader program to set the variable uniforms of
 //	cam: A pointer to the active camera containing information needed to calculate the uniforms
 //	gameObj: A pointer to the GObject containing the information needed for the uniforms
-static void RayTracerGeometryShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera* cam, GObject* gameObj);
+static void RayTracerGeometryShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera* cam, GObject* gameObj, unsigned int objID);
 
 
 ///
@@ -72,6 +73,15 @@ static void RayTracerGeometryShaderProgram_SetVariableUniforms(ShaderProgram* pr
 //	buffer: A pointer to the rendering buffer to render with
 //	gameObjects: A pointer to a linked list containing GObjects to be rendered
 static void RayTracerGeometryShaderProgram_Render(ShaderProgram* prog, RenderingBuffer* buffer, LinkedList* gameObjects);
+
+///
+//Renders a memory pool of GObjects to the active frame buffer object using a raytracer geometry shader program
+//
+//Parameters:
+//	prog: A pointer to the RayTracerGeometryShaderProgram which will be rendering the objects
+//	buffer: A pointer to the rendering buffer to render with
+//	pool: A pointer to the memory pool containing the GObjects to be rendered
+static void RayTracerGeometryShaderProgram_RenderWithMemoryPool(ShaderProgram* prog, RenderingBuffer* buffer, MemoryPool* pool);
 
 ///
 //Function Definitions
@@ -90,7 +100,8 @@ void RayTracerGeometryShaderProgram_Initialize(ShaderProgram* prog)
 	RayTracerGeometryShaderProgram_InitializeMembers(prog);
 
 	prog->FreeMembers = RayTracerGeometryShaderProgram_FreeMembers;
-	prog->Render = (ShaderProgram_RenderFunc)RayTracerGeometryShaderProgram_Render;	
+	//prog->Render = (ShaderProgram_RenderFunc)RayTracerGeometryShaderProgram_Render;	
+	prog->Render = (ShaderProgram_RenderFunc)RayTracerGeometryShaderProgram_RenderWithMemoryPool;
 	
 }
 
@@ -122,7 +133,8 @@ static void RayTracerGeometryShaderProgram_InitializeMembers(ShaderProgram* prog
 	members->colorMatrixLocation = glGetUniformLocation(prog->shaderProgramID, "colorMatrix");
 	members->tileLocation = glGetUniformLocation(prog->shaderProgramID, "tileVector");
 
-	members->materialLocation = glGetUniformLocation(prog->shaderProgramID, "materialVector");
+	members->localMaterialLocation = glGetUniformLocation(prog->shaderProgramID, "localMaterialVector");
+	members->globalMaterialLocation = glGetUniformLocation(prog->shaderProgramID, "globalMaterialVector");
 	members->specularColorLocation = glGetUniformLocation(prog->shaderProgramID, "specularColorVector");
 
 	glUseProgram(0);
@@ -160,7 +172,7 @@ static void RayTracerGeometryShaderProgram_SetConstantUniforms(ShaderProgram* pr
 //	prog: A pointer to the raytracer geometry shader program to set the variable uniforms of
 //	cam: A pointer to the active camera containing information needed to calculate the uniforms
 //	gameObj: A pointer to the GObject containing the information needed for the uniforms
-static void RayTracerGeometryShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera* cam, GObject* gameObj)
+static void RayTracerGeometryShaderProgram_SetVariableUniforms(ShaderProgram* prog, Camera* cam, GObject* gameObj, unsigned int objID)
 {
 	RayTracerGeometryShaderProgram_Members* members = prog->members;
 	
@@ -195,129 +207,70 @@ static void RayTracerGeometryShaderProgram_SetVariableUniforms(ShaderProgram* pr
 		modelViewProjection.components
 	);
 
-	if(gameObj->material != NULL)
+	Material* material = MemoryPool_RequestAddress(assetBuffer->materialPool, gameObj->materialID);
+	//Color matrix
+	ProgramUniformMatrix4fv
+	(
+		prog->shaderProgramID,
+		members->colorMatrixLocation,
+		1,
+		GL_TRUE,
+		material->colorMatrix
+	);
+	//Tile vector
+	ProgramUniform2fv
+	(
+		prog->shaderProgramID,
+		members->tileLocation,
+		1,
+		material->tile
+	);
+
+	float localMaterialVector[4] = 
 	{
-		Material* material = gameObj->material;
+		material->ambientCoefficient,
+		material->diffuseCoefficient,
+		material->specularCoefficient,
+		(float)objID
+	};
 
-		//Color matrix
-		ProgramUniformMatrix4fv
-		(
-			prog->shaderProgramID,
-			members->colorMatrixLocation,
-			1,
-			GL_TRUE,
-			material->colorMatrix->components
-		);
+	ProgramUniform4fv
+	(
+		prog->shaderProgramID,
+		members->localMaterialLocation,
+		1,
+		localMaterialVector
+	);
 
-		//Tile vector
-		ProgramUniform2fv
-		(
-			prog->shaderProgramID,
-			members->tileLocation,
-			1,
-			material->tile->components
-		);
-
-		float materialVector[4] = 
-		{
-			material->ambientCoefficient,
-			material->diffuseCoefficient,
-			material->specularCoefficient,
-			material->specularPower
-		};
-
-		ProgramUniform4fv
-		(
-			prog->shaderProgramID,
-			members->materialLocation,
-			1,
-			materialVector
-		);
-
-		ProgramUniform4fv
-		(
-			prog->shaderProgramID,
-			members->specularColorLocation,
-			1,
-			material->specularColor->components
-		);
-
-		//Texture
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, material->texture->textureID);
-		ProgramUniform1i(prog->shaderProgramID, members->textureLocation, 0);
-	}
-	else
+	float globalMaterialVector[4] = 
 	{
-		static float defaultTile[2] = {1.0f, 1.0f};
-		static float defaultColorMatrix[16] = 
-		{
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f
-		};
-		
-		//Color matrix
-		ProgramUniformMatrix4fv
-		(
-			prog->shaderProgramID,
-			members->colorMatrixLocation,
-			1,
-			GL_TRUE,
-			defaultColorMatrix
-		);
+		material->localCoefficient,
+		material->reflectedCoefficient,
+		material->transmittedCoefficient,
+		material->indexOfRefraction
+	};
 
-		//Tile vector
-		ProgramUniform2fv
-		(
-			prog->shaderProgramID,
-			members->tileLocation,
-			1,
-			defaultTile
-		);
+	ProgramUniform4fv
+	(
+		prog->shaderProgramID,
+		members->globalMaterialLocation,
+		1,
+		globalMaterialVector
+	);
 
-		float materialVector[4] = 
-		{
-			0.2f,
-			0.4f,
-			0.4f,
-			1.0f
-		};
+	ProgramUniform4fv
+	(
+		prog->shaderProgramID,
+		members->specularColorLocation,
+		1,
+		material->specularColor
+	);
 
-		ProgramUniform4fv
-		(
-			prog->shaderProgramID,
-			members->materialLocation,
-			1,
-			materialVector
-		);
-
-		float specularColorVector[4] = 
-		{
-			1.0f,
-			1.0f,
-			1.0f,
-			1.0f
-		};
-
-		ProgramUniform4fv
-		(
-			prog->shaderProgramID,
-			members->specularColorLocation,
-			1,
-			specularColorVector
-		);
-
-
-
-		//Texture
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, AssetManager_LookupTexture("Test")->textureID);
-		ProgramUniform1i(prog->shaderProgramID, members->textureLocation, 0);
-
-
-	}
+	//Texture
+	glActiveTexture(GL_TEXTURE0);
+	GLuint textureID = AssetManager_LookupTextureByID(material->texturePoolID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	ProgramUniform1i(prog->shaderProgramID, members->textureLocation, 0);
 }
 
 
@@ -347,11 +300,43 @@ static void RayTracerGeometryShaderProgram_Render(ShaderProgram* prog, Rendering
 		gameObj = (GObject*)current->data;
 		if(gameObj->mesh != NULL)
 		{
-			RayTracerGeometryShaderProgram_SetVariableUniforms(prog,  buffer->camera, gameObj);
+			//RayTracerGeometryShaderProgram_SetVariableUniforms(prog,  buffer->camera, gameObj);
 			Mesh_Render(gameObj->mesh, gameObj->mesh->primitive);
 		}
 		current = current->next;
 	}
 	
 	//glDisable
+}
+
+///
+//Renders a memory pool of GObjects to the active frame buffer object using a raytracer geometry shader program
+//
+//Parameters:
+//	prog: A pointer to the RayTracerGeometryShaderProgram which will be rendering the objects
+//	buffer: A pointer to the rendering buffer to render with
+//	pool: A pointer to the memory pool containing the GObjects to be rendered
+static void RayTracerGeometryShaderProgram_RenderWithMemoryPool(ShaderProgram* prog, RenderingBuffer* buffer, MemoryPool* pool)
+{
+	glUseProgram(prog->shaderProgramID);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	RayTracerGeometryShaderProgram_SetConstantUniforms(prog, buffer);
+
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_FRONT);
+
+	//struct LinkedList_Node* current = gameObjects->head;
+	GObject* gameObj = NULL;
+	//while(current != NULL)
+	for(unsigned int i = 0; i < pool->pool->capacity; i++)
+	{
+		gameObj = (GObject*)MemoryPool_RequestAddress(pool, i);
+		if(gameObj->mesh != NULL)
+		{
+			RayTracerGeometryShaderProgram_SetVariableUniforms(prog,  buffer->camera, gameObj, i);
+			Mesh_Render(gameObj->mesh, gameObj->mesh->primitive);
+		}
+	}
 }

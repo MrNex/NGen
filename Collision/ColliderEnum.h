@@ -4,7 +4,7 @@
 //Dictates the type of a collider
 typedef enum
 {
-        COLLIDER_SPHERE,
+        COLLIDER_SPHERE = 1,
         COLLIDER_AABB,
         COLLIDER_CONVEXHULL,
 	COLLIDER_RAY

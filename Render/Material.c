@@ -1,14 +1,18 @@
 #include "Material.h"
 
+#include "../Manager/AssetManager.h"
+
 ///
 //Allocates memory for a new material
 //
 //Returns:
-//	A pointer to the newly allocated material
-Material* Material_Allocate(void)
+//	ID of newly allocated material
+unsigned int Material_Allocate(void)
 {
-	Material* mat = (Material*)malloc(sizeof(Material));
-	return mat;
+	unsigned int mID = MemoryPool_RequestID(assetBuffer->materialPool);
+	
+	//Material* mat = (Material*)malloc(sizeof(Material));
+	return mID;
 }
 
 ///
@@ -17,6 +21,7 @@ Material* Material_Allocate(void)
 //Parameters:
 //	mat: A pointer to the material to initialize
 //	t: A pointer to the texture which this material represents an instance of
+/*
 void Material_Initialize(Material* mat, Texture* t)
 {
 	//Allocate & Initialize color matrix
@@ -41,41 +46,56 @@ void Material_Initialize(Material* mat, Texture* t)
 	mat->diffuseCoefficient = 0.6f;
 	mat->ambientCoefficient = 0.2f;
 }
+*/
 
 ///
-//Initializes a deep copy of a Material
-//This means any pointers will point to Newly Allocated instances of identical memory
-//NOTE: Does not deep copy texture (points to same location as original)
+//Initializes a material
 //
 //Parameters:
-//	copy: A pointer to an uninitialized material to initialize as a deep copy
-//	original: A pointer to a material to copy
-void Material_InitializeDeepCopy(Material* copy, Material* original)
+//	mat: A pointer to the material to initialize
+//	t: A pointer to the texture which this material represents an instance of
+//	tPoolID: The id of this texture in the AssetMAnager_texturePool
+void Material_Initialize(unsigned int mID, unsigned int tPoolID)
 {
-	Material_Initialize(copy, original->texture);
-	
-	Matrix_Copy(copy->colorMatrix, original->colorMatrix);
-	Vector_Copy(copy->tile, original->tile);
-	Vector_Copy(copy->specularColor, original->specularColor);
+	Material* mat = MemoryPool_RequestAddress(assetBuffer->materialPool, mID);
 
-	copy->specularPower = original->specularPower;
-	copy->specularCoefficient = original->specularCoefficient;
-	copy->diffuseCoefficient = original->diffuseCoefficient;
-	copy->ambientCoefficient = original->ambientCoefficient;
+	//Allocate & Initialize color matrix
+	memset(mat->colorMatrix, 0, sizeof(mat->colorMatrix));
+	mat->colorMatrix[0] = 1.0f;
+	mat->colorMatrix[5] = 1.0f;
+	mat->colorMatrix[10] = 1.0f;
+	mat->colorMatrix[15] = 1.0f;
+
+	//Allocate & initialize tile vector
+	mat->tile[0] = mat->tile[1] = 1.0f;
+
+	mat->specularColor[0] = mat->specularColor[1] = mat->specularColor[2] = mat->specularColor[3] = 1.0f;
+	
+	mat->texturePoolID = tPoolID;
+
+	mat->specularPower = 1.0f;
+	mat->specularCoefficient = 0.2f;
+	mat->diffuseCoefficient = 0.6f;
+	mat->ambientCoefficient = 0.2f;
+
+	mat->localCoefficient = 0.8f;
+	mat->reflectedCoefficient = 0.2f;
+	mat->transmittedCoefficient = 0.0f;
+	mat->indexOfRefraction = 1.0f;
 }
+
+
 
 ///
 //Frees a material
 //Does not free the associated texture!!
 //
 //Parameters:
-//	mat: A pointer to the material to free
-void Material_Free(Material* mat)
+//	mID: the ID of the material to free
+void Material_Free(unsigned int mID)
 {
-	Matrix_Free(mat->colorMatrix);
-	Vector_Free(mat->tile);
-
-	free(mat);
+	//free(mat);
+	MemoryPool_ReleaseID(assetBuffer->materialPool, mID);
 }
 
 

@@ -69,14 +69,17 @@ void Init(void)
 	CollisionManager_Initialize();
 	KernelManager_Initialize();
 	InputManager_Initialize();
-	RenderingManager_Initialize();
 	AssetManager_Initialize();
-	ObjectManager_Initialize();
-	PhysicsManager_Initialize();
-	SystemManager_Initialize();
 
 	//Load assets
 	AssetManager_LoadAssets();
+
+	ObjectManager_Initialize();
+	RenderingManager_Initialize();
+	PhysicsManager_Initialize();
+	SystemManager_Initialize();
+
+
 
 	//Initialize the scene
 	InitializeScene();
@@ -111,7 +114,8 @@ void CalculateOctTreeCollisions(struct OctTree_Node* node)
 //Draws the current state of the engine
 void Draw(void)
 {
-	RenderingManager_Render(ObjectManager_GetObjectBuffer().gameObjects);
+	//RenderingManager_Render(ObjectManager_GetObjectBuffer().gameObjects);
+	RenderingManager_RenderWithMemoryPool(ObjectManager_GetObjectBuffer().objectPool);
 }
 
 ///
@@ -125,16 +129,11 @@ void Update(void)
 	//Update objects.
 	ObjectManager_Update();
 
-	PhysicsManager_Update(ObjectManager_GetObjectBuffer().gameObjects);
+	//PhysicsManager_Update(ObjectManager_GetObjectBuffer().gameObjects);
+	PhysicsManager_UpdateWithMemoryPool(ObjectManager_GetObjectBuffer().objectPool);
 
 	//Update the oct tree
 	ObjectManager_UpdateOctTree();
-
-	//LinkedList* collisions = CollisionManager_UpdateList(ObjectManager_GetObjectBuffer().gameObjects);
-
-	//OctTree_Node* octTreeRoot = ObjectManager_GetObjectBuffer().octTree->root;
-	//CalculateOctTreeCollisions(octTreeRoot);
-
 	LinkedList* collisions = CollisionManager_UpdateOctTree(ObjectManager_GetObjectBuffer().octTree);
 
 
@@ -158,7 +157,6 @@ void DrawLoop(int val)
 {
 	glutPostRedisplay();
 	glutTimerFunc(val, DrawLoop, val);
-
 
 }
 
@@ -215,7 +213,7 @@ int main(int argc, char* argv[])
 	Init();
 
 	//Start the draw loop
-	glutTimerFunc(16, DrawLoop, 16);
+	glutTimerFunc(64, DrawLoop, 64);
 
 
 	//Start the main loop

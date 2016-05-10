@@ -16,12 +16,21 @@ typedef struct GObject
 {
 	FrameOfReference* frameOfReference;
 	Mesh* mesh;
-	Material* material;
 	LinkedList* states;
 	RigidBody* body;
 	Collider* collider;
 	PointLight* light;
+	unsigned int colliderID;	//TODO: This is temporary
+	unsigned int colliderType;	//TODO: Also temporary
+					//1 = sphere, 2 = AABB
+	unsigned int materialID;
+	unsigned int pad;
+	//unsigned int padA, padB;
 } GObject;
+
+///
+//Replaces below function for memory pools
+unsigned int GObject_Request(void);
 
 ///
 //Allocates memory for a new Game Object
@@ -46,6 +55,18 @@ void GObject_Initialize(GObject* GO);
 //	copy: A pointer to an uninitialized GObject to initialize as a deep copy
 //	original: A pointer to a GObject to deep copy
 void GObject_InitializeDeepCopy(GObject* copy, GObject* original);
+
+///
+//Replaces below function for memory pools
+void GObject_Release(unsigned int objID);
+
+///
+//Frees all internal components of a GObject
+//WARNING: THIS SHOULD ONLY BE CALLED BY OBJECT MANAGER
+//
+//Parameters:
+//	objID: the ID of the object memory unit to free the members of
+void GObject_FreeMembers(unsigned int objID);
 
 ///
 //Frees all components of a GObject

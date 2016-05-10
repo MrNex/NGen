@@ -15,9 +15,11 @@ typedef struct RayTracerDirectionalShaderProgram_Members
 	GLint positionTextureLocation;
 	GLint diffuseTextureLocation;
 	GLint normalTextureLocation;
-	GLint materialTextureLocation;
+	GLint localMaterialTextureLocation;
 	GLint specularTextureLocation;
 	GLint shadowTextureLocation;
+	GLint globalMaterialTextureLocation;
+
 
 	GLint viewPositionLocation;
 
@@ -27,6 +29,11 @@ typedef struct RayTracerDirectionalShaderProgram_Members
 	GLint lightDirectionLocation;
 	GLint ambientIntensityLocation;
 	GLint diffuseIntensityLocation;
+
+	GLint isLocalLocation;
+	GLint isReflectionLocation;
+	GLint isTransmissionLocation;
+
 } RayTracerDirectionalShaderProgram_Members;
 
 ///
@@ -61,7 +68,7 @@ static void RayTracerDirectionalShaderProgram_FreeMembers(ShaderProgram* prog);
 //	prog: A pointer to the raytracer directional shader program to set the constant uniforms of
 //	buffer: A pointer to the rendering buffer to get the uniform values of
 //	gBuffer: A pointer to the geometry buffer containing the results from the geometry pass.
-static void RayTracerDirectionalShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct RenderingBuffer* buffer);
+static void RayTracerDirectionalShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct RenderingBuffer* buffer, unsigned int* passType);
 
 ///
 //Renders a frame after lighting due to a directional light
@@ -119,9 +126,10 @@ static void RayTracerDirectionalShaderProgram_InitializeMembers(ShaderProgram* p
 	members->positionTextureLocation = glGetUniformLocation(prog->shaderProgramID, "positionTexture");
 	members->diffuseTextureLocation = glGetUniformLocation(prog->shaderProgramID, "diffuseTexture");
 	members->normalTextureLocation = glGetUniformLocation(prog->shaderProgramID, "normalTexture");
-	members->materialTextureLocation = glGetUniformLocation(prog->shaderProgramID, "materialTexture");
+	members->localMaterialTextureLocation = glGetUniformLocation(prog->shaderProgramID, "localMaterialTexture");
 	members->specularTextureLocation = glGetUniformLocation(prog->shaderProgramID, "specularTexture");
 	members->shadowTextureLocation = glGetUniformLocation(prog->shaderProgramID, "shadowTexture");
+	members->globalMaterialTextureLocation = glGetUniformLocation(prog->shaderProgramID, "globalMaterialTexture");
 
 	members->viewPositionLocation = glGetUniformLocation(prog->shaderProgramID, "viewPositionVector");
 
@@ -131,6 +139,10 @@ static void RayTracerDirectionalShaderProgram_InitializeMembers(ShaderProgram* p
 	members->lightDirectionLocation = glGetUniformLocation(prog->shaderProgramID, "lightDirection");
 	members->ambientIntensityLocation = glGetUniformLocation(prog->shaderProgramID, "ambientIntensity");
 	members->diffuseIntensityLocation = glGetUniformLocation(prog->shaderProgramID, "diffuseIntensity");
+
+	members->isLocalLocation = glGetUniformLocation(prog->shaderProgramID, "isLocal");
+	members->isReflectionLocation = glGetUniformLocation(prog->shaderProgramID, "isReflection");
+	members->isTransmissionLocation = glGetUniformLocation(prog->shaderProgramID, "isTransmission");
 
 	glUseProgram(0);
 }
@@ -153,7 +165,7 @@ static void RayTracerDirectionalShaderProgram_FreeMembers(ShaderProgram* prog)
 //	prog: A pointer to the raytracer directional shader program to set the constant uniforms of
 //	buffer: A pointer to the rendering buffer to get the uniform values of
 //	gBuffer: A pointer to the geometry buffer containing the results of the geometry pass.
-static void RayTracerDirectionalShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct RenderingBuffer* buffer)
+static void RayTracerDirectionalShaderProgram_SetConstantUniforms(ShaderProgram* prog, struct RenderingBuffer* buffer, unsigned int* passType)
 {
 	RayTracerDirectionalShaderProgram_Members* members = (RayTracerDirectionalShaderProgram_Members*)prog->members;
 	
@@ -172,9 +184,10 @@ static void RayTracerDirectionalShaderProgram_SetConstantUniforms(ShaderProgram*
 	ProgramUniform1i(prog->shaderProgramID, members->positionTextureLocation, RayBuffer_TextureType_POSITION);
 	ProgramUniform1i(prog->shaderProgramID, members->diffuseTextureLocation, RayBuffer_TextureType_DIFFUSE);
 	ProgramUniform1i(prog->shaderProgramID, members->normalTextureLocation, RayBuffer_TextureType_NORMAL);
-	ProgramUniform1i(prog->shaderProgramID, members->materialTextureLocation, RayBuffer_TextureType_MATERIAL);
+	ProgramUniform1i(prog->shaderProgramID, members->localMaterialTextureLocation, RayBuffer_TextureType_LOCALMATERIAL);
 	ProgramUniform1i(prog->shaderProgramID, members->specularTextureLocation, RayBuffer_TextureType_SPECULAR);
 	ProgramUniform1i(prog->shaderProgramID, members->shadowTextureLocation, RayBuffer_TextureType_SHADOW);
+	ProgramUniform1i(prog->shaderProgramID, members->globalMaterialTextureLocation, RayBuffer_TextureType_GLOBALMATERIAL);
 
 	Camera* cam = RenderingManager_GetRenderingBuffer()->camera;
 	Vector camPos;
@@ -232,6 +245,27 @@ static void RayTracerDirectionalShaderProgram_SetConstantUniforms(ShaderProgram*
 		members->diffuseIntensityLocation,
 		buffer->directionalLight->base->diffuseIntensity
 	);
+
+	glProgramUniform1ui
+	(
+		prog->shaderProgramID,
+		members->isLocalLocation,
+		passType[0]
+	);
+
+	glProgramUniform1ui
+	(
+		prog->shaderProgramID,
+		members->isReflectionLocation,
+		passType[1]
+	);
+
+	glProgramUniform1ui
+	(
+		prog->shaderProgramID,
+		members->isTransmissionLocation,
+		passType[2]
+	);
 }
 
 ///
@@ -249,28 +283,28 @@ static void RayTracerDirectionalShaderProgram_Render(ShaderProgram* prog, Render
 
 
 	//Now we should not update the depth buffer to perform the lightning pass.
-	//glDepthMask(GL_FALSE);
-	//glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+	glDisable(GL_DEPTH_TEST);
 
 	glDisable(GL_CULL_FACE);
 
 
 	//The lighting pass will need to blend the effects of the lighting with that of the geometry pass.
-	//glEnable(GL_BLEND);
-	//glBlendEquation(GL_FUNC_ADD);	//Will add the two resulting colors for each pixel
-	//glBlendFunc(GL_ONE, GL_ONE);	//Scales each by a factor of 1 when adding the geometry and lightning passes
+	glEnable(GL_BLEND);
+	glBlendEquation(GL_FUNC_ADD);	//Will add the two resulting colors for each pixel
+	glBlendFunc(GL_ONE, GL_ONE);	//Scales each by a factor of 1 when adding the geometry and lightning passes
 	
-	RayTracerDirectionalShaderProgram_SetConstantUniforms(prog, buffer);
+	RayTracerDirectionalShaderProgram_SetConstantUniforms(prog, buffer, rBuffer->passType);
 
 	//glClear(GL_COLOR_BUFFER_BIT);
 	
 	Mesh_Render(AssetManager_LookupMesh("Square"), GL_TRIANGLES);
 
-	//glDisable(GL_BLEND);
-	//glBlendFunc(GL_ONE, GL_ZERO);
+	glDisable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ZERO);
 
-	//glDepthMask(GL_TRUE);
-	//glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
 
 
 	glEnable(GL_CULL_FACE);
