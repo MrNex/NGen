@@ -436,6 +436,7 @@ static void RayTracerKernelProgram_Execute(KernelProgram* prog, KernelBuffer* bu
 	cl_event execution;
 
 	cl_int err = 0;
+
 	err = clEnqueueNDRangeKernel
 	(
 		buffer->clQueue,

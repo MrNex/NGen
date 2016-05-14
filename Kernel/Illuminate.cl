@@ -4,14 +4,18 @@ float4 PhongDirectionalIllumination(__private float3 surfacePosition,__private f
 {
 	
 	surfaceNormal = normalize(surfaceNormal);
-	
+	lightdirection = normalize(lightDirection);
+
 	__private float4 ambientTerm; 
 	ambientTerm = (float4)(material.x * lightIntensity.x * lightColor * diffuseColor.xyz, diffuseColor.w);
 
 	__private float4 diffuseTerm;
 	__private float diffuseFactor;
 	diffuseFactor = -dot(surfaceNormal, lightDirection);
-	diffuseFactor = (diffuseFactor + fabs(diffuseFactor)) * 0.5f;
+	if(diffuseFactor <= 0.0f)
+	{
+		diffuseFactor = 0.0f;
+	}
 	diffuseTerm = (float4)(material.y * lightIntensity.y * diffuseFactor * lightColor * diffuseColor.xyz, diffuseColor.w);
 
 	__private float4 specularTerm;
@@ -19,7 +23,11 @@ float4 PhongDirectionalIllumination(__private float3 surfacePosition,__private f
 	__private float specularFactor;
 	lightReflection = normalize(lightDirection - 2.0f * surfaceNormal * dot(lightDirection, surfaceNormal));
 	specularFactor = dot(lightReflection, toViewer);
-	specularFactor = pow((specularFactor + fabs(specularFactor)) * 0.5f, material.w);
+	if(specularFactor < 0.0f)
+	{
+		specularFactor = 0.0f;
+	}
+	specularFactor = pow(specularFactor, material.w);
 	specularTerm = (float4)(material.z * specularFactor * specularColor.xyz, specularColor.w);
 
 	__private float4 finalColor;

@@ -15,11 +15,12 @@
 #include "RayTracerGlobalShaderProgram.h"
 
 #include "../Device/KernelProgram.h"
-#include "../Device/RayTracerDirectionalShadowKernelProgram.h"
-#include "../Device/RayTracerPointShadowKernelProgram.h"
-#include "../Device/RayTracerReflectionKernelProgram.h"
-#include "../Device/RayTracerTransmissionKernelProgram.h"
+//#include "../Device/RayTracerDirectionalShadowKernelProgram.h"
+//#include "../Device/RayTracerPointShadowKernelProgram.h"
+//#include "../Device/RayTracerReflectionKernelProgram.h"
+//#include "../Device/RayTracerTransmissionKernelProgram.h"
 #include "../Device/RayTracerKernelProgram.h"
+#include "../Device/ToneReproductionKernelProgram.h"
 
 #include "../Data/LinkedList.h"
 
@@ -34,11 +35,8 @@ typedef struct RayTracerRenderPipeline_Members
 	//RayBuffer* reflectionBuffer;
 	//RayBuffer* transmissionBuffer;
 	GlobalBuffer* gBuffer;
-	KernelProgram* directionalShadowKernelProg;
-	KernelProgram* pointShadowKernelProg;
-	KernelProgram* reflectionKernelProg;
-	KernelProgram* transmissionKernelProg;
 	KernelProgram* rayTracerKernelProg;
+	KernelProgram* toneReproductionKernelProg;
 
 	//Reduction memory for openCL use to combine results from different colliders
 	cl_mem spheres, aabbs;
@@ -160,33 +158,14 @@ static void RayTracerRenderPipeline_InitializeMembers(RenderPipeline_Members* me
 	RayBuffer_Initialize(members->rBuffer, envBuffer->windowWidth, envBuffer->windowHeight);	
 	members->rBuffer->passType[0] = 1;
 
-	/*
-	members->reflectionBuffer = RayBuffer_Allocate();
-	RayBuffer_Initialize(members->reflectionBuffer, envBuffer->windowWidth, envBuffer->windowHeight);
-	members->reflectionBuffer->passType[1] = 1;
-
-	members->transmissionBuffer = RayBuffer_Allocate();
-	RayBuffer_Initialize(members->transmissionBuffer, envBuffer->windowWidth, envBuffer->windowHeight);
-	members->transmissionBuffer->passType[2] = 1;
-	*/
-
 	members->gBuffer = GlobalBuffer_Allocate();
 	GlobalBuffer_Initialize(members->gBuffer, envBuffer->windowWidth, envBuffer->windowHeight);
 
-	members->directionalShadowKernelProg = KernelProgram_Allocate();
-	RayTracerDirectionalShadowKernelProgram_Initialize(members->directionalShadowKernelProg, kBuffer);
-
-	members->pointShadowKernelProg = KernelProgram_Allocate();
-	RayTracerPointShadowKernelProgram_Initialize(members->pointShadowKernelProg, kBuffer);
-
-	members->reflectionKernelProg = KernelProgram_Allocate();
-	RayTracerReflectionKernelProgram_Initialize(members->reflectionKernelProg, kBuffer);
-
-	members->transmissionKernelProg = KernelProgram_Allocate();
-	RayTracerTransmissionKernelProgram_Initialize(members->transmissionKernelProg, kBuffer);
-
 	members->rayTracerKernelProg = KernelProgram_Allocate();
 	RayTracerKernelProgram_Initialize(members->rayTracerKernelProg, kBuffer);
+
+	members->toneReproductionKernelProg = KernelProgram_Allocate();
+	ToneReproductionKernelProgram_Initialize(members->toneReproductionKernelProg, kBuffer);
 
 	//Initialize OpenCL reduction memory
 	cl_image_format format;
@@ -472,11 +451,14 @@ static void RayTracerRenderPipeline_FreeMembers(RenderPipeline_Members* mems)
 	//RayBuffer_Free(members->reflectionBuffer);
 	//RayBuffer_Free(members->transmissionBuffer);
 	GlobalBuffer_Free(members->gBuffer);
+	/*
 	KernelProgram_Free(members->directionalShadowKernelProg);
 	KernelProgram_Free(members->pointShadowKernelProg);
 	KernelProgram_Free(members->reflectionKernelProg);
 	KernelProgram_Free(members->transmissionKernelProg);
-	KernelProgram_Free(members->rayTracerKernelProg);	
+	*/
+	KernelProgram_Free(members->rayTracerKernelProg);
+	KernelProgram_Free(members->toneReproductionKernelProg);
 
 	cl_int err = 0;
 
@@ -706,6 +688,7 @@ static void RayTracerRenderPipeline_RenderWithMemoryPool(RenderPipeline* pipelin
 
 	members->rayTracerKernelProg->Execute(members->rayTracerKernelProg, KernelManager_GetKernelBuffer(), &rayTracerParams);
 
+	members->toneReproductionKernelProg->Execute(members->toneReproductionKernelProg, KernelManager_GetKernelBuffer(), members->gBuffer);
 	cl_event releaseFromKernels[2];
 	RayBuffer_ReleaseFromKernels(members->rBuffer, &releaseFromKernels[0]);
 	GlobalBuffer_ReleaseFromKernels(members->gBuffer, &releaseFromKernels[1]);
@@ -759,7 +742,7 @@ static void RayTracerRenderPipeline_RenderWithMemoryPool(RenderPipeline* pipelin
 //	RayBuffer_BindForFinalPass(members->rBuffer);
 
 	GlobalBuffer_BindForFinalPass(members->gBuffer);
-	pipeline->programs[4]->Render(pipeline->programs[4], buffer, members->gBuffer);
+	//pipeline->programs[4]->Render(pipeline->programs[4], buffer, members->gBuffer);
 
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

@@ -69,6 +69,7 @@ OBJ= \
 	Bin/RayTracerReflectionKernelProgram.o \
 	Bin/RayTracerTransmissionKernelProgram.o \
 	Bin/RayTracerKernelProgram.o \
+	Bin/ToneReproductionKernelProgram.o \
 	Bin/RigidBody.o \
 	Bin/SphereCollider.o \
 	Bin/AABBCollider.o \
@@ -242,6 +243,9 @@ Bin/RayTracerTransmissionKernelProgram.o: Device/RayTracerTransmissionKernelProg
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 Bin/RayTracerKernelProgram.o: Device/RayTracerKernelProgram.c Device/RayTracerKernelProgram.h Bin/KernelProgram.o Bin/RenderingManager.o Bin/KernelManager.o Bin/CollisionManager.o Bin/AssetManager.o Bin/RayBuffer.o Bin/GlobalBuffer.o
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
+
+Bin/ToneReproductionKernelProgram.o: Device/ToneReproductionKernelProgram.c Device/ToneReproductionKernelProgram.h Bin/KernelProgram.o Bin/GlobalBuffer.o
 	$(CC) $(CFLAGS) -c $< -o $@ $(LIBS)
 
 ##

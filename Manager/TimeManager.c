@@ -213,9 +213,9 @@ float TimeManager_GetDeltaSec(void)
 
 	//TODO: Remove constant dt
 	//return 0.00002f;
-	if(dt > 0.01f)
+	if(dt > 0.003f)
 	{
-		dt = 0.01f;
+		dt = 0.003f;
 	}
 	return dt;	
 #endif

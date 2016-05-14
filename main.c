@@ -121,7 +121,7 @@ void Draw(void)
 ///
 //Updates engine
 //
-void Update(void)
+void Update(int val)
 {
 	//Update time manager
 	TimeManager_Update();
@@ -146,8 +146,14 @@ void Update(void)
 	CheckGLErrors();
 
 	//If escape is pressed, leave main loop
-	if(InputManager_IsKeyDown((unsigned char)27))
+	if(!InputManager_IsKeyDown((unsigned char)27))
 	{
+	
+		glutTimerFunc(val, Update, val);
+	}
+	else
+	{
+
 		glutLeaveMainLoop();
 	}
 
@@ -196,7 +202,9 @@ int main(int argc, char* argv[])
 	///
 	//Set up callback registration
 	//
-	glutIdleFunc(Update);
+	//glutIdleFunc(Update);
+
+	glutTimerFunc(1, Update, 1);
 	glutDisplayFunc(Draw);
 
 	//Calback registration for window manipulation

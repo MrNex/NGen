@@ -208,7 +208,7 @@ void GlobalBuffer_Initialize(GlobalBuffer* gBuffer, unsigned int tWidth, unsigne
 		gBuffer->textureRefs[i] = clCreateFromGLTexture
 		(
 			kBuf->clContext,
-			CL_MEM_WRITE_ONLY,
+			CL_MEM_READ_WRITE,
 			GL_TEXTURE_2D,
 			0,
 			gBuffer->textures[i],

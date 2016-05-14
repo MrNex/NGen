@@ -45,8 +45,8 @@ void InitializeScene(void)
 
 	//l->base->color->components[2] = 0.0f;
 
-	//l->base->ambientIntensity = 0.0f;
-	//l->base->diffuseIntensity = 0.0f;
+	l->base->ambientIntensity = 0.01f;
+	l->base->diffuseIntensity = 0.02f;
 
 	//Create floor
 	//GObject* block = GObject_Allocate();
@@ -56,13 +56,13 @@ void InitializeScene(void)
 
 	block->mesh = AssetManager_LookupMesh("Cube");
 	block->materialID = Material_Allocate();
-	GLuint texID = AssetManager_LookupTextureID("Wood");
+	GLuint texID = AssetManager_LookupTextureID("Checkered");
 	Material_Initialize(block->materialID, texID);
 
 	Material* material = MemoryPool_RequestAddress(assetBuffer->materialPool, block->materialID);
 
-	material->tile[0] = 2.0f;
-	material->tile[1] = 3.0f;
+	material->tile[0] = 16.0f;
+	material->tile[1] = 24.0f;
 	material->specularCoefficient = 0.0f;
 	material->specularPower = 32.0f;
 	material->ambientCoefficient = 0.4f;
@@ -122,12 +122,12 @@ void InitializeScene(void)
 	material = MemoryPool_RequestAddress(assetBuffer->materialPool, block->materialID);
 
 
-	material->specularCoefficient = 0.2f;
+	material->specularCoefficient = 1.0f;
 	material->specularPower = 20.0f;
-	material->diffuseCoefficient = 0.075f;
-	material->ambientCoefficient = 0.075f;
-	material->localCoefficient = 1.0f;
-	material->reflectedCoefficient = 0.01f;
+	material->diffuseCoefficient = 0.0075f;
+	material->ambientCoefficient = 0.0075f;
+	material->localCoefficient = 0.1f;
+	material->reflectedCoefficient = 0.001f;
 	material->transmittedCoefficient = 0.8f;
 	material->indexOfRefraction = 0.95f;
 
@@ -150,7 +150,7 @@ void InitializeScene(void)
 
 	Vector_Copy(&v, &Vector_ZERO);
 	v.components[0] = 0.0f;
-	v.components[1] = 5.0f;
+	v.components[1] = 0.0f;
 	v.components[2] = -6.0f;
 
 	GObject_Translate(block, &v);
@@ -174,40 +174,33 @@ void InitializeScene(void)
 
 	block->mesh = AssetManager_LookupMesh("Sphere");
 	block->materialID = Material_Allocate();
-	unsigned int temp = AssetManager_LookupTextureID("Checkered");
+	unsigned int temp = AssetManager_LookupTextureID("White");
 	Material_Initialize(block->materialID, temp);
-/*
-	*Matrix_Index(block->material->colorMatrix, 0, 0) = 1.0f;
-	*Matrix_Index(block->material->colorMatrix, 1, 0) = 1.0f;
-	*Matrix_Index(block->material->colorMatrix, 1, 1) = 1.0f;
-	*Matrix_Index(block->material->colorMatrix, 2, 0) = 1.0f;
-	*Matrix_Index(block->material->colorMatrix, 2, 2) = 1.0f;
-*/
-	//Matrix_Scale(block->material->colorMatrix, 0.7f);
+
 	material = MemoryPool_RequestAddress(assetBuffer->materialPool, block->materialID);
 	material->specularPower = 20.0f;
-	material->ambientCoefficient = 0.2f;
-	material->diffuseCoefficient = 0.90f;
+	material->ambientCoefficient = 0.15f;
+	material->diffuseCoefficient = 0.25f;
 	material->specularCoefficient = 1.0f;
-	material->localCoefficient = 1.0f;
-	material->reflectedCoefficient = 0.85f;
+	material->localCoefficient = 0.5f;
+	material->reflectedCoefficient = 0.75f;
 	material->transmittedCoefficient = 0.0f;
 
 	block->collider = Collider_Allocate();
 	SphereCollider_Initialize(block->collider, 1.0f, &Vector_ZERO);
 
-	/*
+	
 	block->body = RigidBody_Allocate();
 	RigidBody_Initialize(block->body, block->frameOfReference, 1.0f);
 	block->body->dynamicFriction = block->body->staticFriction = 0.08f;
 	
 	block->body->coefficientOfRestitution = 0.8f;
 	block->body->rollingResistance = 0.1f;
-	*/
+	
 	Vector_Copy(&v, &Vector_ZERO);
 	v.components[0] = -2.8f;
 	v.components[1] = -2.0f;
-	v.components[2] = -13.0f;
+	v.components[2] = -8.0f;
 
 	GObject_Translate(block, &v);
 
@@ -215,10 +208,12 @@ void InitializeScene(void)
 	v.components[0] = v.components[1] = v.components[2] = 1.8f;
 	GObject_Scale(block, &v);
 
+	/*
 	state = State_Allocate();
 	State_MultivectorRevolution_Initialize(state, 0.00005f);
 	GObject_AddState(block, state);
-	
+	*/
+
 	//ObjectManager_AddObject(block);
 	ObjectManager_RegisterObject(blockID);
 
@@ -311,10 +306,11 @@ void InitializeScene(void)
 
 	
 	//Set gravity	
+	/*
 	Vector* gravity = Vector_Allocate();
 	Vector_Initialize(gravity, 3);
 	gravity->components[1] = -9.81f;
 	
 	PhysicsManager_AddGlobalAcceleration(gravity);	
-
+	*/
 }
