@@ -4,7 +4,7 @@ float4 PhongDirectionalIllumination(__private float3 surfacePosition,__private f
 {
 	
 	surfaceNormal = normalize(surfaceNormal);
-	lightdirection = normalize(lightDirection);
+	lightDirection = normalize(lightDirection);
 
 	__private float4 ambientTerm; 
 	ambientTerm = (float4)(material.x * lightIntensity.x * lightColor * diffuseColor.xyz, diffuseColor.w);
